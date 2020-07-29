@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yay/controllers/SpotifyApi.dart';
 import 'package:yay/screens/homePage/room_page.dart';
+import 'package:yay/screens/player/Player.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -10,23 +13,45 @@ class HomePage extends StatefulWidget {
   }
 }
 
+enum ScreenType { Player, Room }
+
 class HomePageState extends State<HomePage> {
   static const platform = const MethodChannel('yay.homepage/initSpotify');
+
   HomePageState() {
     print("creates homePage\n");
   }
+
   @override
   void initState() {
     super.initState();
-    Future<String> result = platform.invokeMethod('connect');
-
-    result.then((value) {
-      print("result from Spotify : $value\n");
-    });
+    SpotifyApi.getSpotifyAPI().connect();
   }
 
   int _currentPageIndex = 0;
-  List<Widget> pages = <Widget>[Text("hello"), RoomPage()];
+  List<ScreenType> screenTypes = <ScreenType>[
+    ScreenType.Player,
+    ScreenType.Room,
+  ];
+
+  Widget getScreen(ScreenType st, BuildContext context) {
+    Widget w;
+    switch (st) {
+      case ScreenType.Player:
+        w = ChangeNotifierProvider(
+          create: (context) => SpotifyApi.getSpotifyAPI(),
+          child: PlayerPage(),
+        );
+        break;
+      case ScreenType.Room:
+        w = ChangeNotifierProvider(
+          create: (context) => SpotifyApi.getSpotifyAPI(),
+          child: RoomPage(),
+        );
+        break;
+    }
+    return w;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +59,7 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text("yay"),
       ),
-      body: pages[_currentPageIndex],
+      body: getScreen(screenTypes[_currentPageIndex], context),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentPageIndex,
         items: <BottomNavigationBarItem>[

@@ -1,5 +1,7 @@
 package com.example.yay;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -11,8 +13,8 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
-    String CLIENT_ID = "f44d8cd7efdd4f14b49ce9cc958330fc";
-    String REDIRECT_URI = "http://com.example.yay/callback";
+    String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
+    String REDIRECT_URI = "http://com.example.yay/";
     SpotifyAppRemote mSpotifyAppRemote;
     private static final String CHANNEL = "yay.homepage/initSpotify";
 
@@ -24,6 +26,7 @@ public class MainActivity extends FlutterActivity {
                         (call, result) -> {
                           if (call.method.equals("connect")){
                               connect(true,result);
+                              Log.d("spotify sdk connection", "trying to connect");
                           }
                         }
                 );
@@ -49,6 +52,8 @@ public class MainActivity extends FlutterActivity {
 
                     @Override
                     public void onFailure(Throwable error) {
+                        Log.e("spotify sdk connection","spotify connection failed");
+                        Log.e("spotify sdk connection",error.toString());
                         channelResult.success("connection was unsuccessful");
 
                     }
