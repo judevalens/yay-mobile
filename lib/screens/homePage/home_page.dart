@@ -23,7 +23,7 @@ class HomePageState extends State<HomePage> {
   }
 
   @override
-  void initState() {
+
     super.initState();
     SpotifyApi.getSpotifyAPI().connect();
   }
