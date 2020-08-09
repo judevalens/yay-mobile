@@ -52,6 +52,12 @@ android {
 dependencies {
     // your app dependencies
     implementation project(':spotify-app-remote')
+    implementation project(':spotify-auth')
+    implementation ('io.socket:socket.io-client:1.0.0') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
+
     implementation "com.google.code.gson:gson:2.8.5"
 }
 

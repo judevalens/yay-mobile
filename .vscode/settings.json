@@ -1,0 +1,7 @@
+{
+    "python.jediEnabled": false,
+    "python.autoComplete.extraPaths": [
+        "./**"
+    ],
+    "python.languageServer": "Microsoft"
+}

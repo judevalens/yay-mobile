@@ -2,11 +2,11 @@
 import flask as flask
 from urllib.parse import quote, unquote
 import requests
-import flask_session as Session
+import flask_session as session
 import time
 import json
 import codecs
-import flask_socketio as socketIO
+import flask_socketio as socketio
 import yay_utils
 import os
 import MusicRoomSocketMobile
@@ -14,16 +14,18 @@ import YAY_Config
 
 app = flask.Flask(__name__)
 
-app_configs  = YAY_Config.get_config()
+app_configs = YAY_Config.get_config()
 app.config.from_object(app_configs)
 util = yay_utils.Util(flask)
-socketio = socketIO.SocketIO(app)
-Session.Session(app)
-Session.RedisSessionInterface(
+socketio = socketio.SocketIO(app)
+session.Session(app)
+session.RedisSessionInterface(
     YAY_Config.get_redis(), 'session', permanent=True)
 
-MusicRoomSocket = MusicRoomSocketMobile.MusicRoomSocket('/',flask,util,socketio)
+MusicRoomSocket = MusicRoomSocketMobile.MusicRoomSocket(
+    '/', flask, util, socketio)
 socketio.on_namespace(MusicRoomSocket)
+
 
 @app.route('/logout')
 def logout():
@@ -38,4 +40,4 @@ def index():
 
 
 if "ON_HEROKU" not in os.environ:
-    socketio.run(app,host="0.0.0.0");
+    socketio.run(app, host="0.0.0.0")

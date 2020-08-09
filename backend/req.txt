@@ -1,7 +1,6 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: win-64
-@EXPLICIT
 https://repo.anaconda.com/pkgs/main/win-64/redis-3.2.100-h81e342f_0.conda
 https://repo.anaconda.com/pkgs/main/win-64/ca-certificates-2020.1.1-0.conda
 https://repo.anaconda.com/pkgs/main/win-64/vs2015_runtime-14.16.27012-hf0eaf9b_1.conda

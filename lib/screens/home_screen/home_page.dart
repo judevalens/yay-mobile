@@ -1,32 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/SpotifyApi.dart';
-import 'package:yay/screens/homePage/room_page.dart';
+import 'package:yay/screens/home_screen//room_page.dart';
 import 'package:yay/screens/player/Player.dart';
 import 'package:provider/provider.dart';
 
+// ignore: must_be_immutable
 class HomePage extends StatefulWidget {
+  Socket socket;
+  SharedPreferences sharedPreferences;
+   HomePage (this.socket);
+
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return HomePageState();
+    return HomePageState(socket);
   }
 }
 
 enum ScreenType { Player, Room }
 
 class HomePageState extends State<HomePage> {
-  static const platform = const MethodChannel('yay.homepage/initSpotify');
+  Socket socket;
+  Widget mainPage;
+  Widget loginPage;
+  static const platform = const MethodChannel('yay.homepage/spotify');
 
-  HomePageState() {
+  HomePageState(this.socket) {
     print("creates homePage\n");
   }
 
   @override
-
+  void initState() {
     super.initState();
-    SpotifyApi.getSpotifyAPI().connect();
+
   }
+
+
+
+
+  
 
   int _currentPageIndex = 0;
   List<ScreenType> screenTypes = <ScreenType>[
@@ -38,14 +54,14 @@ class HomePageState extends State<HomePage> {
     Widget w;
     switch (st) {
       case ScreenType.Player:
-        w = ChangeNotifierProvider(
-          create: (context) => SpotifyApi.getSpotifyAPI(),
+        w = ChangeNotifierProvider.value(
+          value: SpotifyApi.getSpotifyAPI(),
           child: PlayerPage(),
         );
         break;
       case ScreenType.Room:
-        w = ChangeNotifierProvider(
-          create: (context) => SpotifyApi.getSpotifyAPI(),
+        w = ChangeNotifierProvider.value(
+          value: SpotifyApi.getSpotifyAPI(),
           child: RoomPage(),
         );
         break;
@@ -55,7 +71,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return  Scaffold(
       appBar: AppBar(
         title: Text("yay"),
       ),

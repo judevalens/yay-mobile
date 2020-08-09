@@ -4,6 +4,7 @@ import json
 import base64
 import YAY_Config
 
+
 class Util():
     my_client_id = 'f44d8cd7efdd4f14b49ce9cc958330fc'
     client_secret = '52ddc9e6b9704750863738a2770c6836'
@@ -12,13 +13,13 @@ class Util():
         self.flask = flask
 
     def get_valid_spotify_token(self):
-        elpasedTime = time.time()-self.flask.session['spotify_token_expiration_date']
+        elpasedTime = time.time() - self.flask.session['spotify_token_expiration_date']
 
         token_duration = self.flask.session['spotify_token_expires_in']
 
         if elpasedTime >= token_duration:
-            credentials  = self.my_client_id+':'+self.client_secret;
-            credentials_bytes  = credentials.encode()
+            credentials = self.my_client_id + ':' + self.client_secret;
+            credentials_bytes = credentials.encode()
             credentials_base64_bytes = base64.urlsafe_b64encode(credentials_bytes)
             credentials_base64 = credentials_base64_bytes.decode()
 
@@ -38,7 +39,7 @@ class Util():
             return self.flask.session['spotify_access_token']
         else:
             return self.flask.session['spotify_access_token']
-    
+
     def get_user(self):
         """
         return the saved data about the current user
@@ -49,13 +50,13 @@ class Util():
         print(user)
         return user
 
-    def set_user(self,user):
+    def set_user(self, user):
         print("BEFORE SET USERRRRRRR")
         print(user)
         user_object = json.dumps(user)
         print("SET USERRRRRRR")
         print(user)
-        user = YAY_Config.get_redis().hset('Users', self.flask.session['user_id'],user_object)
+        user = YAY_Config.get_redis().hset('Users', self.flask.session['user_id'], user_object)
 
     def is_connected(self):
         if 'connected' not in self.flask.session:
