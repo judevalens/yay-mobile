@@ -15,27 +15,25 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
-  static const platform = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
-
   void login() {
-    Future<String> loginResult = platform.invokeMethod("login");
-    loginResult.then((value)  async{
-    Map<String, dynamic> loginResultJson = jsonDecode(value);
-    SharedPreferences sp  = await SharedPreferences.getInstance();
-    sp.setBool("isConnected", true);
-    sp.setString("email", loginResultJson["email"]);
-    SpotifyApi.getSpotifyAPI().updateConnectionStatus(true);
+    Future<String> loginResult =
+        SpotifyApi.spotifyApi.platform.invokeMethod("login");
+    loginResult.then((value) async {
+      Map<String, dynamic> loginResultJson = jsonDecode(value);
 
-
-
-    print("loginResultJson");
-    print(loginResultJson);
-    }).catchError((err){
-
-    });
-
+      Future<String> spotifyAppRemoteConnectionResult =
+          SpotifyApi.spotifyApi.platform.invokeMethod("connectToSpotifyApp");
+      spotifyAppRemoteConnectionResult.then((value) {
+        SpotifyApi.spotifyApi.appSharedPreferences.setBool("isConnected", true);
+        SpotifyApi.spotifyApi.spotifyApiCredentials = loginResultJson;
+        SpotifyApi.spotifyApi.appSharedPreferences
+            .setString("accessToken", loginResultJson["access_token"]);
+        SpotifyApi.spotifyApi.updateConnectionStatus(true);
+      });
+      print("loginResultJson");
+      print(loginResultJson);
+    }).catchError((err) {});
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +86,4 @@ class LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  
-
 }

@@ -9,34 +9,31 @@ import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatefulWidget {
-  Socket socket;
   SharedPreferences sharedPreferences;
-   HomePage (this.socket);
+   HomePage ();
 
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return HomePageState(socket);
+    return HomePageState();
   }
 }
 
 enum ScreenType { Player, Room }
 
 class HomePageState extends State<HomePage> {
-  Socket socket;
   Widget mainPage;
   Widget loginPage;
-  static const platform = const MethodChannel('yay.homepage/spotify');
 
-  HomePageState(this.socket) {
+  HomePageState() {
     print("creates homePage\n");
   }
 
   @override
   void initState() {
     super.initState();
-
+    SpotifyApi.spotifyApi.connectToRemote();
   }
 
 
@@ -55,13 +52,13 @@ class HomePageState extends State<HomePage> {
     switch (st) {
       case ScreenType.Player:
         w = ChangeNotifierProvider.value(
-          value: SpotifyApi.getSpotifyAPI(),
+          value: SpotifyApi.spotifyApi,
           child: PlayerPage(),
         );
         break;
       case ScreenType.Room:
         w = ChangeNotifierProvider.value(
-          value: SpotifyApi.getSpotifyAPI(),
+          value: SpotifyApi.spotifyApi,
           child: RoomPage(),
         );
         break;

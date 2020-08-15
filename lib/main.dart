@@ -8,9 +8,10 @@ import 'package:yay/screens/login_screen/login_screen.dart';
 import 'package:yay/screens/home_screen//room_page.dart';
 
 void main() {
+  var sa = SpotifyApi.getInstance();
   runApp(
     ChangeNotifierProvider(
-      create: (context) => SpotifyApi.getSpotifyAPI(),
+      create: (context) => sa,
       child: MyApp(),
     ),
   );
@@ -26,17 +27,13 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   Widget widgetToRender = Text("waiting");
+  Future<bool> _isConnected;
   Map<String, Widget> homeWidgets;
 
   MyAppState() {
     print("rendered 1");
     print("rendered 2");
     WidgetsFlutterBinding.ensureInitialized();
-    Socket socket = io("http://192.168.1.3:5000");
-    homeWidgets = {
-      "homeScreen": HomePage(socket),
-      "loginScreen": LoginScreen()
-    };
   }
 
   @override
@@ -44,12 +41,21 @@ class MyAppState extends State<MyApp> {
     // TODO: implement initState
     super.initState();
 
+    print("isNull");
+    print(SpotifyApi.spotifyApi);
+
+    homeWidgets = {
+      "homeScreen": HomePage(),
+      "loginScreen": LoginScreen()
+    };
+    SpotifyApi.init();
+    _isConnected = SpotifyApi.spotifyApi.connect();
   }
-
-
 
   Widget build(BuildContext context) {
     return Selector<SpotifyApi, bool>(selector: (buildContext, spotifyApi) {
+      //_isConnected = SpotifyApi.spotifyApi.connect();
+
       return spotifyApi.isConnected;
     }, builder: (ctx, data, child) {
       return MaterialApp(
@@ -58,11 +64,15 @@ class MyAppState extends State<MyApp> {
         ),
         title: "YAY",
         home: FutureBuilder(
-          future: SpotifyApi.getSpotifyAPI().getConnectionState(),
+          future: _isConnected,
           builder: (BuildContext context, AsyncSnapshot<bool> isConnected) {
-            return isConnected.data
-                ? homeWidgets["homeScreen"]
-                : homeWidgets["loginScreen"];
+            Widget w = Text("waiting......");
+            if (isConnected.hasData) {
+              w = isConnected.data
+                  ? homeWidgets["homeScreen"]
+                  : homeWidgets["loginScreen"];
+            }
+            return w;
           },
         ),
       );

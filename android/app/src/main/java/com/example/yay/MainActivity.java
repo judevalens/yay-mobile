@@ -14,6 +14,7 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 import io.flutter.embedding.android.FlutterActivity;
@@ -38,22 +39,30 @@ public class MainActivity extends FlutterActivity {
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
-        spotify = new Spotify(this,this,tunnel);
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
+        spotify = new Spotify(this,this,tunnel);
+
         tunnel.setMethodCallHandler(
                 (call, result) -> {
                     switch (call.method) {
-                        case "connect":
-                            MainActivity.this.connect(true, result);
-                            Log.d("spotify sdk connection", "trying to connect");
+                        case "connectToSpotifyApp":
+                           spotify.connectToSpotifyAppRemote(result);
+                           break;
                         case "login":
                             Log.d("login", "login with spotify");
+                            spotify.getCode();
                             loginResult = result;
-                            spotify.getToken();
+                            break;
+                        case "isAppRemoteConnected":
+                            boolean isConnected = spotify.mSpotifyAppRemote != null && spotify.mSpotifyAppRemote.isConnected();
+                            result.success(isConnected);
 
                     }
+
                 }
         );
+
+
 
     }
 
@@ -61,12 +70,25 @@ public class MainActivity extends FlutterActivity {
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
-        if (requestCode == Spotify.AUTH_TOKEN_REQUEST_CODE) {
+        if (requestCode == Spotify.AUTH_TOKEN_REQUEST_CODE || requestCode == Spotify.AUTH_CODE_REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
 
 
             switch (response.getType()) {
                 // Response was successful and contains auth token
+                case CODE:
+                    Log.d("get code", "get COde 2");
+
+                    String code = response.getCode();
+                    Log.d("spotify login", "spot 1");
+
+                    try {
+                        spotify.requestToken(code,loginResult);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                    // Response was successful and contains auth token
                 case TOKEN:
                     Log.d("login", "got result");
                     spotify.accessToken = response.getAccessToken();
@@ -76,28 +98,9 @@ public class MainActivity extends FlutterActivity {
                         JSONObject tokenResponse = new JSONObject();
 
 
-                            Connector.ConnectionListener con  = new Connector.ConnectionListener() {
-                                @Override
-                                public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                                    spotify.mSpotifyAppRemote = spotifyAppRemote;
-                                    try {
-                                        tokenResponse.put("accessToken",spotify.accessToken);
-                                        tokenResponse.put("accessTokenExpirationDate",spotify.accessTokenExpirationDate);
-                                        loginResult.success(tokenResponse.toString());
-                                        loginResult = null;
 
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
 
-                                @Override
-                                public void onFailure(Throwable throwable) {
-                                        loginResult.error("loginFailed",null,null);
-                                }
-                            };
-
-                            spotify.connectToSpotifyAppRemote(con);
+                            //spotify.connectToSpotifyAppRemote(con);
 
 
 

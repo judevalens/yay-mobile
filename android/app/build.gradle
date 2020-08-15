@@ -51,6 +51,8 @@ android {
 
 dependencies {
     // your app dependencies
+    implementation("com.squareup.okhttp3:okhttp:4.8.1")
+
     implementation project(':spotify-app-remote')
     implementation project(':spotify-auth')
     implementation ('io.socket:socket.io-client:1.0.0') {
