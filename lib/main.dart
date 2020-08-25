@@ -28,6 +28,7 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   Widget widgetToRender = Text("waiting");
   Future<bool> _isConnected;
+  Future<bool> _isInitialized;
   Map<String, Widget> homeWidgets;
 
   MyAppState() {
@@ -44,17 +45,13 @@ class MyAppState extends State<MyApp> {
     print("isNull");
     print(SpotifyApi.spotifyApi);
 
-    homeWidgets = {
-      "homeScreen": HomePage(),
-      "loginScreen": LoginScreen()
-    };
-    SpotifyApi.init();
-    _isConnected = SpotifyApi.spotifyApi.connect();
+    homeWidgets = {"homeScreen": HomePage(), "loginScreen": LoginScreen()};
+    _isInitialized = SpotifyApi.init();
   }
 
   Widget build(BuildContext context) {
     return Selector<SpotifyApi, bool>(selector: (buildContext, spotifyApi) {
-      //_isConnected = SpotifyApi.spotifyApi.connect();
+     _isInitialized = SpotifyApi.spotifyApi.connect();
 
       return spotifyApi.isConnected;
     }, builder: (ctx, data, child) {
@@ -64,7 +61,7 @@ class MyAppState extends State<MyApp> {
         ),
         title: "YAY",
         home: FutureBuilder(
-          future: _isConnected,
+          future: _isInitialized,
           builder: (BuildContext context, AsyncSnapshot<bool> isConnected) {
             Widget w = Text("waiting......");
             if (isConnected.hasData) {

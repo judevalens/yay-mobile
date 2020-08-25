@@ -20,13 +20,14 @@ from pymongo import MongoClient
 class MusicRoomSocket(Namespace):
     def __init__(self, namespace, flask, util, socket):
         super().__init__(namespace=namespace)
+        print(namespace)
+
         self.flask = flask
         self.util = util
         self.socket = socket
         self.redis = conf.get_redis()
-        print("CREATED")
         self.mongo = MongoClient(
-            "mongodb+srv://judevalens:JfHY51vNkAmwlceB@cluster0.yuzkw.mongodb.net/yay?retryWrites=true&w=majority")
+            "mongodb+srv://judevalens:2nOMHL7MLIwLQwvR@cluster0.yuzkw.mongodb.net/yay?retryWrites=true&w=majority")
 
     def on_connect(self):
         self.flask.session['user_socket_id'] = self.flask.request.sid
@@ -36,8 +37,8 @@ class MusicRoomSocket(Namespace):
         On connect check if the user was already in a group, if he/she was, update is socket_address.
         Send the new updated room object to the other participant by emmit "update_room_object"
         """
-        # every time a user connects. we shall save its socket ID
-
+        # every time a user connects. we should save its socket ID
+        print(self.flask.request.event)
         res = {
             "socket_id": self.flask.request.sid,
             "TEST": {
@@ -48,11 +49,22 @@ class MusicRoomSocket(Namespace):
         emit("connection_config", res)
         print("Connected new member " + self.flask.request.sid)
 
-        conf.get_redis().hexists("users")
+    def on_login(self, config):
+        user_db = self.mongo["yay_db"]["users"]
+        user = user_db.find_one({"email": config["user_email"]})
 
-    def on_login(self, user_email):
-        user = self.mongo.yay.users.findOne({"email": user_email})
-        print(user+"\n")
+        if user is not None:
+            user_db.update_one({"email": config["user_email"]}, {"$set": {"socket_id": self.flask.request.sid}})
+        else:
+            user_model = {
+                "user_email": config["user_email"],
+                "socket_id": self.flask.request.sid,
+                "rooms": {},
+                "current_room_id": ""
+            }
+            user_db.insert_one(user_model)
+
+        print(str(user) + "\n")
 
     def on_message(self, msg):
         print("user id " + self.flask.session['user_socket_id'])

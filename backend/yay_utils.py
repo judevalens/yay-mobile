@@ -5,7 +5,7 @@ import base64
 import YAY_Config
 
 
-class Util():
+class Util:
     my_client_id = 'f44d8cd7efdd4f14b49ce9cc958330fc'
     client_secret = '52ddc9e6b9704750863738a2770c6836'
 
@@ -13,11 +13,11 @@ class Util():
         self.flask = flask
 
     def get_valid_spotify_token(self):
-        elpasedTime = time.time() - self.flask.session['spotify_token_expiration_date']
+        elapsed_time = time.time() - self.flask.session['spotify_token_expiration_date']
 
         token_duration = self.flask.session['spotify_token_expires_in']
 
-        if elpasedTime >= token_duration:
+        if elapsed_time >= token_duration:
             credentials = self.my_client_id + ':' + self.client_secret;
             credentials_bytes = credentials.encode()
             credentials_base64_bytes = base64.urlsafe_b64encode(credentials_bytes)

@@ -31,11 +31,13 @@ class PlayerPageState extends State<PlayerPage> {
           children: <Widget>[
             Text("music is playing: ${spotifyApi.isPaused}"),
             RaisedButton(child: Text("play"), onPressed: () {}),
-            RaisedButton(child: Text("pause"), onPressed: () {}),
+            RaisedButton(child: Text("pause"), onPressed: () {
+              spotifyApi.disconnect();
+            }),
             ChangeNotifierProvider.value(
               value: spotifyApi,
               child: ProgressBar(
-                height: 40,
+                height: 10,
               ),
             )
           ],

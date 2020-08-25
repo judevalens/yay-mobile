@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yay/ChannelConst.dart';
+import 'package:http/http.dart' as http;
 import 'package:yay/controllers/SpotifyApi.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,25 +16,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
-  void login() {
-    Future<String> loginResult =
-        SpotifyApi.spotifyApi.platform.invokeMethod("login");
-    loginResult.then((value) async {
-      Map<String, dynamic> loginResultJson = jsonDecode(value);
-
-      Future<String> spotifyAppRemoteConnectionResult =
-          SpotifyApi.spotifyApi.platform.invokeMethod("connectToSpotifyApp");
-      spotifyAppRemoteConnectionResult.then((value) {
-        SpotifyApi.spotifyApi.appSharedPreferences.setBool("isConnected", true);
-        SpotifyApi.spotifyApi.spotifyApiCredentials = loginResultJson;
-        SpotifyApi.spotifyApi.appSharedPreferences
-            .setString("accessToken", loginResultJson["access_token"]);
-        SpotifyApi.spotifyApi.updateConnectionStatus(true);
-      });
-      print("loginResultJson");
-      print(loginResultJson);
-    }).catchError((err) {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +44,7 @@ class LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(90),
                 ),
-                onPressed: this.login,
+                onPressed: SpotifyApi.getInstance().login,
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
