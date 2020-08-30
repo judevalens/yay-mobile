@@ -6,6 +6,8 @@ import time
 import json
 import codecs
 import flask_socketio as socketio
+from pymongo import MongoClient
+
 import yay_utils
 import os
 import MusicRoomSocketMobile
@@ -15,15 +17,16 @@ import eventlet
 app = flask.Flask(__name__)
 
 app_configs = YAY_Config.get_config()
+SESSION_TYPE = 'mongodb'
+
 app.config.from_object(app_configs)
 util = yay_utils.Util(flask)
 socketio = socketio.SocketIO(app, logger=True)
+
 session.Session(app)
-session.RedisSessionInterface(
-    YAY_Config.get_redis(), 'session', permanent=True)
 
 MusicRoomSocket = MusicRoomSocketMobile.MusicRoomSocket(
-    '/', flask, util, socketio)
+    '/', flask, util, socketio, YAY_Config.mongo_client)
 socketio.on_namespace(MusicRoomSocket)
 
 

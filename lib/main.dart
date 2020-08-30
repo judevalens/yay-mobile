@@ -47,11 +47,16 @@ class MyAppState extends State<MyApp> {
 
     homeWidgets = {"homeScreen": HomePage(), "loginScreen": LoginScreen()};
     _isInitialized = SpotifyApi.init();
+
+    _isInitialized.then((value) {
+
+      print("is connected : $_isInitialized");
+    });
+    print(_isConnected);
   }
 
   Widget build(BuildContext context) {
     return Selector<SpotifyApi, bool>(selector: (buildContext, spotifyApi) {
-     _isInitialized = SpotifyApi.spotifyApi.connect();
 
       return spotifyApi.isConnected;
     }, builder: (ctx, data, child) {
@@ -60,14 +65,17 @@ class MyAppState extends State<MyApp> {
           textTheme: TextTheme(),
         ),
         title: "YAY",
-        home: FutureBuilder(
-          future: _isInitialized,
+        home: FutureBuilder<bool>(
+          future: _isInitialized  ,
           builder: (BuildContext context, AsyncSnapshot<bool> isConnected) {
-            Widget w = Text("waiting......");
+            Widget w;
             if (isConnected.hasData) {
+              print("has DATA");
               w = isConnected.data
                   ? homeWidgets["homeScreen"]
                   : homeWidgets["loginScreen"];
+            }else{
+              w = Text("waiting......");
             }
             return w;
           },

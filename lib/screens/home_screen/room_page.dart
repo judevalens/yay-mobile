@@ -10,6 +10,14 @@ class RoomPage extends StatefulWidget {
 class _RoomPageState extends State<RoomPage> {
   int roomJoinCode = 0;
 
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<SpotifyApi>(builder: (context, spotifyApi, child) {
@@ -20,7 +28,14 @@ class _RoomPageState extends State<RoomPage> {
             onSubmitted: (value) => roomJoinCode = int.parse(value),
           ),
           RaisedButton(child: Text("join room"), onPressed: () {}),
-          RaisedButton(child: Text("create room"), onPressed: () {}),
+          RaisedButton(
+              child: Text("create room"),
+              onPressed: () {
+                spotifyApi.nt.socket.emit("create_room", {
+                  "user_email": spotifyApi.userEmail,
+                  "socket_id": spotifyApi.nt.socketID
+                });
+              }),
         ],
       );
     });

@@ -1,18 +1,21 @@
 import os
 import redis
+from pymongo import MongoClient
 
 yay_redis = redis.Redis(
     host='redis-15846.c80.us-east-1-2.ec2.cloud.redislabs.com',
     port=15846,
     password='8MXUxPPYs9feyXTLyB74YHl6PmGQ6RxH')
+mongo_client = MongoClient(
+    "mongodb+srv://judevalens:2nOMHL7MLIwLQwvR@cluster0.yuzkw.mongodb.net/yay?retryWrites=true&w=majority")
 
 
 class Config(object):
-    SECRET_KEY = b'dsfes30904'
-    SESSION_TYPE = 'redis'
-    SESSION_REDIS = yay_redis
-    SESSION_PERMANENT = False
-    SEND_FILE_MAX_AGE_DEFAULT = 0
+    SECRET_KEY = b'dsfwvccxces30904'
+    SESSION_TYPE = 'mongodb'
+    SESSION_MONGODB = mongo_client
+    SESSION_MONGODB_DB = "yay_db"
+    SESSION_MONGODB_COLLECT = "sessions"
 
 
 if "ON_HEROKU" in os.environ:

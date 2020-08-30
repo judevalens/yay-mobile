@@ -10,24 +10,21 @@ from flask_socketio import Namespace, emit, join_room, leave_room
 from flask_socketio import rooms as user_rooms
 from flask_socketio import send
 import redis
-
 import YAY_Config
 import YAY_Config as conf
 import yay_utils
 from pymongo import MongoClient
-
+from bson.json_util import dumps
 
 class MusicRoomSocket(Namespace):
-    def __init__(self, namespace, flask, util, socket):
+    def __init__(self, namespace, flask, util, socket, mongo):
         super().__init__(namespace=namespace)
         print(namespace)
 
         self.flask = flask
         self.util = util
         self.socket = socket
-        self.redis = conf.get_redis()
-        self.mongo = MongoClient(
-            "mongodb+srv://judevalens:2nOMHL7MLIwLQwvR@cluster0.yuzkw.mongodb.net/yay?retryWrites=true&w=majority")
+        self.mongo = mongo
 
     def on_connect(self):
         self.flask.session['user_socket_id'] = self.flask.request.sid
@@ -50,11 +47,16 @@ class MusicRoomSocket(Namespace):
         print("Connected new member " + self.flask.request.sid)
 
     def on_login(self, config):
+        self.flask.session["user_email"] = config["user_email"]
+
+        print("user mail :" + self.flask.session["user_email"])
         user_db = self.mongo["yay_db"]["users"]
-        user = user_db.find_one({"email": config["user_email"]})
+        user = user_db.find_one({"user_email": config["user_email"]})
+        # TODO : this can be simpler. it add update then add if no entry is found
 
         if user is not None:
-            user_db.update_one({"email": config["user_email"]}, {"$set": {"socket_id": self.flask.request.sid}})
+            user = user_db.update_one({"user_email": config["user_email"]},
+                                      {"$set": {"socket_id": self.flask.request.sid}})
         else:
             user_model = {
                 "user_email": config["user_email"],
@@ -62,7 +64,18 @@ class MusicRoomSocket(Namespace):
                 "rooms": {},
                 "current_room_id": ""
             }
-            user_db.insert_one(user_model)
+            user = user_db.insert_one(user_model)
+
+        rooms_result = None
+
+        if user is not None:
+            rooms = self.mongo["yay_db"]["rooms"]
+            rooms_result = dumps(list(rooms.find({"$or": [{"owner.user_email": config["user_email"]},
+                                                    {"members.email": config["user_email"]}]})))
+            print("rooms")
+            print(str(rooms_result))
+
+        emit("update_room_list", rooms_result)
 
         print(str(user) + "\n")
 
@@ -71,11 +84,11 @@ class MusicRoomSocket(Namespace):
         print("socket id " + self.flask.request.sid)
         print(msg)
 
-    def on_create_room(self, leader_info):
+    def on_create_room(self, room_info):
         """
         Create a new music room.
 
-        Genereate a join_code
+        Generate a join_code
         create the room object , add the leader socket address
         then send the room object back to the user
         """
@@ -90,83 +103,65 @@ class MusicRoomSocket(Namespace):
 
         # object that contains info abt the room that will be created
         room = {
-            'room_id': room_id,
-            'leader': {'id': leader_info['id'], 'socket_address': leader_info['socket_address']},
-            'member': {},
+            'owner': {'user_email': room_info["user_email"], 'socket_id': room_info["socket_id"]},
+            'members': [{
+            }],
             'time': time.time(),
             'join_code': join_code,
-            "active": True
+            "isActive": False,
         }
 
-        print("room leader socket address " + leader_info['socket_address'], 'socket_address')
+        print("room leader socket_id " + self.flask.request.sid, 'socket_id')
 
-        # add the room_id to the join_code table, so new member can join
-        YAY_Config.get_redis().hset('join_code', str(join_code), room_id)
-        # store the rooms in the database
-        room_object = json.dumps(room)
-        YAY_Config.get_redis().hset('Rooms', room_id, room_object)
-        response = {
-            'status': 'CREATE_ROOM_OK',
-            'room': room,
+        room_document = self.mongo["yay_db"]["rooms"]
+
+        inserted_room = room_document.insert_one(room)
+
+        res = {
+            'isRoomCreated': inserted_room.acknowledged,
+            'room':dumps(room),
             'is_leader': True
         }
 
         # start a socket room for the musicRoom :)
-        print("CREATE ROOM ID " + str(room_id))
-        join_room(str(room_id))
-
+        print("CREATE ROOM ID " + str(inserted_room.inserted_id))
+        if inserted_room.acknowledged:
+            join_room(inserted_room.inserted_id)
         # send this event to let the user know that his room has been created!
-        emit('room_event', response)
+        emit('new_room_created', res)
 
     def on_join_room(self, room_info):
         print("TRYING TO JOIN")
-        join_code = room_info["join_code"]
-        global response
         response = {
 
         }
-        print(join_code)
-        code_exist = YAY_Config.get_redis().hexists('join_code', join_code)
-        if code_exist:
-            room_id = YAY_Config.get_redis().hget('join_code', join_code).decode(encoding='utf-8')
-            room = YAY_Config.get_redis().hget('Rooms', room_id).decode(encoding='utf-8')
-            room_object = json.loads(room)
+        rooms = self.mongo["yay_db"]["rooms"]
+        updatedRoom = None
 
-            # add the user id and socket address to member of the room_object
-            room_object['member'][room_info['id']] = {'id': room_info['id'],
-                                                      'socket_address': room_info['socket_address']}
-            response['status'] = 'JOIN_ROOM_OK'
-            response['room'] = room_object
-            response['is_leader'] = False
-
-            # join the socket room
-            join_room(str(room_object['room_id']))
-            print("joining " + room_object['room_id'])
-
-            room = json.dumps(room_object)
-            YAY_Config.get_redis().hset('Rooms', room_id, room)
-
-            # send an event to the other members, so they can update the room_object, acknowledging the new member
-            print("ROOM ID " + str(room_id))
-            emit('room_event', response, room=room_id, include_self=True)
-
-            # send this event to room leader, so he can send the state of the current song being played to the new member
-
-            print("room leader socket address " + room_object['leader']['socket_address'])
-
-            emit('send_state', {
-                'member_socket_address': room_info["socket_address"],
-                'room': room_object,
-                'status': "SYNC_PLAYER_STATE"
-            }, room=room_object['leader']['socket_address'])
+        if room_info["action"] == "first_time_join":
+            updatedRoom = rooms.update_one({"join_code": room_info["join_code"]}, {
+                "$push": {"members": {"email": self.flask.session["user_email"], "isActive": False}}})
+        elif room_info["action"] == "start_room":
+            updatedRoom = rooms.update_one(
+                {"$and": [{"_id": room_info["id"]}, {"owner": {"email": self.flask.session["user_email"]}}]},
+                {"$set": {"isActive": True}})
         else:
-            # if room does exit, we let the user know that!
-            response['status'] = 'failed'
-            response['error_msg'] = 'room does not exist'
+            updatedRoom = rooms.update_one({"$and": [{"_id": room_info["id"]},
+                                                     {"members.email": self.flask.session["user_email"]},
+                                                     {"isActive": False}]}, {
+                                               {"$set": {"members.$.isActive": True}}
+                                           }, )
 
-        print(response['status'] + " STATUS")
+        if updatedRoom is not None:
+            print("room has been updated")
+            print(updatedRoom)
 
         return response
+
+    def on_set_room_state(self, room_info):
+        room = self.mongo["yay_db"]["rooms"].find_one({"_id : " + room_info["id"]}, {"$set": {
+            "isActiveTrue": room_info["isActive"]
+        }})
 
     def on_send_data_to_new_member_data(self, data):
         print('on_send_new_member_data')

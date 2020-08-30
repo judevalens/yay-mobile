@@ -36,6 +36,7 @@ class SpotifyApi extends ChangeNotifier {
   SpotifyApi();
 
   Network nt;
+  String userEmail;
 
   static SpotifyApi getInstance() {
     if (spotifyApi == null) {
@@ -50,10 +51,10 @@ class SpotifyApi extends ChangeNotifier {
     SpotifyApi.getInstance().appSharedPreferences =
         await SharedPreferences.getInstance();
 
-    var userEmail =
+    SpotifyApi.getInstance().userEmail =
         SpotifyApi.getInstance().appSharedPreferences.get("userEmail");
 
-    print("user email \n " + "$userEmail");
+    print("user email \n " + "${SpotifyApi.getInstance().userEmail}");
 
     spotifyApi.platform.setMethodCallHandler((call) {
       print("player state changed !! Flutter");
@@ -120,7 +121,6 @@ class SpotifyApi extends ChangeNotifier {
 
   Future<bool> connect() async {
     Future<bool> connectionResult;
-
     if (isConnected && isAuthenticated) {
       return true;
     } else if (!(appSharedPreferences.containsKey("isConnected")
@@ -128,9 +128,10 @@ class SpotifyApi extends ChangeNotifier {
         : false)) {
       return false;
     } else {
+      print("connecting to remote");
       connectionResult = platform.invokeMethod("connectToSpotifyApp");
       connectionResult.then((value) {
-        //updateConnectionStatus(true);
+        updateConnectionStatus(true);
         isAuthenticated = true;
         print("connectedToRemote");
         nt.socket.connect();
