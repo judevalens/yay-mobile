@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:yay/controllers/Network.dart';
 import 'package:yay/controllers/SpotifyApi.dart';
 
 class RoomPage extends StatefulWidget {
@@ -40,4 +41,12 @@ class _RoomPageState extends State<RoomPage> {
       );
     });
   }
+}
+
+Widget buildRoomList(){
+  return Selector<Network, List<Map<String,dynamic>>>(selector: (buildContext,network){
+    return network.rooms;
+  }, builder: (ctx, data, child){
+    return Column;
+  });
 }
