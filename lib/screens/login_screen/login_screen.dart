@@ -44,7 +44,7 @@ class LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(90),
                 ),
-                onPressed: SpotifyApi.getInstance().login,
+                onPressed: SpotifyApi.getInstance().authorization.login,
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

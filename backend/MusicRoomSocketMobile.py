@@ -16,6 +16,7 @@ import yay_utils
 from pymongo import MongoClient
 from bson.json_util import dumps
 
+
 class MusicRoomSocket(Namespace):
     def __init__(self, namespace, flask, util, socket, mongo):
         super().__init__(namespace=namespace)
@@ -71,7 +72,7 @@ class MusicRoomSocket(Namespace):
         if user is not None:
             rooms = self.mongo["yay_db"]["rooms"]
             rooms_result = dumps(list(rooms.find({"$or": [{"owner.user_email": config["user_email"]},
-                                                    {"members.email": config["user_email"]}]})))
+                                                          {"members.email": config["user_email"]}]})))
             print("rooms")
             print(str(rooms_result))
 
@@ -108,7 +109,7 @@ class MusicRoomSocket(Namespace):
             }],
             'time': time.time(),
             'join_code': join_code,
-            "isActive": False,
+            "is_active": False,
         }
 
         print("room leader socket_id " + self.flask.request.sid, 'socket_id')
@@ -119,7 +120,7 @@ class MusicRoomSocket(Namespace):
 
         res = {
             'isRoomCreated': inserted_room.acknowledged,
-            'room':dumps(room),
+            'room': dumps(room),
             'is_leader': True
         }
 
@@ -130,7 +131,7 @@ class MusicRoomSocket(Namespace):
         # send this event to let the user know that his room has been created!
         emit('new_room_created', res)
 
-    def on_join_room(self, room_info):
+    def update_room_state(self, room_info):
         print("TRYING TO JOIN")
         response = {
 
@@ -141,15 +142,21 @@ class MusicRoomSocket(Namespace):
         if room_info["action"] == "first_time_join":
             updatedRoom = rooms.update_one({"join_code": room_info["join_code"]}, {
                 "$push": {"members": {"email": self.flask.session["user_email"], "isActive": False}}})
+            active_members = rooms.find_one({"$and": [{"_id": room_info["id"]}, {"members.is_active": True}]})
         elif room_info["action"] == "start_room":
             updatedRoom = rooms.update_one(
                 {"$and": [{"_id": room_info["id"]}, {"owner": {"email": self.flask.session["user_email"]}}]},
                 {"$set": {"isActive": True}})
-        else:
+        elif room_info["action"] == "close_room":
+            pass
+        elif room_info["action"] == "join_room":
+
+            pass
+        elif room_info["action"] == "leave_room":
             updatedRoom = rooms.update_one({"$and": [{"_id": room_info["id"]},
                                                      {"members.email": self.flask.session["user_email"]},
-                                                     {"isActive": False}]}, {
-                                               {"$set": {"members.$.isActive": True}}
+                                                     {"is_active": False}]}, {
+                                               {"$set": {"members.$.is_active": True}}
                                            }, )
 
         if updatedRoom is not None:
@@ -160,7 +167,7 @@ class MusicRoomSocket(Namespace):
 
     def on_set_room_state(self, room_info):
         room = self.mongo["yay_db"]["rooms"].find_one({"_id : " + room_info["id"]}, {"$set": {
-            "isActiveTrue": room_info["isActive"]
+            "isActiveTrue": room_info["is_active"]
         }})
 
     def on_send_data_to_new_member_data(self, data):

@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/SpotifyApi.dart';
-import 'package:yay/screens/home_screen//room_page.dart';
+import 'package:yay/screens/login_screen/login_screen.dart';
+import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
 import 'package:provider/provider.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatefulWidget {
   SharedPreferences sharedPreferences;
-   HomePage ();
 
+  HomePage();
 
   @override
   State<StatefulWidget> createState() {
@@ -25,6 +27,7 @@ enum ScreenType { Player, Room }
 class HomePageState extends State<HomePage> {
   Widget mainPage;
   Widget loginPage;
+  Map<ScreenType,Widget> _screens = Map();
 
   HomePageState() {
     print("creates homePage\n");
@@ -33,19 +36,25 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    SpotifyApi.spotifyApi.connectToRemote();
+
+    _screens[ScreenType.Player] = ChangeNotifierProvider.value(
+      value: SpotifyApi.spotifyApi,
+      child: PlayerPage(),
+    );
+
+    _screens[ScreenType.Room]  = ChangeNotifierProvider.value(
+     value: SpotifyApi.getInstance().nt,
+      child: RoomPage(),
+    );
   }
-
-
-
-
-  
 
   int _currentPageIndex = 0;
   List<ScreenType> screenTypes = <ScreenType>[
     ScreenType.Player,
     ScreenType.Room,
   ];
+
+
 
   Widget getScreen(ScreenType st, BuildContext context) {
     Widget w;
@@ -58,7 +67,7 @@ class HomePageState extends State<HomePage> {
         break;
       case ScreenType.Room:
         w = ChangeNotifierProvider.value(
-          value: SpotifyApi.spotifyApi,
+          value: SpotifyApi.getInstance().nt,
           child: RoomPage(),
         );
         break;
@@ -68,11 +77,55 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Selector<Authorization,bool>(selector: (_,authorization)=>authorization.getAuthorization(),builder: (context,isAuthorized,_){
+      return isAuthorized ? buildHomePage() : LoginScreen();
+    },);
+  }
+
+  FloatingActionButton getFloatingButton(BuildContext context) {
+    FloatingActionButton w;
+    if (screenTypes[_currentPageIndex] == ScreenType.Room) {
+      w = FloatingActionButton(
+        onPressed: () {
+          addRoomModalSheet(context);
+        },
+        child: Icon(Icons.add),
+      );
+    }
+
+    return w;
+  }
+
+  Future<void> addRoomModalSheet(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(alignment: Alignment.center,
+        height: double.infinity,
+        width: double.infinity,
+        child: Column(children: [
+          Text("Add/Join a room"),
+          RaisedButton(child: Text("join room"), onPressed: () {}),
+          RaisedButton(
+              child: Text("create room"),
+              onPressed: () {
+                SpotifyApi.getInstance().nt.socket.emit("create_room", {
+                  "user_email": SpotifyApi.getInstance().userEmail,
+                  "socket_id": SpotifyApi.getInstance().nt.socketID
+                });
+              })
+        ],),);
+      },
+    );
+  }
+
+  Widget buildHomePage(){
+    return Scaffold(
       appBar: AppBar(
         title: Text("yay"),
       ),
-      body: getScreen(screenTypes[_currentPageIndex], context),
+      body: _screens[screenTypes[_currentPageIndex]],
+      floatingActionButton: getFloatingButton(context),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentPageIndex,
         items: <BottomNavigationBarItem>[

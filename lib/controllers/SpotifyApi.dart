@@ -6,14 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:yay/controllers/Authorization.dart';
 
 import '../ChannelConst.dart';
 import 'package:http/http.dart' as http;
 import 'Network.dart';
 
 class SpotifyApi extends ChangeNotifier {
+
+  static const String INIT_PREFERENCES_ATTR = "init";
+  static const bool INIT_PREFERENCES_VALUE = false;
+
   static SpotifyApi spotifyApi;
-  bool isInitialized;
+  static Completer initializationCompleter = new Completer();
+  static Future<bool> isInitialized;
   bool isConnected = false;
   bool isAuthenticated = false;
   bool isPaused = false;
@@ -36,20 +42,27 @@ class SpotifyApi extends ChangeNotifier {
   SpotifyApi();
 
   Network nt;
+  Authorization authorization;
   String userEmail;
 
   static SpotifyApi getInstance() {
     if (spotifyApi == null) {
       spotifyApi = new SpotifyApi();
-      spotifyApi.nt = Network();
     }
 
     return spotifyApi;
   }
 
-  static Future<bool> init() async {
+  Future<bool> init() async {
     SpotifyApi.getInstance().appSharedPreferences =
         await SharedPreferences.getInstance();
+
+    if(!SpotifyApi.getInstance().appSharedPreferences.containsKey(INIT_PREFERENCES_ATTR) || SpotifyApi.getInstance().appSharedPreferences.getBool(INIT_PREFERENCES_ATTR) == false){
+      setDefaultPreference();
+    }
+
+    SpotifyApi.getInstance().nt = Network();
+    SpotifyApi.getInstance().authorization = new Authorization(spotifyApi);
 
     SpotifyApi.getInstance().userEmail =
         SpotifyApi.getInstance().appSharedPreferences.get("userEmail");
@@ -82,9 +95,12 @@ class SpotifyApi extends ChangeNotifier {
         spotifyApi.notifyListeners();
       }
     });
+    return true;
+  }
 
-    var isConnected = await SpotifyApi.getInstance().connect();
-    return isConnected;
+  void setDefaultPreference(){
+    SpotifyApi.getInstance().appSharedPreferences.setBool(Authorization.LOGIN_STATUS_PREFERENCE_ATTR, false);
+    SpotifyApi.getInstance().appSharedPreferences.setBool(INIT_PREFERENCES_ATTR, true);
   }
 
   void login() {
@@ -96,6 +112,7 @@ class SpotifyApi extends ChangeNotifier {
           headers: {
             "Authorization": "Bearer " + loginResultJson["access_token"]
           });
+
       var userProfileJson = json.decode(userProfile.body);
       SpotifyApi.spotifyApi.appSharedPreferences
           .setString("userEmail", userProfileJson["email"]);
@@ -135,7 +152,6 @@ class SpotifyApi extends ChangeNotifier {
         isAuthenticated = true;
         print("connectedToRemote");
         nt.socket.connect();
-
         return true;
       });
       return connectionResult;
@@ -176,7 +192,6 @@ class SpotifyApi extends ChangeNotifier {
   Future<bool> getConnectionState() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
     isConnected = sp.getBool("isConnected");
-
     return isConnected;
   }
 

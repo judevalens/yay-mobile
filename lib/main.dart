@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/SpotifyApi.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
-import 'package:yay/screens/home_screen//room_page.dart';
+import 'package:yay/screens/rooms_screen/room_page.dart';
 
 void main() {
-  var sa = SpotifyApi.getInstance();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => sa,
-      child: MyApp(),
-    ),
-  );
+     MyApp(),
+    );
 }
 
 class MyApp extends StatefulWidget {
@@ -46,34 +43,28 @@ class MyAppState extends State<MyApp> {
     print(SpotifyApi.spotifyApi);
 
     homeWidgets = {"homeScreen": HomePage(), "loginScreen": LoginScreen()};
-    _isInitialized = SpotifyApi.init();
+    _isInitialized = SpotifyApi.getInstance().init();
 
     _isInitialized.then((value) {
-
       print("is connected : $_isInitialized");
+
     });
     print(_isConnected);
   }
 
   Widget build(BuildContext context) {
-    return Selector<SpotifyApi, bool>(selector: (buildContext, spotifyApi) {
-
-      return spotifyApi.isConnected;
-    }, builder: (ctx, data, child) {
-      return MaterialApp(
+    return MaterialApp(
         theme: ThemeData(
           textTheme: TextTheme(),
         ),
         title: "YAY",
         home: FutureBuilder<bool>(
-          future: _isInitialized  ,
-          builder: (BuildContext context, AsyncSnapshot<bool> isConnected) {
+          future: _isInitialized,
+          builder: (BuildContext context, AsyncSnapshot<bool> initialized) {
             Widget w;
-            if (isConnected.hasData) {
-              print("has DATA");
-              w = isConnected.data
-                  ? homeWidgets["homeScreen"]
-                  : homeWidgets["loginScreen"];
+
+            if(initialized.hasData){
+              w = ChangeNotifierProvider(create: (_) => SpotifyApi.getInstance().authorization,child: homeWidgets['homeScreen'],);
             }else{
               w = Text("waiting......");
             }
@@ -81,6 +72,6 @@ class MyAppState extends State<MyApp> {
           },
         ),
       );
-    });
+
   }
 }

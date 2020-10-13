@@ -84,7 +84,7 @@ public class Spotify {
             ConnectionParams connectionParams =
                     new ConnectionParams.Builder(CLIENT_ID)
                             .setRedirectUri(REDIRECT_URI)
-                            .showAuthView(false)
+                            .showAuthView(true)
                             .build();
             SpotifyAppRemote.connect(context, connectionParams,
                     new Connector.ConnectionListener() {
@@ -100,7 +100,6 @@ public class Spotify {
                                     }
                                 }
                             });
-
 
                             update();
 
