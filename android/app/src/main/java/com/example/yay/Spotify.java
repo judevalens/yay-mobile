@@ -2,20 +2,17 @@ package com.example.yay;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import androidx.annotation.RequiresApi;
+import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import com.spotify.protocol.client.CallResult;
@@ -27,26 +24,18 @@ import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.sql.Time;
-import java.util.Base64;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 import dataClass.User.User;
+import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.socket.client.Socket;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 
 public class Spotify {
@@ -55,6 +44,8 @@ public class Spotify {
     public static final int AUTH_CODE_REQUEST_CODE = 0x11;
     private static final String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
     private static final String CLIENT_SECRET = "4bf8bb4cb9964ec8bb9d900bc9bc5fb3";
+
+
 
     private static final String REDIRECT_URI = "http://com.example.yay/";
     private final String SOCKET_ADDRESS = "http://192.168.1.3:5000";
@@ -67,12 +58,18 @@ public class Spotify {
     private Socket socket;
     private Gson gson = new Gson();
     MethodChannel tunnel;
+    MethodChannel playBackStateTunnel;
 
 
-    public Spotify(Context mContext, Activity activity, MethodChannel tunnel) {
+    Subscription<PlayerState> playerStateSubscription;
+    private static final String SUBSCRIBE_TO_PLAYBACK_STATE  = "SubscribeToPlayBackState";
+    private static final String  UNSUBSCRIBE_TO_PLAYBACK_STATE = "UnSubscribeToPlayBackState";
+    public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
         this.context = mContext;
         this.activity = activity;
         this.tunnel = tunnel;
+        this.playBackStateTunnel = playBackStateTunnel;
+
     }
 
     public void connectToSpotifyAppRemote(MethodChannel.Result connectToSpotifyAppRemoteResult) {
@@ -101,7 +98,7 @@ public class Spotify {
                                 }
                             });
 
-                            update();
+                            subscribeToPlayBackState();
 
                         }
 
@@ -134,6 +131,21 @@ public class Spotify {
                 });
     }
 
+    private void setUpPlayBackChannel(){
+        playBackStateTunnel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
+            @Override
+            public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+                switch (call.method){
+                    case SUBSCRIBE_TO_PLAYBACK_STATE:
+                        subscribeToPlayBackState();
+                        break;
+                    case UNSUBSCRIBE_TO_PLAYBACK_STATE:
+                        UnSubscribeToPlayBackState();
+                        break;
+                }
+            }
+        });
+    }
 
     public void getCode() {
         AuthorizationRequest.Builder builder = new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI);
@@ -210,19 +222,22 @@ public class Spotify {
 
     }
 
-    public void update() {
-        mSpotifyAppRemote.getPlayerApi().subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<PlayerState>() {
+    public void subscribeToPlayBackState() {
+        playerStateSubscription  = mSpotifyAppRemote.getPlayerApi().subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<PlayerState>() {
             @Override
             public void onEvent(PlayerState playerState) {
                 Log.d("spotify playback", "player state changed!!!!!!");
                 JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
-
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("last_updated_position_timeStamp", System.currentTimeMillis());
 
-                tunnel.invokeMethod("updatePlayerState", playerStateJson.toString());
+                playBackStateTunnel.invokeMethod("updatePlayerState", playerStateJson.toString());
             }
         });
+    }
+
+    public void UnSubscribeToPlayBackState(){
+        playerStateSubscription.cancel();
     }
 
 

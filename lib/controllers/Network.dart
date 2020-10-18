@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:yay/controllers/SpotifyApi.dart';
+import 'package:yay/controllers/App.dart';
 
 class Network  extends ChangeNotifier{
   IO.Socket socket;
@@ -33,7 +33,7 @@ class Network  extends ChangeNotifier{
 
     socket.on("connection_config", (connectionConfig) {
       socketID = connectionConfig["socket_id"];
-      var config = {"socket_id": socketID, "user_email": SpotifyApi.getInstance().appSharedPreferences.get("userEmail")};
+      var config = {"socket_id": socketID, "user_email": App.getInstance().appSharedPreferences.get("userEmail")};
         print("rcc");
       socket.emit("login", config);
     });

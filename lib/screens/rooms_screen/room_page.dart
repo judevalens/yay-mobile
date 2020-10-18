@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/Network.dart';
-import 'package:yay/controllers/SpotifyApi.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/rooms_screen/room_item.dart';
 
 class RoomPage extends StatefulWidget {
@@ -24,7 +24,7 @@ class _RoomPageState extends State<RoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SpotifyApi>(builder: (context, spotifyApi, child) {
+    return Consumer<App>(builder: (context, spotifyApi, child) {
       print("stateChanged");
       return Column(
         children: <Widget>[

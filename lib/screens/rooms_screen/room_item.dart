@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yay/controllers/SpotifyApi.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 
 class RoomItem extends StatefulWidget {
@@ -41,10 +41,10 @@ class RoomItemState extends State<RoomItem> {
                   child: Text("manage"),
                 ));
                 print("user email");
-                print(SpotifyApi.getInstance().userEmail);
+                print(App.getInstance().userEmail);
                 print(ownerEmail);
                 var actionText;
-                if (room["owner"]["user_email"] == SpotifyApi.getInstance().userEmail) {
+                if (room["owner"]["user_email"] == App.getInstance().userEmail) {
 
 
                   if (room["is_active"]) {
@@ -56,7 +56,7 @@ class RoomItemState extends State<RoomItem> {
                   }
                 } else {
                   if (room["is_active"]) {
-                    if (!room["member"][SpotifyApi.getInstance().userEmail]["isActive"]) {
+                    if (!room["member"][App.getInstance().userEmail]["isActive"]) {
                       actionText = "Join room";
                       roomAction = "join_room";
                     } else {

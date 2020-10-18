@@ -7,17 +7,18 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
+import 'package:yay/controllers/PlayBackController.dart';
 
 import '../ChannelConst.dart';
 import 'package:http/http.dart' as http;
 import 'Network.dart';
 
-class SpotifyApi extends ChangeNotifier {
+class App extends ChangeNotifier {
 
   static const String INIT_PREFERENCES_ATTR = "init";
   static const bool INIT_PREFERENCES_VALUE = false;
 
-  static SpotifyApi spotifyApi;
+  static App spotifyApi;
   static Completer initializationCompleter = new Completer();
   static Future<bool> isInitialized;
   bool isConnected = false;
@@ -39,35 +40,40 @@ class SpotifyApi extends ChangeNotifier {
   SharedPreferences appSharedPreferences;
   Socket socket;
 
-  SpotifyApi();
+  App();
 
   Network nt;
   Authorization authorization;
+  PlayBackController playBackController;
   String userEmail;
 
-  static SpotifyApi getInstance() {
+  static App getInstance() {
     if (spotifyApi == null) {
-      spotifyApi = new SpotifyApi();
+      spotifyApi = new App();
     }
 
     return spotifyApi;
   }
 
   Future<bool> init() async {
-    SpotifyApi.getInstance().appSharedPreferences =
+    App.getInstance().appSharedPreferences =
         await SharedPreferences.getInstance();
 
-    if(!SpotifyApi.getInstance().appSharedPreferences.containsKey(INIT_PREFERENCES_ATTR) || SpotifyApi.getInstance().appSharedPreferences.getBool(INIT_PREFERENCES_ATTR) == false){
+    if(!App.getInstance().appSharedPreferences.containsKey(INIT_PREFERENCES_ATTR) || App.getInstance().appSharedPreferences.getBool(INIT_PREFERENCES_ATTR) == false){
       setDefaultPreference();
     }
 
-    SpotifyApi.getInstance().nt = Network();
-    SpotifyApi.getInstance().authorization = new Authorization(spotifyApi);
+    nt = Network();
+    authorization = new Authorization(spotifyApi);
+    playBackController = new PlayBackController();
+    // wait to for the app the connect to the spotify remote sdk
+    await authorization.init();
+    await playBackController.init();
 
-    SpotifyApi.getInstance().userEmail =
-        SpotifyApi.getInstance().appSharedPreferences.get("userEmail");
+    App.getInstance().userEmail =
+        App.getInstance().appSharedPreferences.get("userEmail");
 
-    print("user email \n " + "${SpotifyApi.getInstance().userEmail}");
+    print("user email \n " + "${App.getInstance().userEmail}");
 
     spotifyApi.platform.setMethodCallHandler((call) {
       print("player state changed !! Flutter");
@@ -84,7 +90,7 @@ class SpotifyApi extends ChangeNotifier {
 
     spotifyApi.songPositionUpdaterRp = ReceivePort();
     Future<Isolate> songUpdaterIsolate = Isolate.spawn(
-        SpotifyApi.songProgress, spotifyApi.songPositionUpdaterRp.sendPort);
+        App.songProgress, spotifyApi.songPositionUpdaterRp.sendPort);
 
     spotifyApi.songPositionUpdaterRp.listen((msg) {
       if (msg is SendPort) {
@@ -99,13 +105,13 @@ class SpotifyApi extends ChangeNotifier {
   }
 
   void setDefaultPreference(){
-    SpotifyApi.getInstance().appSharedPreferences.setBool(Authorization.LOGIN_STATUS_PREFERENCE_ATTR, false);
-    SpotifyApi.getInstance().appSharedPreferences.setBool(INIT_PREFERENCES_ATTR, true);
+    App.getInstance().appSharedPreferences.setBool(Authorization.LOGIN_STATUS_PREFERENCE_ATTR, false);
+    App.getInstance().appSharedPreferences.setBool(INIT_PREFERENCES_ATTR, true);
   }
 
   void login() {
     Future<String> loginResult =
-        SpotifyApi.spotifyApi.platform.invokeMethod("login");
+        App.spotifyApi.platform.invokeMethod("login");
     loginResult.then((value) async {
       Map<String, dynamic> loginResultJson = jsonDecode(value);
       var userProfile = await http.get("https://api.spotify.com/v1/me",
@@ -114,22 +120,22 @@ class SpotifyApi extends ChangeNotifier {
           });
 
       var userProfileJson = json.decode(userProfile.body);
-      SpotifyApi.spotifyApi.appSharedPreferences
+      App.spotifyApi.appSharedPreferences
           .setString("userEmail", userProfileJson["email"]);
       //TODO remove this later
       print("http response");
       print(userProfileJson);
 
       Future<bool> spotifyAppRemoteConnectionResult =
-          SpotifyApi.spotifyApi.platform.invokeMethod("connectToSpotifyApp");
+          App.spotifyApi.platform.invokeMethod("connectToSpotifyApp");
       spotifyAppRemoteConnectionResult.then((value) {
-        SpotifyApi.spotifyApi.appSharedPreferences.setBool("isConnected", true);
-        SpotifyApi.spotifyApi.spotifyApiCredentials = loginResultJson;
-        SpotifyApi.spotifyApi.appSharedPreferences
+        App.spotifyApi.appSharedPreferences.setBool("isConnected", true);
+        App.spotifyApi.spotifyApiCredentials = loginResultJson;
+        App.spotifyApi.appSharedPreferences
             .setString("accessToken", loginResultJson["access_token"]);
 
         nt.socket.connect();
-        SpotifyApi.spotifyApi.updateConnectionStatus(true);
+        App.spotifyApi.updateConnectionStatus(true);
       });
       print("loginResultJson");
       print(loginResultJson);
@@ -162,7 +168,7 @@ class SpotifyApi extends ChangeNotifier {
     spotifyApi.appSharedPreferences.remove("isConnected");
     spotifyApi.appSharedPreferences.remove("accessToken");
     spotifyApi.appSharedPreferences.remove("userEmail");
-    SpotifyApi.getInstance().updateConnectionStatus(false);
+    App.getInstance().updateConnectionStatus(false);
   }
 
   void playMusic() {

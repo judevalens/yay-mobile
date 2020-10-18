@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
-import 'package:yay/controllers/SpotifyApi.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
@@ -36,14 +36,13 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     _screens[ScreenType.Player] = ChangeNotifierProvider.value(
-      value: SpotifyApi.spotifyApi,
+      value: App.getInstance().playBackController.currentPlayBackState,
       child: PlayerPage(),
     );
 
     _screens[ScreenType.Room]  = ChangeNotifierProvider.value(
-     value: SpotifyApi.getInstance().nt,
+     value: App.getInstance().nt,
       child: RoomPage(),
     );
   }
@@ -61,13 +60,13 @@ class HomePageState extends State<HomePage> {
     switch (st) {
       case ScreenType.Player:
         w = ChangeNotifierProvider.value(
-          value: SpotifyApi.spotifyApi,
+          value: App.spotifyApi,
           child: PlayerPage(),
         );
         break;
       case ScreenType.Room:
         w = ChangeNotifierProvider.value(
-          value: SpotifyApi.getInstance().nt,
+          value: App.getInstance().nt,
           child: RoomPage(),
         );
         break;
@@ -109,9 +108,9 @@ class HomePageState extends State<HomePage> {
           RaisedButton(
               child: Text("create room"),
               onPressed: () {
-                SpotifyApi.getInstance().nt.socket.emit("create_room", {
-                  "user_email": SpotifyApi.getInstance().userEmail,
-                  "socket_id": SpotifyApi.getInstance().nt.socketID
+                App.getInstance().nt.socket.emit("create_room", {
+                  "user_email": App.getInstance().userEmail,
+                  "socket_id": App.getInstance().nt.socketID
                 });
               })
         ],),);

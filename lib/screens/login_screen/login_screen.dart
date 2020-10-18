@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yay/ChannelConst.dart';
 import 'package:http/http.dart' as http;
-import 'package:yay/controllers/SpotifyApi.dart';
+import 'package:yay/controllers/App.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -44,7 +44,7 @@ class LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(90),
                 ),
-                onPressed: SpotifyApi.getInstance().authorization.login,
+                onPressed: App.getInstance().authorization.login,
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

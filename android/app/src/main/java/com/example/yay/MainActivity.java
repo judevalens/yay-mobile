@@ -30,17 +30,19 @@ public class MainActivity extends FlutterActivity {
     String REDIRECT_URI = "http://com.example.yay/";
     SpotifyAppRemote mSpotifyAppRemote;
     private static final String CHANNEL = "yay.homepage/spotify";
-    private static final String CHANNEL2 = "yay.homepage/backToFront";
+    private static final String PLAY_BACK_STATE_CHANNEL = "playBackStateTunnel";
     private final String SOCKET_ADDRESS = "http://192.168.1.4:5000";
     private io.socket.client.Socket socketio;
     MethodChannel tunnel;
+    MethodChannel playBackStateTunnel;
     Spotify spotify;
     MethodChannel.Result loginResult;
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
-        spotify = new Spotify(this,this,tunnel);
+        playBackStateTunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PLAY_BACK_STATE_CHANNEL);
+        spotify = new Spotify(this,this,tunnel,playBackStateTunnel);
 
         tunnel.setMethodCallHandler(
                 (call, result) -> {
