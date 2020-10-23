@@ -8,6 +8,11 @@ import 'package:yay/model/play_back_state.dart';
 
 class PlayBackController {
   static const String PLAY_BACK_CHANNEL_NAME = "playBackStateTunnel";
+  static const String MC_UPDATE = "updatePlayerState";
+  static const String MC_SUBSCRIBE_TO_PLAYBACK_STATE = "SubscribeToPlayBackState";
+  static const String MC_PLAY = "play";
+  static const String MC_PAUSE = "pause";
+  static const String MC_SEEK = "seek";
   MethodChannel playBackChannel = new MethodChannel(PLAY_BACK_CHANNEL_NAME);
   Isolate playerUpdateIsolate;
   // main thread receiver port
@@ -19,12 +24,12 @@ class PlayBackController {
    /// init();
   }
 
+  /// Set up an isolate to update the playBack position. Calls method to subscribe to the spotify playback
   init(){
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler((call) {
-      print("player state changed !! Flutter from controller");
       switch (call.method) {
-        case "updatePlayerState":
+        case MC_UPDATE:
           print("calling updatePlayerState");
           print("playBackState");
           print(call.arguments);
@@ -46,6 +51,9 @@ class PlayBackController {
       if (message is SendPort) {
         print("set port");
         positionUpdaterSendPort = message;
+        // once the isolate to update the progress is set up, we subscribe to the player playback  state
+        playBackChannel.invokeMethod(MC_SUBSCRIBE_TO_PLAYBACK_STATE);
+        
       }
       else if(message is int){
           print("received new position from isolate");
@@ -55,6 +63,19 @@ class PlayBackController {
 
 
     Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
+
+
+    void playMusic() {
+      playBackChannel.invokeMethod("play");
+    }
+
+    void pauseMusic() {
+      playBackChannel.invokeMethod("pause");
+    }
+
+    void seek(double position) {
+      playBackChannel.invokeMethod("seek", [position]);
+    }
   }
 
   void updatePlayerState(PlayBackState playBackState) {
@@ -98,3 +119,4 @@ class PlayBackController {
       }
     });
   }}
+

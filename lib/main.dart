@@ -28,6 +28,14 @@ class MyAppState extends State<MyApp> {
   Future<bool> _isInitialized;
   Map<String, Widget> homeWidgets;
 
+  String initialRoute = "/splash";
+  static const String homeRoute = "/home";
+  static const String loginRoute  = "/login";
+  static const String splashRoute = "/splash";
+
+  String currentRoute;
+  BuildContext _context;
+
   MyAppState() {
     print("rendered 1");
     print("rendered 2");
@@ -38,40 +46,68 @@ class MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    currentRoute = splashRoute;
     print("isNull");
     print(App.spotifyApi);
-
-    homeWidgets = {"homeScreen": HomePage(), "loginScreen": LoginScreen()};
     _isInitialized = App.getInstance().init();
 
     _isInitialized.then((value) {
+      homeWidgets = {"homeScreen":ChangeNotifierProvider.value(value : App.getInstance().authorization,child: HomePage(),), "loginScreen": LoginScreen()};
+
       print("is connected : $_isInitialized");
+
+     bool isAuthorized = App.getInstance().authorization.getAuthorization();
 
     });
     print(_isConnected);
   }
 
   Widget build(BuildContext context) {
+    print("initial ? " + initialRoute);
     return MaterialApp(
         theme: ThemeData(
           textTheme: TextTheme(),
+          primaryColor: Color(0xFFBD2B2E),
+          accentColor: Color(0xFF821E20),
+            backgroundColor: Color(0xFF120C0C)
+
         ),
         title: "YAY",
-        home: FutureBuilder<bool>(
+      home:FutureBuilder<bool>(
           future: _isInitialized,
           builder: (BuildContext context, AsyncSnapshot<bool> initialized) {
             Widget w;
 
             if(initialized.hasData){
-              w = ChangeNotifierProvider(create: (_) => App.getInstance().authorization,child: homeWidgets['homeScreen'],);
+              w = homeWidgets['homeScreen'];
             }else{
-              w = Text("waiting......");
+              w = getSplashScreen();
             }
             return w;
           },
         ),
+      routes: {
+          "/home": (context) => homeWidgets['homeScreen'],
+          "/loginScreen": (context) => LoginScreen(),
+          "/splash": (context) => getSplashScreen()
+      },
       );
+  }
 
+  Widget getHome(String route){
+      switch(route){
+        case splashRoute:
+          return getSplashScreen();
+        case homeRoute:
+          return ChangeNotifierProvider(create: (_) => App.getInstance().authorization,child: homeWidgets['homeScreen'],);
+        case loginRoute:
+          return LoginScreen();
+        default:
+          return getSplashScreen();
+      }
+  }
+
+  Widget getSplashScreen(){
+    return Container(height: double.infinity,width: double.infinity,child: Text("Initializing....."),);
   }
 }

@@ -48,6 +48,7 @@ public class MainActivity extends FlutterActivity {
                 (call, result) -> {
                     switch (call.method) {
                         case "connectToSpotifyApp":
+                           Log.d("connection","connectToSpotifyAppRemote");
                            spotify.connectToSpotifyAppRemote(result);
                            break;
                         case "login":

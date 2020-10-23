@@ -79,4 +79,12 @@ class Authorization extends ChangeNotifier{
     return isAuthorized;
   }
 
+  void logOut(){
+    isSignIn = false;
+    isAuthorized = false;
+    isRemoteAppConnected = false;
+    print("logged out");
+    notifyListeners();
+  }
+
 }

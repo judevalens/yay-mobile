@@ -44,7 +44,11 @@ class LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(90),
                 ),
-                onPressed: App.getInstance().authorization.login,
+                onPressed: () {
+                  App.getInstance().authorization.login();
+                  //Navigator.popAndPushNamed(context, "/home",);
+                  Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
+                },
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[

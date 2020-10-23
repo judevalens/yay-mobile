@@ -64,17 +64,18 @@ public class Spotify {
     Subscription<PlayerState> playerStateSubscription;
     private static final String SUBSCRIBE_TO_PLAYBACK_STATE  = "SubscribeToPlayBackState";
     private static final String  UNSUBSCRIBE_TO_PLAYBACK_STATE = "UnSubscribeToPlayBackState";
+    private static final String  MC_UPDATE_METHOD_NAME = "updatePlayerState";
     public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
         this.context = mContext;
         this.activity = activity;
         this.tunnel = tunnel;
         this.playBackStateTunnel = playBackStateTunnel;
-
+        setUpPlayBackChannel();
     }
 
     public void connectToSpotifyAppRemote(MethodChannel.Result connectToSpotifyAppRemoteResult) {
 
-        if (mSpotifyAppRemote != null && !mSpotifyAppRemote.isConnected() ) {
+        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected() ) {
             connectToSpotifyAppRemoteResult.success(true);
             return;
         }
@@ -87,6 +88,7 @@ public class Spotify {
                     new Connector.ConnectionListener() {
                         @Override
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+
                             mSpotifyAppRemote = spotifyAppRemote;
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
@@ -98,13 +100,15 @@ public class Spotify {
                                 }
                             });
 
-                            subscribeToPlayBackState();
 
                         }
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            connectToSpotifyAppRemoteResult.error("loginFailed", null, null);
+                            if (connectToSpotifyAppRemoteResult != null) {
+                                connectToSpotifyAppRemoteResult.error("loginFailed", null, null);
+
+                            }
                         }
                     });
 
@@ -138,9 +142,11 @@ public class Spotify {
                 switch (call.method){
                     case SUBSCRIBE_TO_PLAYBACK_STATE:
                         subscribeToPlayBackState();
+                        result.success(null);
                         break;
                     case UNSUBSCRIBE_TO_PLAYBACK_STATE:
                         UnSubscribeToPlayBackState();
+                        result.success(null);
                         break;
                 }
             }
@@ -231,7 +237,7 @@ public class Spotify {
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("last_updated_position_timeStamp", System.currentTimeMillis());
 
-                playBackStateTunnel.invokeMethod("updatePlayerState", playerStateJson.toString());
+                playBackStateTunnel.invokeMethod(MC_UPDATE_METHOD_NAME, playerStateJson.toString());
             }
         });
     }

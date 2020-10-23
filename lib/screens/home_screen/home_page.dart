@@ -8,6 +8,7 @@ import 'package:yay/screens/login_screen/login_screen.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
 import 'package:provider/provider.dart';
+import 'package:yay/screens/setting_screen/setting_screen.dart';
 
 // ignore: must_be_immutable
 class HomePage extends StatefulWidget {
@@ -119,29 +120,38 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget buildHomePage(){
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("yay"),
-      ),
-      body: _screens[screenTypes[_currentPageIndex]],
-      floatingActionButton: getFloatingButton(context),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentPageIndex,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            title: Text("Home"),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group_work),
-            title: Text("Rooms"),
-          ),
-        ],
-        onTap: (currentPageIndex) {
-          setState(() {
-            _currentPageIndex = currentPageIndex;
-          });
-        },
+    return WillPopScope(
+
+      onWillPop: () { return Future.value(false); },
+      child:Scaffold(
+        appBar: AppBar(
+          title: Text("yay"),
+          actions: [IconButton(icon: new Icon(Icons.settings,color: Colors.white,), color: Colors.white, onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context){
+              return Setting();
+            }));
+          })],
+        ),
+        body: _screens[screenTypes[_currentPageIndex]],
+        floatingActionButton: getFloatingButton(context),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentPageIndex,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              title: Text("Home"),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group_work),
+              title: Text("Rooms"),
+            ),
+          ],
+          onTap: (currentPageIndex) {
+            setState(() {
+              _currentPageIndex = currentPageIndex;
+            });
+          },
+        ),
       ),
     );
   }
