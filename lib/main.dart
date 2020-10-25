@@ -56,7 +56,6 @@ class MyAppState extends State<MyApp> {
 
       print("is connected : $_isInitialized");
 
-     bool isAuthorized = App.getInstance().authorization.getAuthorization();
 
     });
     print(_isConnected);
@@ -68,8 +67,8 @@ class MyAppState extends State<MyApp> {
         theme: ThemeData(
           textTheme: TextTheme(),
           primaryColor: Color(0xFFBD2B2E),
-          accentColor: Color(0xFF821E20),
-            backgroundColor: Color(0xFF120C0C)
+          accentColor: Colors.white,
+            backgroundColor: Color(0xFF1c1717)
 
         ),
         title: "YAY",

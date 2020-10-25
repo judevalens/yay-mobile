@@ -77,7 +77,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<Authorization,bool>(selector: (_,authorization)=>authorization.getAuthorization(),builder: (context,isAuthorized,_){
+    return Selector<Authorization,bool>(selector: (_,authorization)=>authorization.isAuthorized(),builder: (context,isAuthorized,_){
       return isAuthorized ? buildHomePage() : LoginScreen();
     },);
   }

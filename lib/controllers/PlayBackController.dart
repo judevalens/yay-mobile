@@ -10,21 +10,28 @@ class PlayBackController {
   static const String PLAY_BACK_CHANNEL_NAME = "playBackStateTunnel";
   static const String MC_UPDATE = "updatePlayerState";
   static const String MC_SUBSCRIBE_TO_PLAYBACK_STATE = "SubscribeToPlayBackState";
-  static const String MC_PLAY = "play";
+  static const String MC_RESUME = "resume";
   static const String MC_PAUSE = "pause";
   static const String MC_SEEK = "seek";
+  static const String MC_NEXT = "next";
+  static const String MC_PREV = "prev";
   MethodChannel playBackChannel = new MethodChannel(PLAY_BACK_CHANNEL_NAME);
   Isolate playerUpdateIsolate;
   // main thread receiver port
   ReceivePort positionUpdaterRp;
   SendPort positionUpdaterSendPort;
   PlayBackState currentPlayBackState;
+
+  bool isPositionUpdaterActive = false;
+  bool isDragging = false;
   PlayBackController(){
     currentPlayBackState = PlayBackState.empty();
    /// init();
   }
 
   /// Set up an isolate to update the playBack position. Calls method to subscribe to the spotify playback
+  ///
+
   init(){
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler((call) {
@@ -58,24 +65,15 @@ class PlayBackController {
       else if(message is int){
           print("received new position from isolate");
           currentPlayBackState.setPlayBackPosition(message);
+          currentPlayBackState.isFresh = false;
+      }else if(message is bool){
+        isPositionUpdaterActive = message;
       }
     });
 
 
     Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
 
-
-    void playMusic() {
-      playBackChannel.invokeMethod("play");
-    }
-
-    void pauseMusic() {
-      playBackChannel.invokeMethod("pause");
-    }
-
-    void seek(double position) {
-      playBackChannel.invokeMethod("seek", [position]);
-    }
   }
 
   void updatePlayerState(PlayBackState playBackState) {
@@ -103,20 +101,69 @@ class PlayBackController {
       currentTrackPosition = playBackState.playBackPosition;
       if (playBackState is PlayBackState) {
         print("new state!!!!! 1");
-        if (playBackState.isPaused) {
+        if (playBackState.isPaused || playBackState.isDragging) {
           if (timer != null) {
             timer.cancel();
             timer = null;
           }
+          positionUpdaterSendPort.send(false);
+
         } else {
           if (timer == null) {
+            positionUpdaterSendPort.send(true);
             timer = Timer.periodic(Duration(milliseconds: 1), (timer) {
               currentTrackPosition += 1;
               positionUpdaterSendPort.send(currentTrackPosition);
+              positionUpdaterSendPort.send(true);
+
             });
           }
         }
       }
     });
-  }}
+  }
+
+  void resumeMusic() {
+    playBackChannel.invokeMethod(MC_RESUME);
+  }
+  void pauseMusic() {
+    playBackChannel.invokeMethod(MC_PAUSE);
+  }
+  void seek(double position) {
+    playBackChannel.invokeMethod(MC_SEEK, position);
+  }
+  void next(){
+    playBackChannel.invokeMethod(MC_NEXT);
+  }
+  void prev(){
+    playBackChannel.invokeMethod(MC_PREV);
+  }
+
+  void dragStart(double position){
+    isDragging = true;
+    currentPlayBackState.isDragging = isDragging;
+
+    PlayBackState _currentPlayBackState = new PlayBackState.clone(currentPlayBackState);
+
+    positionUpdaterSendPort.send(_currentPlayBackState);
+    //if(!isPositionUpdaterActive) {
+    _currentPlayBackState.setPlayBackPosition(position.toInt());
+    //}
+    print("drag start!!!");
+  }
+
+  drag(double position){
+      currentPlayBackState.setPlayBackPosition(position.toInt());
+
+  }
+
+  dragEnd(double position){
+    isDragging = false;
+    currentPlayBackState.isDragging = isDragging;
+    PlayBackState _currentPlayBackState = new PlayBackState.clone(currentPlayBackState);
+    positionUpdaterSendPort.send(_currentPlayBackState);
+    seek(position);
+  }
+
+}
 

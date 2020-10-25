@@ -18,11 +18,12 @@ class PlayerPage extends StatefulWidget {
 
 class PlayerPageState extends State<PlayerPage> {
   int playStatus = 0;
-  String imgSrc = "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
+  String imgSrc =
+      "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
   Color controlsColor;
 
   @override
-  initState(){
+  initState() {
     super.initState();
   }
 
@@ -49,23 +50,32 @@ class PlayerPageState extends State<PlayerPage> {
         height: double.infinity,
         alignment: Alignment.center,
         decoration: BoxDecoration(color: Theme.of(context).backgroundColor),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text("music is playing: ${_playBackState.isPaused}"),
-            artWork(),
-            ChangeNotifierProvider.value(
-              value: _playBackState,
-              child: ProgressBar(
-                height: 5,
-              ),
-            ),
+        child:
 
-            Row(
-              children: [previousButton(),_playBackState.isPaused ? playButton() : pauseButton(),nextButton()],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            ),
-          ],
+        FractionallySizedBox(
+          widthFactor: 0.8,
+          child:Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Text("music is playing: ${_playBackState.isPaused}"),
+              artWork(),
+              ChangeNotifierProvider.value(
+                value: _playBackState,
+                child: ProgressBar(
+                  height: 10,
+                  seekCallBack: App.getInstance().playBackController.seek,
+                ),
+              ),
+              Row(
+                children: [
+                  previousButton(),
+                  _playBackState.isPaused ? playButton() : pauseButton(),
+                  nextButton()
+                ],
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              ),
+            ],
+          )
         ),
       );
     }
@@ -73,37 +83,54 @@ class PlayerPageState extends State<PlayerPage> {
 
   Widget playButton() {
     return new IconButton(
-          icon: new Icon(
-            Icons.play_circle_outline,
-            color: controlsColor,
-          ),
-          onPressed: null, iconSize: 65,);
+      icon: new Icon(
+        Icons.play_circle_outline,
+        color: controlsColor,
+      ),
+      onPressed: () {
+        App.getInstance().playBackController.resumeMusic();
+      },
+      iconSize: 65,
+    );
   }
 
   Widget pauseButton() {
     return new IconButton(
-        icon: new Icon(
-          Icons.pause_circle_outline,
-          color: controlsColor,
-        ), onPressed: () {  }, iconSize: 65,
+      icon: new Icon(
+        Icons.pause_circle_outline,
+        color: controlsColor,
+      ),
+      onPressed: () {
+        App.getInstance().playBackController.pauseMusic();
+      },
+      iconSize: 65,
     );
   }
+
   Widget previousButton() {
     return new IconButton(
-        icon: new Icon(
-          Icons.skip_previous,
-          color:controlsColor,
-        ),
-        onPressed: null, iconSize: 50,);
-
+      icon: new Icon(
+        Icons.skip_previous,
+        color: controlsColor,
+      ),
+      onPressed: () {
+        App.getInstance().playBackController.prev();
+      },
+      iconSize: 50,
+    );
   }
+
   Widget nextButton() {
     return new IconButton(
-        icon: new Icon(
-          Icons.skip_next,
-          color: controlsColor,
-        ),
-        onPressed: null, iconSize: 50,);
+      icon: new Icon(
+        Icons.skip_next,
+        color: controlsColor,
+      ),
+      onPressed: () {
+        App.getInstance().playBackController.next();
+      },
+      iconSize: 50,
+    );
   }
 
   Widget emptyPlayBackState() {
@@ -111,8 +138,10 @@ class PlayerPageState extends State<PlayerPage> {
       child: Text("no playback state yet"),
     );
   }
-  
-  Widget artWork(){
-    return Container(child: Image.network(imgSrc),);
+
+  Widget artWork() {
+    return Container(
+      child: Image.network(imgSrc),
+    );
   }
 }

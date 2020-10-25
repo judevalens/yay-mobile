@@ -45,17 +45,13 @@ public class Spotify {
     private static final String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
     private static final String CLIENT_SECRET = "4bf8bb4cb9964ec8bb9d900bc9bc5fb3";
 
-
-
     private static final String REDIRECT_URI = "http://com.example.yay/";
     private final String SOCKET_ADDRESS = "http://192.168.1.3:5000";
-    public User user;
     public String accessToken;
     public int accessTokenExpirationDate;
     public SpotifyAppRemote mSpotifyAppRemote;
     private Context context;
     private Activity activity;
-    private Socket socket;
     private Gson gson = new Gson();
     MethodChannel tunnel;
     MethodChannel playBackStateTunnel;
@@ -65,6 +61,11 @@ public class Spotify {
     private static final String SUBSCRIBE_TO_PLAYBACK_STATE  = "SubscribeToPlayBackState";
     private static final String  UNSUBSCRIBE_TO_PLAYBACK_STATE = "UnSubscribeToPlayBackState";
     private static final String  MC_UPDATE_METHOD_NAME = "updatePlayerState";
+    private static  final String MC_RESUME = "resume";
+    private static  final String MC_PAUSE = "pause";
+    private static  final String MC_SEEK = "seek";
+    private static  final String MC_NEXT = "next";
+    private static  final String MC_PREV = "prev";
     public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
         this.context = mContext;
         this.activity = activity;
@@ -116,24 +117,6 @@ public class Spotify {
 
     }
 
-    private void initPlayer() {
-
-        activity.getFilesDir();
-        //// mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
-
-        // Subscribe to PlayerState
-        mSpotifyAppRemote.getPlayerApi()
-                .subscribeToPlayerState()
-                .setEventCallback(new Subscription.EventCallback<PlayerState>() {
-                    @Override
-                    public void onEvent(PlayerState playerState) {
-                        final Track track = playerState.track;
-                        if (track != null) {
-                            Log.d("MainActivity", track.name + " by " + track.artist.name);
-                        }
-                    }
-                });
-    }
 
     private void setUpPlayBackChannel(){
         playBackStateTunnel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
@@ -147,6 +130,32 @@ public class Spotify {
                     case UNSUBSCRIBE_TO_PLAYBACK_STATE:
                         UnSubscribeToPlayBackState();
                         result.success(null);
+                        break;
+                    case MC_RESUME:
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            mSpotifyAppRemote.getPlayerApi().resume();
+                        }
+                        break;
+                    case MC_PAUSE:
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            mSpotifyAppRemote.getPlayerApi().pause();
+                        }
+                        break;
+                    case MC_SEEK:
+                        long pos = (long)((double)call.arguments);
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            mSpotifyAppRemote.getPlayerApi().seekTo(pos);
+                        }
+                        break;
+                    case MC_NEXT:
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            mSpotifyAppRemote.getPlayerApi().skipNext();
+                        }
+                        break;
+                    case MC_PREV:
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                        }
                         break;
                 }
             }
@@ -216,14 +225,16 @@ public class Spotify {
 
     }
 
+    public void refreshToken(String code, MethodChannel.Result response){
+
+    }
+
 
     public void getToken() {
+        System.out.println("getting token");
         AuthorizationRequest.Builder builder = new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
-
         builder.setScopes(new String[]{"user-read-email", "user-read-private", "app-remote-control"});
         AuthorizationRequest request = builder.build();
-
-
         AuthorizationClient.openLoginActivity(activity, AUTH_TOKEN_REQUEST_CODE, request);
 
     }
@@ -235,7 +246,8 @@ public class Spotify {
                 Log.d("spotify playback", "player state changed!!!!!!");
                 JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
-                playerStateJson.addProperty("last_updated_position_timeStamp", System.currentTimeMillis());
+                playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
+                playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
 
                 playBackStateTunnel.invokeMethod(MC_UPDATE_METHOD_NAME, playerStateJson.toString());
             }
@@ -256,26 +268,7 @@ public class Spotify {
         });
     }
 
-    public void getCurrentPosition() {
-        new Runnable() {
 
-            @Override
-            public void run() {
-                while (true) {
-
-                    mSpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(playerState -> {
-
-                    });
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
-        };
-    }
 
     private void executor(Runnable r) {
         Thread t = new Thread(r);

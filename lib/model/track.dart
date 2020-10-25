@@ -8,7 +8,13 @@ class Track{
   @JsonKey(name: "duration_ms")
   int duration;
 
-  Track(this.duration);
+  @JsonKey(name: "image_uri")
+  String imageUri;
+
+  @JsonKey(name: "uri")
+  String trackUri;
+
+  Track(this.duration,this.imageUri,this.trackUri);
 
   factory Track.fromJson(Map<String, dynamic> json) =>
       _$TrackFromJson(json);

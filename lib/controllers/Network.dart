@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yay/controllers/App.dart';
 
+import 'package:http/http.dart' as http;
+
 class Network  extends ChangeNotifier{
   IO.Socket socket;
   String socketID;
@@ -15,7 +17,7 @@ class Network  extends ChangeNotifier{
 
   Network(){
     print("network");
-    socket = IO.io("http://129.21.69.190:5000", <String, dynamic>{
+    socket = IO.io("http://129.21.70.100:8000/socket.io/", <String, dynamic>{
       "transports": ["websocket"],
       "user_id": 'sknjssjsksksks',
       'autoConnect': false,
@@ -66,5 +68,19 @@ class Network  extends ChangeNotifier{
   
   void joinRoom(int joinCode){
     socket.emit("join_room ");
+  }
+
+  Future<Map<String, dynamic>> queryWebApiWithToken (String endpoint, String accessToken) async {
+    print("accesTOKEN " + accessToken);
+    var result = await http.get(endpoint,
+        headers: {
+          "Authorization": "Bearer " + accessToken
+        });
+
+    return json.decode(result.body);
+  }
+
+  Future<Map<String, dynamic>> queryWebApi (String endpoint) async {
+    return null;//queryWebApiWithToken(endpoint,App.getInstance().authorization.accessToken);
   }
 }

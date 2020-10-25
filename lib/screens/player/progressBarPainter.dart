@@ -16,8 +16,12 @@ class ProgressBarPainter extends CustomPainter {
 
     var progressBarContainer = Rect.fromCenter(
         center: startingPosition, width: size.width, height: size.height);
+
+    var progressBarContainerPaint  = Paint();
+    progressBarContainerPaint.color = new Color.fromRGBO(214, 214, 214, 0.15);
+
     var progress = Rect.fromLTWH(startingPosition2.dx,  startingPosition2.dy, size.width*percent, size.height);
-    canvas.drawRect(progressBarContainer, Paint());
+    canvas.drawRect(progressBarContainer, progressBarContainerPaint);
     var progressPaint  = Paint();
     progressPaint.color = progressBarColor;
     canvas.drawRect(progress,progressPaint );

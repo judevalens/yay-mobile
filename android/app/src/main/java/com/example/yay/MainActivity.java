@@ -43,7 +43,11 @@ public class MainActivity extends FlutterActivity {
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
         playBackStateTunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PLAY_BACK_STATE_CHANNEL);
         spotify = new Spotify(this,this,tunnel,playBackStateTunnel);
-
+        try {
+            SocketIONetwork socketIONetwork = new SocketIONetwork();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
         tunnel.setMethodCallHandler(
                 (call, result) -> {
                     switch (call.method) {
@@ -51,14 +55,16 @@ public class MainActivity extends FlutterActivity {
                            Log.d("connection","connectToSpotifyAppRemote");
                            spotify.connectToSpotifyAppRemote(result);
                            break;
-                        case "login":
+                        case "getCode":
                             Log.d("login", "login with spotify");
                             spotify.getCode();
                             loginResult = result;
+                            //result.success("true");
                             break;
                         case "isAppRemoteConnected":
                             boolean isConnected = spotify.mSpotifyAppRemote != null && spotify.mSpotifyAppRemote.isConnected();
                             result.success(isConnected);
+                            break;
 
                     }
 
@@ -75,21 +81,15 @@ public class MainActivity extends FlutterActivity {
         // Check if result comes from the correct activity
         if (requestCode == Spotify.AUTH_TOKEN_REQUEST_CODE || requestCode == Spotify.AUTH_CODE_REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-
-
             switch (response.getType()) {
                 // Response was successful and contains auth token
                 case CODE:
                     Log.d("get code", "get COde 2");
 
                     String code = response.getCode();
-                    Log.d("spotify login", "spot 1");
+                    Log.d("spotify login", code);
+                        loginResult.success(code);
 
-                    try {
-                        spotify.requestToken(code,loginResult);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     break;
                     // Response was successful and contains auth token
                 case TOKEN:
@@ -97,17 +97,11 @@ public class MainActivity extends FlutterActivity {
                     spotify.accessToken = response.getAccessToken();
                     spotify.accessTokenExpirationDate = response.getExpiresIn();
 
+                    System.out.println("token expires in : " + response.getExpiresIn());
+
                     if (loginResult != null) {
                         JSONObject tokenResponse = new JSONObject();
-
-
-
-
-                            //spotify.connectToSpotifyAppRemote(con);
-
-
-
-
+                            //spotify.connectToSpotifyAppRemote(con)
                     }
                     // Handle successful response
                     break;

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,7 +33,6 @@ class App extends ChangeNotifier {
   DateTime lastUpdatedPositionTimeStamp;
 
   String currentTrackTitle;
-  MethodChannel platform = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
   Future<bool> connectionState;
   ReceivePort songPositionUpdaterRp;
   SendPort songPositionUpdaterSp;
@@ -46,6 +46,8 @@ class App extends ChangeNotifier {
   Authorization authorization;
   PlayBackController playBackController;
   String userEmail;
+
+
 
   static App getInstance() {
     if (spotifyApi == null) {
@@ -68,39 +70,14 @@ class App extends ChangeNotifier {
     playBackController = new PlayBackController();
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
-    await playBackController.init();
+    authorization.getConnectionState().listen((isConnected) async {
 
-    App.getInstance().userEmail =
-        App.getInstance().appSharedPreferences.get("userEmail");
-
-    print("user email \n " + "${App.getInstance().userEmail}");
-
-    spotifyApi.platform.setMethodCallHandler((call) {
-      print("player state changed !! Flutter");
-
-      switch (call.method) {
-        case "updatePlayerState":
-          var playerState = jsonDecode(call.arguments);
-          spotifyApi.updatePlayerState(playerState);
+      if(isConnected){
+        await playBackController.init();
       }
 
-      return null;
     });
-    print("set call back");
 
-    spotifyApi.songPositionUpdaterRp = ReceivePort();
-    Future<Isolate> songUpdaterIsolate = Isolate.spawn(
-        App.songProgress, spotifyApi.songPositionUpdaterRp.sendPort);
-
-    spotifyApi.songPositionUpdaterRp.listen((msg) {
-      if (msg is SendPort) {
-        spotifyApi.songPositionUpdaterSp = msg;
-      } else if (msg is int) {
-        print("new pos  $msg\n");
-        spotifyApi.playerState["playback_position"] = msg;
-        spotifyApi.notifyListeners();
-      }
-    });
     return true;
   }
 
@@ -109,11 +86,13 @@ class App extends ChangeNotifier {
     App.getInstance().appSharedPreferences.setBool(INIT_PREFERENCES_ATTR, true);
   }
 
+  /*
   void login() {
     Future<String> loginResult =
         App.spotifyApi.platform.invokeMethod("login");
     loginResult.then((value) async {
       Map<String, dynamic> loginResultJson = jsonDecode(value);
+
       var userProfile = await http.get("https://api.spotify.com/v1/me",
           headers: {
             "Authorization": "Bearer " + loginResultJson["access_token"]
@@ -204,7 +183,7 @@ class App extends ChangeNotifier {
   Future<void> connectToRemote() async {
     bool connectionResult = await platform.invokeMethod("connectToSpotifyApp");
   }
-
+*/
   static void songProgress(SendPort sp) {
     print("new state!!!!!");
 

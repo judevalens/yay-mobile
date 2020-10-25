@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 
 apply plugin: 'com.android.application'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
+apply plugin: 'com.google.gms.google-services'
 android {
     compileSdkVersion 28
 
@@ -52,15 +52,15 @@ android {
 dependencies {
     // your app dependencies
     implementation("com.squareup.okhttp3:okhttp:4.8.1")
-
     implementation project(':spotify-app-remote')
     implementation project(':spotify-auth')
     implementation ('io.socket:socket.io-client:1.0.0') {
         // excluding org.json which is provided by Android
         exclude group: 'org.json', module: 'json'
     }
-
+    implementation platform('com.google.firebase:firebase-bom:25.12.0')
     implementation "com.google.code.gson:gson:2.8.5"
+    implementation 'com.google.firebase:firebase-analytics'
 }
 
 flutter {

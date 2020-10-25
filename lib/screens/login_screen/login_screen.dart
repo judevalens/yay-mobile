@@ -45,9 +45,10 @@ class LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(90),
                 ),
                 onPressed: () {
-                  App.getInstance().authorization.login();
+                  App.getInstance().authorization.hardLogin().then((value) => (
+                      Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false)
+                  ));
                   //Navigator.popAndPushNamed(context, "/home",);
-                  Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false);
                 },
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

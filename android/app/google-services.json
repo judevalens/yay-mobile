@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "633133084998",
+    "firebase_url": "https://yay-music.firebaseio.com",
+    "project_id": "yay-music",
+    "storage_bucket": "yay-music.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633133084998:android:5612c7e1ab086194993547",
+        "android_client_info": {
+          "package_name": "com.example.yay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "633133084998-nv6mk8herldm59voif3q7r1ujcap7pmc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.yay",
+            "certificate_hash": "e673e47b3350772ae668d9677b316f0c1459e8ad"
+          }
+        },
+        {
+          "client_id": "633133084998-fvverj8cs7bbt0kola5ar8avobouucdu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArgHRdErmBQ07VeAt7c2QynDqqyI2CP2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633133084998-fvverj8cs7bbt0kola5ar8avobouucdu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
