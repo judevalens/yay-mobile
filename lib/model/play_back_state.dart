@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:yay/controllers/App.dart';
@@ -22,6 +24,13 @@ class PlayBackState extends ChangeNotifier{
   @JsonKey(name: "track_changed", defaultValue: false)
   bool trackChanged;
 
+  @JsonKey(name: "image_uri")
+  String imageUri;
+
+  @JsonKey(ignore: true)
+  Uint8List coverImage;
+
+
   @JsonKey(disallowNullValue: true, name: "time_stamp")
   int timeStamp;
 
@@ -34,7 +43,7 @@ class PlayBackState extends ChangeNotifier{
   @JsonKey(ignore: true)
   bool isUnAvailable = false;
   PlayBackState(this.isPaused, this.duration, this.playBackPosition,
-      this.trackName,this.trackChanged);
+      this.trackName,this.trackChanged,this.imageUri);
 
   PlayBackState.empty(){
     isUnAvailable = true;
@@ -69,10 +78,13 @@ class PlayBackState extends ChangeNotifier{
     }
 
     this.track = _playBackState.track;
+    this.imageUri = _playBackState.imageUri;
 
 
     if(trackChanged){
-      queryArtWOrk();
+
+      App.getInstance().playBackController.getArtWork(imageUri);
+      ///queryArtWOrk();
     }
 
     print("trackChanged  " + trackChanged.toString() +" trackURI  " + this.track.trackUri);
@@ -81,11 +93,17 @@ class PlayBackState extends ChangeNotifier{
     notifyListeners();
   }
 
+  void setCoverImage(Uint8List imageByte){
+    this.coverImage = imageByte;
+    notifyListeners();
+  }
+
   void queryArtWOrk(){
     String queryEndPoint = "https://api.spotify.com/v1/tracks/" + this.track.trackUri;
- /*  App.getInstance().nt.queryWebApi(queryEndPoint).then((trackObject) => (
-    print(trackObject)
-    ));*/
+  App.getInstance().nt.queryWebApi(queryEndPoint).then((trackObject) => () {
+    print("queried cover");
+    print(trackObject);
+  });
   }
 
   void setPlayBackPosition(int playBackPosition){

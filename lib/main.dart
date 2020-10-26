@@ -68,7 +68,7 @@ class MyAppState extends State<MyApp> {
           textTheme: TextTheme(),
           primaryColor: Color(0xFFBD2B2E),
           accentColor: Colors.white,
-            backgroundColor: Color(0xFF1c1717)
+            backgroundColor: Color(0xFF1f2021)
 
         ),
         title: "YAY",

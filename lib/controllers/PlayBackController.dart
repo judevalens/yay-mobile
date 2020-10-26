@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/model/play_back_state.dart';
 
 class PlayBackController {
@@ -15,6 +17,7 @@ class PlayBackController {
   static const String MC_SEEK = "seek";
   static const String MC_NEXT = "next";
   static const String MC_PREV = "prev";
+  static const String MC_GET_ART_WORK = "artwork";
   MethodChannel playBackChannel = new MethodChannel(PLAY_BACK_CHANNEL_NAME);
   Isolate playerUpdateIsolate;
   // main thread receiver port
@@ -24,15 +27,19 @@ class PlayBackController {
 
   bool isPositionUpdaterActive = false;
   bool isDragging = false;
+
+  bool isInitialized;
+  Isolate positionUpdaterIsolate;
   PlayBackController(){
+    isInitialized = false;
     currentPlayBackState = PlayBackState.empty();
-   /// init();
+    watchAuthorization();
   }
 
   /// Set up an isolate to update the playBack position. Calls method to subscribe to the spotify playback
   ///
 
-  init(){
+  init() async {
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler((call) {
       switch (call.method) {
@@ -72,8 +79,27 @@ class PlayBackController {
     });
 
 
-    Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
+    positionUpdaterIsolate =  await Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
+    isInitialized = true;
 
+  }
+
+  void watchAuthorization(){
+    App.getInstance().authorization.getConnectionState().listen((isConnected) {
+      if(isConnected){
+        if(!isInitialized){
+         init();
+        }
+      }else{
+        if(isInitialized){
+          shutdown();
+        }
+      }
+    });
+  }
+
+  void shutdown(){
+   // positionUpdaterIsolate.kill();
   }
 
   void updatePlayerState(PlayBackState playBackState) {
@@ -139,6 +165,21 @@ class PlayBackController {
     playBackChannel.invokeMethod(MC_PREV);
   }
 
+  void getArtWork(String imageUri){
+    print("sending call for artwork : " + imageUri);
+    playBackChannel.invokeMethod(MC_GET_ART_WORK,imageUri).then((value) {
+      print("image cover");
+      var imageByte = value as Uint8List;
+      print(imageByte.length);
+
+      currentPlayBackState.setCoverImage(imageByte);
+      print(value);
+
+    });
+
+
+  }
+
   void dragStart(double position){
     isDragging = true;
     currentPlayBackState.isDragging = isDragging;
@@ -154,7 +195,6 @@ class PlayBackController {
 
   drag(double position){
       currentPlayBackState.setPlayBackPosition(position.toInt());
-
   }
 
   dragEnd(double position){

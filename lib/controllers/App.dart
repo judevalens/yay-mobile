@@ -70,13 +70,7 @@ class App extends ChangeNotifier {
     playBackController = new PlayBackController();
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
-    authorization.getConnectionState().listen((isConnected) async {
 
-      if(isConnected){
-        await playBackController.init();
-      }
-
-    });
 
     return true;
   }

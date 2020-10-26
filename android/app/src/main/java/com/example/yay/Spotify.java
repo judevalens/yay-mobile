@@ -2,6 +2,7 @@ package com.example.yay;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -13,24 +14,26 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.ImagesApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.ImageUri;
 import com.spotify.protocol.types.PlayerState;
-import com.spotify.protocol.types.Track;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
+import com.spotify.protocol.types.Image.Dimension;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Objects;
 
-import dataClass.User.User;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.socket.client.Socket;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -50,6 +53,7 @@ public class Spotify {
     public String accessToken;
     public int accessTokenExpirationDate;
     public SpotifyAppRemote mSpotifyAppRemote;
+    public ImagesApi imagesApi;
     private Context context;
     private Activity activity;
     private Gson gson = new Gson();
@@ -66,6 +70,7 @@ public class Spotify {
     private static  final String MC_SEEK = "seek";
     private static  final String MC_NEXT = "next";
     private static  final String MC_PREV = "prev";
+    private static final String MC_GET_ARTWORK = "artwork";
     public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
         this.context = mContext;
         this.activity = activity;
@@ -91,6 +96,7 @@ public class Spotify {
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
 
                             mSpotifyAppRemote = spotifyAppRemote;
+                            imagesApi = mSpotifyAppRemote.getImagesApi();
                             new Handler(Looper.getMainLooper()).post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -101,14 +107,12 @@ public class Spotify {
                                 }
                             });
 
-
                         }
 
                         @Override
                         public void onFailure(Throwable throwable) {
                             if (connectToSpotifyAppRemoteResult != null) {
                                 connectToSpotifyAppRemoteResult.error("loginFailed", null, null);
-
                             }
                         }
                     });
@@ -156,6 +160,10 @@ public class Spotify {
                         if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
                             mSpotifyAppRemote.getPlayerApi().skipPrevious();
                         }
+                        break;
+                    case MC_GET_ARTWORK:
+                        Log.d("MC", "onMethodCall: getting bitmap");
+                        getImage((String) call.arguments,Dimension.LARGE,result);
                         break;
                 }
             }
@@ -258,16 +266,21 @@ public class Spotify {
         playerStateSubscription.cancel();
     }
 
+    public CallResult<Bitmap> getBitmap(String  uri, Dimension imgDIM){
+        return imagesApi.getImage(new ImageUri(uri),imgDIM);
+    }
 
-    public void getPlayerState() {
-        mSpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+    public void getImage(String  uri,Dimension imgDIM, MethodChannel.Result result){
+        getBitmap(uri,imgDIM).setResultCallback(new CallResult.ResultCallback<Bitmap>() {
             @Override
-            public void onResult(PlayerState playerState) {
+            public void onResult(Bitmap bitmap) {
+                ByteArrayOutputStream stream =  new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG,100,stream);
+                result.success(stream.toByteArray());
 
             }
         });
     }
-
 
 
     private void executor(Runnable r) {

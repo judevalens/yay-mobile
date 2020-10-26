@@ -77,10 +77,14 @@ class Network  extends ChangeNotifier{
           "Authorization": "Bearer " + accessToken
         });
 
+    print("got result cover");
+
+    print(result.body);
+
     return json.decode(result.body);
   }
 
   Future<Map<String, dynamic>> queryWebApi (String endpoint) async {
-    return null;//queryWebApiWithToken(endpoint,App.getInstance().authorization.accessToken);
+    return queryWebApiWithToken(endpoint,App.getInstance().authorization.accessToken);
   }
 }
