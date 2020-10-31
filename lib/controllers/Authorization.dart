@@ -23,7 +23,6 @@ class Authorization extends ChangeNotifier {
   bool isRemoteAppConnected;
   String userEmail;
 
-  FirebaseApp firebaseApp;
 
   FirebaseAuth firebaseAuth;
 
@@ -32,20 +31,18 @@ class Authorization extends ChangeNotifier {
 
   MethodChannel authenticationChannel = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
 
-  static const String remoteLoginUrl = "http://129.21.70.100:8000/login";
-  static const String freshTokenUrl = "http://129.21.70.100:8000/getFreshToken";
+  static const String remoteLoginUrl = "http://129.21.70.250:8000/login";
+  static const String freshTokenUrl = "http://129.21.70.250:8000/getFreshToken";
 
-  Authorization(App spotifyApi) {
+  Authorization(App spotifyApi,FirebaseAuth auth) {
     this.spotifyApi = spotifyApi;
-
+    firebaseAuth = auth;
     connectionState =  new StreamController();
 
     print("did not wait");
   }
 
   Future<void> init() async {
-    firebaseApp = await Firebase.initializeApp();
-    firebaseAuth = FirebaseAuth.instance;
     userEmail = App.getInstance().appSharedPreferences.get(USER_EMAIL_PREFERENCE_ATTR);
     isSignIn = App.getInstance().appSharedPreferences.get(LOGIN_STATUS_PREFERENCE_ATTR);
     await loginFlow();

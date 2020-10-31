@@ -2,13 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/PlayBackController.dart';
+import 'package:yay/controllers/RoomController.dart';
 
 import '../ChannelConst.dart';
 import 'package:http/http.dart' as http;
@@ -20,32 +23,19 @@ class App extends ChangeNotifier {
   static const bool INIT_PREFERENCES_VALUE = false;
 
   static App spotifyApi;
-  static Completer initializationCompleter = new Completer();
-  static Future<bool> isInitialized;
-  bool isConnected = false;
-  bool isAuthenticated = false;
-  bool isPaused = false;
-  int currentTrackDuration = 0;
-  int currentTrackPosition = 0;
-
-  Map<String, dynamic> spotifyApiCredentials;
-  Map<String, dynamic> playerState;
-  DateTime lastUpdatedPositionTimeStamp;
-
-  String currentTrackTitle;
-  Future<bool> connectionState;
-  ReceivePort songPositionUpdaterRp;
-  SendPort songPositionUpdaterSp;
 
   SharedPreferences appSharedPreferences;
   Socket socket;
 
-  App();
-
+  FirebaseApp firebaseApp;
+  FirebaseDatabase firebaseDatabase;
+  FirebaseAuth firebaseAuth;
   Network nt;
   Authorization authorization;
   PlayBackController playBackController;
-  String userEmail;
+  RoomController roomController;
+
+  App();
 
 
 
@@ -58,6 +48,11 @@ class App extends ChangeNotifier {
   }
 
   Future<bool> init() async {
+
+    firebaseApp = await Firebase.initializeApp();
+    firebaseAuth = FirebaseAuth.instance;
+    firebaseDatabase = FirebaseDatabase.instance;
+
     App.getInstance().appSharedPreferences =
         await SharedPreferences.getInstance();
 
@@ -66,8 +61,9 @@ class App extends ChangeNotifier {
     }
 
     nt = Network();
-    authorization = new Authorization(spotifyApi);
+    authorization = new Authorization(spotifyApi,firebaseAuth);
     playBackController = new PlayBackController();
+    roomController = new RoomController(firebaseDatabase,firebaseAuth);
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
 

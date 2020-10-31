@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
+import 'package:yay/screens/rooms_screen/room_page.dart';
 
 class RoomItem extends StatefulWidget {
-  final Map<String,dynamic> room;
-
-  RoomItem(this.room);
+  final Map<String, dynamic> room;
+  RoomItem(this.room) : super(key: PageStorageKey(UniqueKey()));
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return RoomItemState(room);
+    return RoomItemState(room,);
   }
 }
 
@@ -22,103 +25,106 @@ class RoomItemState extends State<RoomItem> {
   String activeRoomID;
   String roomAction;
 
-  Map<String,dynamic> room;
+  Map<String, dynamic> room;
 
   RoomItemState(this.room);
 
+  Color arrowColor = Colors.white;
+  bool _isExpanded = false;
+  bool exclude = false;
+  String test = "Join";
+
+
+  bool isMyRoom  = false;
+  var isActive;
+  String action;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    isMyRoom = room["leader"] == App.getInstance().firebaseAuth.currentUser.uid;
+
+    action = isMyRoom ? "Stream" : "Join";
+    isActive = room.containsKey("is_active") ? room["is_active"] : false;
+    if (isMyRoom && isActive ){
+      action = "End Stream";
+    }
+  }
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-
+    print("width 10 " + MediaQuery.of(context).size.width.toString());
     return GestureDetector(
-        onTap: () {
-          showDialog(
-              context: context,
-              builder: (BuildContext ctx) {
-                var items = List<Widget>();
-                items.add(RaisedButton(
+      child: Container(
+        child: Card(
+          color: Color(0xFF161617),
+          elevation: 2,
+          shape:
+              Border.all(width: 0, color: Theme.of(context).accentColor, style: BorderStyle.none),
+          child: Container(
+            padding: EdgeInsets.all(10),
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              title: getTitleRow(),
+              expandedAlignment: Alignment.centerRight,
+              children: [
+                ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateColor.resolveWith(
+                          (states) => Theme.of(context).accentColor)),
                   onPressed: () {},
-                  child: Text("manage"),
-                ));
-                print("user email");
-                print(App.getInstance().userEmail);
-                print(ownerEmail);
-                var actionText;
-                if (room["owner"]["user_email"] == App.getInstance().userEmail) {
-
-
-                  if (room["is_active"]) {
-                    actionText = "Close room";
-                    roomAction = "0";
-                  } else {
-                    actionText = "Start room";
-                    roomAction = "start_room";
-                  }
-                } else {
-                  if (room["is_active"]) {
-                    if (!room["member"][App.getInstance().userEmail]["isActive"]) {
-                      actionText = "Join room";
-                      roomAction = "join_room";
-                    } else {
-                      actionText = "Leave room";
-                      roomAction = "leave_room";
-                    }
-                  } else {
-                    actionText = "Room is inactive";
-                  }
-                }
-
-                items.add(
-                  RaisedButton(
-                    onPressed: () {
-
-                    },
-                    child: Text(actionText),
-                  ),
-                );
-                return Container(
-                    height: double.infinity,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.all(16),
-                          padding: EdgeInsets.all(12),
-                          color: Colors.white,
-                          child: Column(
-                            children: items,
-                          ),
-                        )
-                      ],
-                    ));
-              });
-        },
-        child: Container(
-          decoration: BoxDecoration(
-              color: Colors.deepOrange,
-              border: Border(bottom: BorderSide(color: Colors.white))),
-          padding: EdgeInsets.all(15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: buildItemRow(),
+                  child: Text(action) ,
+                ),
+              ],
+              trailing: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.white,
+              ),
+            ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
-  List<Widget> buildItemRow() {
-    var items = List<Widget>();
-    items.add(Text(
-      "${room["join_code"]}",
-      style: TextStyle(fontSize: 15, color: Colors.white),
-    ));
-    if (room["is_active"]) {
-      items.add(Icon(
-        Icons.fiber_manual_record,
-        color: Colors.white,
-      ));
+  Widget getTitleRow(){
+    if (!isActive){
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 10,
+
+            child: Text(
+              room["room_id"],
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          Spacer(flex: 2,)
+        ],
+      );
+    }else{
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 10,
+            child: Text(
+              room["room_id"],
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          Spacer(flex: 1,),
+          Icon(Icons.online_prediction,color: Colors.white,)
+        ],
+      );
     }
-
-    return items;
   }
+
 }

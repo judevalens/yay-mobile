@@ -1,10 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yay/ChannelConst.dart';
-import 'package:http/http.dart' as http;
 import 'package:yay/controllers/App.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,7 +10,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
-
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -45,9 +38,9 @@ class LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(90),
                 ),
                 onPressed: () {
-                  App.getInstance().authorization.hardLogin().then((value) => (
-                      Navigator.pushNamedAndRemoveUntil(context, "/home",(route) => false)
-                  ));
+                  App.getInstance().authorization.hardLogin().then((value) =>
+                      (Navigator.pushNamedAndRemoveUntil(
+                          context, "/home", (route) => false)));
                   //Navigator.popAndPushNamed(context, "/home",);
                 },
                 child: Row(

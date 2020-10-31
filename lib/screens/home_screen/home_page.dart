@@ -28,7 +28,7 @@ enum ScreenType { Player, Room }
 class HomePageState extends State<HomePage> {
   Widget mainPage;
   Widget loginPage;
-  Map<ScreenType,Widget> _screens = Map();
+  Map<ScreenType, Widget> _screens = Map();
 
   HomePageState() {
     print("creates homePage\n");
@@ -42,9 +42,9 @@ class HomePageState extends State<HomePage> {
       child: PlayerPage(),
     );
 
-    _screens[ScreenType.Room]  = ChangeNotifierProvider.value(
-     value: App.getInstance().nt,
-      child: RoomPage(),
+    _screens[ScreenType.Room] = ChangeNotifierProvider.value(
+      value: App.getInstance().nt,
+      child: RoomPage(App.getInstance().roomController),
     );
   }
 
@@ -53,8 +53,6 @@ class HomePageState extends State<HomePage> {
     ScreenType.Player,
     ScreenType.Room,
   ];
-
-
 
   Widget getScreen(ScreenType st, BuildContext context) {
     Widget w;
@@ -68,7 +66,7 @@ class HomePageState extends State<HomePage> {
       case ScreenType.Room:
         w = ChangeNotifierProvider.value(
           value: App.getInstance().nt,
-          child: RoomPage(),
+          child: RoomPage(App.getInstance().roomController),
         );
         break;
     }
@@ -77,9 +75,12 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<Authorization,bool>(selector: (_,authorization)=>authorization.isAuthorized(),builder: (context,isAuthorized,_){
-      return isAuthorized ? buildHomePage() : LoginScreen();
-    },);
+    return Selector<Authorization, bool>(
+      selector: (_, authorization) => authorization.isAuthorized(),
+      builder: (context, isAuthorized, _) {
+        return isAuthorized ? buildHomePage() : LoginScreen();
+      },
+    );
   }
 
   FloatingActionButton getFloatingButton(BuildContext context) {
@@ -89,7 +90,12 @@ class HomePageState extends State<HomePage> {
         onPressed: () {
           addRoomModalSheet(context);
         },
-        child: Icon(Icons.add),
+        focusColor: Theme.of(context).accentColor,
+        backgroundColor: Theme.of(context).primaryColorDark,
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       );
     }
 
@@ -99,40 +105,99 @@ class HomePageState extends State<HomePage> {
   Future<void> addRoomModalSheet(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return Container(alignment: Alignment.center,
-        height: double.infinity,
-        width: double.infinity,
-        child: Column(children: [
-          Text("Add/Join a room"),
-          RaisedButton(child: Text("join room"), onPressed: () {}),
-          RaisedButton(
-              child: Text("create room"),
-              onPressed: () {
-                App.getInstance().nt.socket.emit("create_room", {
-                  "user_email": App.getInstance().userEmail,
-                  "socket_id": App.getInstance().nt.socketID
-                });
-              })
-        ],),);
+        return FractionallySizedBox(
+          heightFactor: 1,
+          widthFactor: 0.5,
+          child: Container(
+            alignment: Alignment.center,
+            height: double.infinity,
+            width: double.infinity,
+            padding: MediaQuery.of(context).viewInsets,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Add/Join a room",
+                    style: TextStyle(color: Theme.of(context).accentColor, fontSize: 20)),
+                Divider(
+                  thickness: 2,
+                ),
+                TextField(
+                  decoration: InputDecoration(labelText: "Enter Join Code"),
+                ),
+                Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Theme.of(context).accentColor)),
+                      onPressed: () {
+                        App.getInstance().roomController.joinRoom("joinCode");
+                      },
+                      child: Text("Join room"),
+                    )),
+                Divider(
+                  thickness: 2,
+
+                ),
+                Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateColor.resolveWith(
+                              (states) => Theme.of(context).accentColor)),
+                      onPressed: () {
+                        App.getInstance().roomController.createRoom();
+                      },
+                      child: Text("Create room"),
+                    ))
+              ],
+            ),
+          ),
+        );
       },
     );
   }
 
-  Widget buildHomePage(){
-    return WillPopScope(
+  Widget joinRoomExpandable() {
+    return Container();
+  }
 
-      onWillPop: () { return Future.value(false); },
-      child:Scaffold(
+  Widget buildHomePage() {
+    return WillPopScope(
+      onWillPop: () {
+        return Future.value(false);
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomPadding: true,
         appBar: AppBar(
           title: Text("yay"),
-          actions: [IconButton(icon: new Icon(Icons.settings,color: Colors.white,), color: Colors.white, onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context){
-              return Setting();
-            }));
-          })],
+          actions: [
+            IconButton(
+                icon: new Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return Setting();
+                  }));
+                })
+          ],
         ),
-        body: _screens[screenTypes[_currentPageIndex]],
+        body: IndexedStack(
+          index: _currentPageIndex,
+          children: [
+            ChangeNotifierProvider.value(
+              value: App.getInstance().playBackController.currentPlayBackState,
+              child: PlayerPage(),
+            ),
+            RoomPage(App.getInstance().roomController),
+          ],
+        ),
         floatingActionButton: getFloatingButton(context),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentPageIndex,
