@@ -126,7 +126,7 @@ class PlayerPageState extends State<PlayerPage> {
       highlightColor: Colors.white60,
       hoverColor: Colors.white,
       icon: new Icon(
-        Icons.play_circle_outline,
+        Icons.play_circle_filled,
         color: controlsColor,
       ),
       onPressed: () {
@@ -146,7 +146,7 @@ class PlayerPageState extends State<PlayerPage> {
       hoverColor: Colors.white,
 
       icon: new Icon(
-        Icons.pause_circle_outline,
+        Icons.pause_circle_filled,
         color: controlsColor,
       ),
       onPressed: () {

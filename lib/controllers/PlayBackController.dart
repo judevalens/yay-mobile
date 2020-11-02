@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/model/play_back_state.dart';
-
+enum playerMode {
+  NORMAL,LISTENING,STREAMING
+}
 class PlayBackController {
   static const String PLAY_BACK_CHANNEL_NAME = "playBackStateTunnel";
   static const String MC_UPDATE = "updatePlayerState";
@@ -30,11 +32,16 @@ class PlayBackController {
 
   bool isInitialized;
   Isolate positionUpdaterIsolate;
+
+  playerMode currentMode = playerMode.NORMAL;
+
   PlayBackController(){
     isInitialized = false;
     currentPlayBackState = PlayBackState.empty();
     watchAuthorization();
   }
+
+
 
   /// Set up an isolate to update the playBack position. Calls method to subscribe to the spotify playback
   ///
@@ -203,6 +210,24 @@ class PlayBackController {
     PlayBackState _currentPlayBackState = new PlayBackState.clone(currentPlayBackState);
     positionUpdaterSendPort.send(_currentPlayBackState);
     seek(position);
+  }
+
+
+      setCurrentMode(playerMode mode) async{
+      currentMode = mode;
+      pauseMusic();
+
+      /// give time to stop current track
+      await Future.delayed(new Duration(milliseconds: 500));
+  }
+
+
+  PlayBackState getPlayBackState(){
+    return null;
+  }
+
+  void sync(Map<String,String> playbackState){
+
   }
 
 }

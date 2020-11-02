@@ -66,6 +66,7 @@ class RoomItemState extends State<RoomItem> {
           child: Container(
             padding: EdgeInsets.all(10),
             child: ExpansionTile(
+              maintainState: true,
               initiallyExpanded: false,
               title: getTitleRow(),
               expandedAlignment: Alignment.centerRight,

@@ -103,6 +103,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> addRoomModalSheet(BuildContext context) {
+    String joinCode;
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -125,15 +126,19 @@ class HomePageState extends State<HomePage> {
                 ),
                 TextField(
                   decoration: InputDecoration(labelText: "Enter Join Code"),
+                  onChanged: (code){
+                    joinCode = code;
+                  },
                 ),
                 Container(
                     width: double.infinity,
                     child: ElevatedButton(
+
                       style: ButtonStyle(
                           backgroundColor: MaterialStateColor.resolveWith(
                               (states) => Theme.of(context).accentColor)),
                       onPressed: () {
-                        App.getInstance().roomController.joinRoom("joinCode");
+                        App.getInstance().roomController.joinRoom(joinCode);
                       },
                       child: Text("Join room"),
                     )),
