@@ -44,7 +44,7 @@ class HomePageState extends State<HomePage> {
 
     _screens[ScreenType.Room] = ChangeNotifierProvider.value(
       value: App.getInstance().nt,
-      child: RoomPage(App.getInstance().roomController),
+      child: RoomListPage(App.getInstance().roomController),
     );
   }
 
@@ -66,7 +66,7 @@ class HomePageState extends State<HomePage> {
       case ScreenType.Room:
         w = ChangeNotifierProvider.value(
           value: App.getInstance().nt,
-          child: RoomPage(App.getInstance().roomController),
+          child: RoomListPage(App.getInstance().roomController),
         );
         break;
     }
@@ -200,7 +200,7 @@ class HomePageState extends State<HomePage> {
               value: App.getInstance().playBackController.currentPlayBackState,
               child: PlayerPage(),
             ),
-            RoomPage(App.getInstance().roomController),
+            RoomListPage(App.getInstance().roomController),
           ],
         ),
         floatingActionButton: getFloatingButton(context),

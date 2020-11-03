@@ -4,16 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
+import 'package:yay/screens/room_screen/Room.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
 
 class RoomItem extends StatefulWidget {
   final Map<String, dynamic> room;
+
   RoomItem(this.room) : super(key: PageStorageKey(UniqueKey()));
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return RoomItemState(room,);
+    return RoomItemState(
+      room,
+    );
   }
 }
 
@@ -34,8 +38,7 @@ class RoomItemState extends State<RoomItem> {
   bool exclude = false;
   String test = "Join";
 
-
-  bool isMyRoom  = false;
+  bool isMyRoom = false;
   var isActive;
   String action;
 
@@ -48,10 +51,11 @@ class RoomItemState extends State<RoomItem> {
 
     action = isMyRoom ? "Stream" : "Join";
     isActive = room.containsKey("is_active") ? room["is_active"] : false;
-    if (isMyRoom && isActive ){
+    if (isMyRoom && isActive) {
       action = "End Stream";
     }
   }
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -75,8 +79,15 @@ class RoomItemState extends State<RoomItem> {
                   style: ButtonStyle(
                       backgroundColor: MaterialStateColor.resolveWith(
                           (states) => Theme.of(context).accentColor)),
-                  onPressed: () {},
-                  child: Text(action) ,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) {
+                        return RoomPage();
+                      }),
+                    );
+                  },
+                  child: Text(action),
                 ),
               ],
               trailing: Icon(
@@ -90,14 +101,13 @@ class RoomItemState extends State<RoomItem> {
     );
   }
 
-  Widget getTitleRow(){
-    if (!isActive){
+  Widget getTitleRow() {
+    if (!isActive) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
             flex: 10,
-
             child: Text(
               room["room_id"],
               overflow: TextOverflow.fade,
@@ -105,10 +115,12 @@ class RoomItemState extends State<RoomItem> {
               style: TextStyle(color: Colors.white),
             ),
           ),
-          Spacer(flex: 2,)
+          Spacer(
+            flex: 2,
+          )
         ],
       );
-    }else{
+    } else {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -121,11 +133,15 @@ class RoomItemState extends State<RoomItem> {
               style: TextStyle(color: Colors.white),
             ),
           ),
-          Spacer(flex: 1,),
-          Icon(Icons.online_prediction,color: Colors.white,)
+          Spacer(
+            flex: 1,
+          ),
+          Icon(
+            Icons.online_prediction,
+            color: Colors.white,
+          )
         ],
       );
     }
   }
-
 }

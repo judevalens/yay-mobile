@@ -10,24 +10,24 @@ import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/RoomController.dart';
 import 'package:yay/screens/rooms_screen/room_item.dart';
 
-class RoomPage extends StatefulWidget {
+class RoomListPage extends StatefulWidget {
  final RoomController roomController;
-  RoomPage(this.roomController);
+  RoomListPage(this.roomController);
   @override
-  _RoomPageState createState() => _RoomPageState();
+  _RoomListPageState createState() => _RoomListPageState();
 }
 
 typedef void SetExpanded(String key);
 
 
-class _RoomPageState extends State<RoomPage> with AutomaticKeepAliveClientMixin {
+class _RoomListPageState extends State<RoomListPage> with AutomaticKeepAliveClientMixin {
   int roomJoinCode = 0;
   Map<String, Widget> rooms = Map();
   Stream<Map<String,dynamic>> roomListStream;
 
   RoomItem expandedRoomItem;
   SetExpanded toggle;
-_RoomPageState(){
+_RoomListPageState(){
 
 }
 
