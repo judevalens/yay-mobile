@@ -216,7 +216,6 @@ class PlayBackController {
       setCurrentMode(playerMode mode) async{
       currentMode = mode;
       pauseMusic();
-
       /// give time to stop current track
       await Future.delayed(new Duration(milliseconds: 500));
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class RoomPage extends StatefulWidget {
@@ -24,27 +25,52 @@ class _RoomPageState extends State<RoomPage> {
   Widget roomPageBody() {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: Theme.of(context).backgroundColor),
-      child:
-      Column(
+      decoration: BoxDecoration(color: Colors.white),
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
         children: getChildren(),
       ),
     );
   }
+  
 
   List<Widget> getChildren() {
     if (showTextInput) {
       return [
+
         Expanded(flex: 8, child: chatBody()),
-        Expanded(flex: 2,child: actionBar()),
-        Expanded(flex: 2, child: textInput())
+        Divider(
+          thickness: 2,
+          height: 15,
+        ),
+        actionBar(),
+        Divider(
+          thickness: 2,
+          height: 15,
+
+        ),
+        textInput(),
+        Divider(
+          thickness: 0,
+          height: 7.5,
+
+        )
       ];
     } else {
       return [
-        Expanded( flex: 7, child: chatBody()),
-        Expanded( child: actionBar())
+        Expanded(flex: 8, child: chatBody()),
+        Divider(
+          thickness: 2,
+          height: 15,
+
+        ),
+        actionBar(),
+        Divider(
+          thickness: 0,
+          height: 7.5,
+
+        )
       ];
     }
   }
@@ -54,18 +80,13 @@ class _RoomPageState extends State<RoomPage> {
       heightFactor: 1,
       widthFactor: 1,
       child: Container(
-        margin: EdgeInsets.only(bottom: 15),
         decoration: BoxDecoration(
-            color: Colors.white, // Color(0xFF161617),
-            boxShadow: kElevationToShadow[1],
-            border: Border.all(width: 0.1),
-            borderRadius: BorderRadius.all(Radius.circular(5))),
+          color: Colors.white,
+        ), // Color(0xFF161617),
         alignment: Alignment.center,
         child: SingleChildScrollView(
           child: Text("not implemented yet"),
-        )
-
-        ,
+        ),
       ),
     );
   }
@@ -74,7 +95,7 @@ class _RoomPageState extends State<RoomPage> {
     return FractionallySizedBox(
       widthFactor: 0.95,
       child: Container(
-        margin: EdgeInsets.all(2),
+      //  margin: EdgeInsets.all(2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
@@ -85,19 +106,17 @@ class _RoomPageState extends State<RoomPage> {
                 borderRadius: BorderRadius.all(
                   Radius.circular(30),
                 ),
-                boxShadow: kElevationToShadow[3],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Container(
-                    margin: EdgeInsets.all(2),
-
+                    margin: EdgeInsets.all(5),
                     decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
                     child: IconButton(
                       icon: Icon(
                         Icons.music_note,
-                        color: Colors.black54,
+                        color: Colors.white,
                       ),
                       onPressed: null,
                       color: Colors.white,
@@ -105,22 +124,32 @@ class _RoomPageState extends State<RoomPage> {
                   ),
                   Container(
                     margin: EdgeInsets.all(2),
-
                     decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
-                    child: IconButton(icon: Icon(Icons.add), onPressed: null),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.add,
+                          color: Colors.white,
+                        ),
+                        onPressed: null),
                   ),
                   Container(
                     margin: EdgeInsets.all(2),
-
                     decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
-                    child: IconButton(icon: Icon(Icons.mood), onPressed: null),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.mood,
+                          color: Colors.white,
+                        ),
+                        onPressed: null),
                   ),
                   Container(
                     margin: EdgeInsets.all(1),
-
                     decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
                     child: IconButton(
-                        icon: Icon(Icons.textsms),
+                        icon: Icon(
+                          Icons.textsms,
+                          color: Colors.white,
+                        ),
                         onPressed: () {
                           setState(() {
                             showTextInput = !showTextInput;
@@ -144,31 +173,35 @@ class _RoomPageState extends State<RoomPage> {
     );
   }
 
-
-
-
   Widget textInput() {
     f.addListener(() {
-      if (!f.hasFocus){
+      if (!f.hasFocus) {
         setState(() {
           showTextInput = !showTextInput;
-
         });
       }
     });
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.white
-      ),
-      child: TextField(
-        focusNode: f,
-        scrollController:  new ScrollController(),
-        maxLines: 3,
-        minLines: 1,
-        autofocus: true,
-      ),
+    return FractionallySizedBox(
+      widthFactor: 0.95,
+      child: Container(
+          alignment: Alignment.bottomCenter,
+          padding: EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: Colors.black12,
+            border: Border.all(style: BorderStyle.none),
+            borderRadius: BorderRadius.all(
+              Radius.circular(15),
+            ),
+            //  boxShadow: kElevationToShadow[3]
+          ),
+          child: TextField(
+            decoration: InputDecoration(border: InputBorder.none),
+            focusNode: f,
+            scrollController: new ScrollController(),
+            maxLines: 3,
+            minLines: 1,
+            autofocus: true,
+          )),
     );
   }
 }

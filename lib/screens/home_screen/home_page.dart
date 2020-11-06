@@ -103,7 +103,8 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> addRoomModalSheet(BuildContext context) {
-    String joinCode;
+    String joinCode = "";
+    String roomName = "";
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -126,14 +127,13 @@ class HomePageState extends State<HomePage> {
                 ),
                 TextField(
                   decoration: InputDecoration(labelText: "Enter Join Code"),
-                  onChanged: (code){
+                  onChanged: (code) {
                     joinCode = code;
                   },
                 ),
                 Container(
                     width: double.infinity,
                     child: ElevatedButton(
-
                       style: ButtonStyle(
                           backgroundColor: MaterialStateColor.resolveWith(
                               (states) => Theme.of(context).accentColor)),
@@ -144,19 +144,25 @@ class HomePageState extends State<HomePage> {
                     )),
                 Divider(
                   thickness: 2,
-
+                ),
+                TextField(
+                  decoration: InputDecoration(labelText: "Enter Join Code"),
+                  onChanged: (name) {
+                    roomName = name;
+                  },
                 ),
                 Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Theme.of(context).accentColor)),
-                      onPressed: () {
-                        App.getInstance().roomController.createRoom();
-                      },
-                      child: Text("Create room"),
-                    ))
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStateColor.resolveWith(
+                            (states) => Theme.of(context).accentColor)),
+                    onPressed: () {
+                      App.getInstance().roomController.createRoom(roomName);
+                    },
+                    child: Text("Create room"),
+                  ),
+                ),
               ],
             ),
           ),

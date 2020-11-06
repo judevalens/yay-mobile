@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/controllers/RoomController.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/room_screen/Room.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
@@ -21,6 +22,8 @@ class RoomItem extends StatefulWidget {
   }
 }
 
+
+
 class RoomItemState extends State<RoomItem> {
   String roomName;
   String roomId;
@@ -28,6 +31,7 @@ class RoomItemState extends State<RoomItem> {
   String ownerEmail;
   String activeRoomID;
   String roomAction;
+  RoomAction allowedAction;
 
   Map<String, dynamic> room;
 
@@ -36,25 +40,44 @@ class RoomItemState extends State<RoomItem> {
   Color arrowColor = Colors.white;
   bool _isExpanded = false;
   bool exclude = false;
-  String test = "Join";
+  String textAction = "Join";
 
   bool isMyRoom = false;
-  var isActive;
-  String action;
+  bool isActive = false;
+  RoomController _roomController;
+  SnackBar inActiveRoomSnackBar = SnackBar(content: Text("This room is inactive"));
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _roomController = App.getInstance().roomController;
 
-    isMyRoom = room["leader"] == App.getInstance().firebaseAuth.currentUser.uid;
+    allowedAction = _roomController.getAction(room["room_id"]);
 
-    action = isMyRoom ? "Stream" : "Join";
-    isActive = room.containsKey("is_active") ? room["is_active"] : false;
-    if (isMyRoom && isActive) {
-      action = "End Stream";
+    switch(allowedAction){
+      case RoomAction.JoinStream:
+        textAction = "Join";
+        break;
+      case RoomAction.leaveStream:
+        textAction  = "Leave";
+        break;
+      case RoomAction.StartStream:
+        textAction  = "Start";
+        break;
+      case RoomAction.StopStream:
+        textAction  = "Stop";
+        break;
+      case RoomAction.RoomIsInactive:
+        textAction  = "Inactive";
+        break;
     }
+
+
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -75,19 +98,41 @@ class RoomItemState extends State<RoomItem> {
               title: getTitleRow(),
               expandedAlignment: Alignment.centerRight,
               children: [
+                //App.getInstance().roomController.
                 ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateColor.resolveWith(
                           (states) => Theme.of(context).accentColor)),
                   onPressed: () {
+
+                    switch(allowedAction){
+                      case RoomAction.JoinStream:
+                        _roomController.joinStream(room["room_id"]);
+                        break;
+                      case RoomAction.leaveStream:
+                        _roomController.leaveStream();
+                        break;
+                      case RoomAction.StartStream:
+                        _roomController.streamToRoom(room["room_id"]);
+                        break;
+                      case RoomAction.StopStream:
+                        _roomController.stopStreaming();
+                        break;
+                      case RoomAction.RoomIsInactive:
+                        Scaffold.of(context).showSnackBar(inActiveRoomSnackBar);
+                        break;
+                    }
+
+                  if (allowedAction != RoomAction.RoomIsInactive && false){
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) {
                         return RoomPage();
                       }),
                     );
+                  }
                   },
-                  child: Text(action),
+                  child: Text(textAction),
                 ),
               ],
               trailing: Icon(
@@ -101,6 +146,10 @@ class RoomItemState extends State<RoomItem> {
     );
   }
 
+  void buttonAction(){
+
+  }
+
   Widget getTitleRow() {
     if (!isActive) {
       return Row(
@@ -109,7 +158,7 @@ class RoomItemState extends State<RoomItem> {
           Expanded(
             flex: 10,
             child: Text(
-              room["room_id"],
+              room["room_name"],
               overflow: TextOverflow.fade,
               softWrap: false,
               style: TextStyle(color: Colors.white),
