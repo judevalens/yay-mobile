@@ -71,6 +71,10 @@ public class Spotify {
     private static  final String MC_NEXT = "next";
     private static  final String MC_PREV = "prev";
     private static final String MC_GET_ARTWORK = "artwork";
+    private static final String MC_GET_PLAY_BACK_STATE = "getPlayBackState";
+
+    private long playerStateTimeStamp = 0;
+    private long newPlayerStateThreshold = 250;
     public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
         this.context = mContext;
         this.activity = activity;
@@ -80,6 +84,12 @@ public class Spotify {
     }
 
     public void connectToSpotifyAppRemote(MethodChannel.Result connectToSpotifyAppRemoteResult) {
+            if (playerStateSubscription != null){
+                playerStateSubscription.cancel();
+            }
+            if (mSpotifyAppRemote != null){
+                SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+            }
 
         if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected() ) {
             connectToSpotifyAppRemoteResult.success(true);
@@ -165,6 +175,11 @@ public class Spotify {
                         Log.d("MC", "onMethodCall: getting bitmap");
                         getImage((String) call.arguments,Dimension.LARGE,result);
                         break;
+                    case MC_GET_PLAY_BACK_STATE:
+                        getPlayBackState(result);
+                        break;
+
+
                 }
             }
         });
@@ -251,13 +266,21 @@ public class Spotify {
         playerStateSubscription  = mSpotifyAppRemote.getPlayerApi().subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<PlayerState>() {
             @Override
             public void onEvent(PlayerState playerState) {
-                Log.d("spotify playback", "player state changed!!!!!!");
+                boolean isBrandNewState = (System.currentTimeMillis()-playerStateTimeStamp) >= newPlayerStateThreshold;
+                playerStateTimeStamp = System.currentTimeMillis();
+                Log.d("spotify playback", "spotify playback : player state changed!!!!!!");
+                Log.d("spotify playback", "spotify playback: isPaused : " + playerState.isPaused);
+                Log.d("spotify playback", "spotify playback: playback timestamp " + System.currentTimeMillis());
+                Log.d("spotify playback", "spotify playback: isBrandNewState :" + isBrandNewState);
                 JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
                 playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
 
-                playBackStateTunnel.invokeMethod(MC_UPDATE_METHOD_NAME, playerStateJson.toString());
+                if(isBrandNewState){
+                    playBackStateTunnel.invokeMethod(MC_UPDATE_METHOD_NAME, playerStateJson.toString());
+                }
+
             }
         });
     }
@@ -294,5 +317,21 @@ public class Spotify {
 
     private void stop() {
         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
+    }
+
+
+    private  void getPlayBackState(MethodChannel.Result response){
+        mSpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+            @Override
+            public void onResult(PlayerState playerState) {
+                Log.d("spotify playback", "player state changed!!!!!!");
+                JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
+                JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
+                playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
+                playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
+
+               response.success(playerStateJson.toString());
+            }
+        });
     }
 }

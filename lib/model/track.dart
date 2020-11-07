@@ -13,6 +13,8 @@ class Track{
 
   @JsonKey(name: "uri")
   String trackUri;
+  @JsonKey(name: "name")
+  String name;
 
   Track(this.duration,this.imageUri,this.trackUri);
 

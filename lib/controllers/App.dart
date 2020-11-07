@@ -67,7 +67,6 @@ class App extends ChangeNotifier {
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
 
-
     return true;
   }
 

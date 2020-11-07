@@ -20,6 +20,7 @@ class PlayBackController {
   static const String MC_NEXT = "next";
   static const String MC_PREV = "prev";
   static const String MC_GET_ART_WORK = "artwork";
+  static const String MC_GET_PLAY_BACK_STATE = "getPlayBackState";
   MethodChannel playBackChannel = new MethodChannel(PLAY_BACK_CHANNEL_NAME);
   Isolate playerUpdateIsolate;
   // main thread receiver port
@@ -59,6 +60,11 @@ class PlayBackController {
           print("playBackState 2");
           print(playBackState);
           updatePlayerState(playBackState);
+
+          if (currentMode == playerMode.STREAMING){
+            App.getInstance().roomController.streamPlayBackState(playBackJson);
+          }
+
           break;
       }
 
@@ -112,6 +118,7 @@ class PlayBackController {
   void updatePlayerState(PlayBackState playBackState) {
     print("received playBack");
     currentPlayBackState.updatePlayBackState(playBackState);
+
     if (positionUpdaterSendPort != null) {
       print("sent playBack");
       positionUpdaterSendPort.send(playBackState);
@@ -221,11 +228,19 @@ class PlayBackController {
   }
 
 
-  PlayBackState getPlayBackState(){
-    return null;
+  Future<Map<String,dynamic>> getPlayBackState() async {
+
+    var playerStateJSonString   = await playBackChannel.invokeMethod(MC_GET_PLAY_BACK_STATE);
+
+    return jsonDecode(playerStateJSonString);
+
   }
 
   void sync(Map<String,String> playbackState){
+  }
+
+
+  void compareState(){
 
   }
 

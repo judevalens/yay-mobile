@@ -115,4 +115,18 @@ class PlayBackState extends ChangeNotifier{
 
   }
 
+  bool isEqual(PlayBackState a,PlayBackState b){
+    if (a.track.trackUri != b.track.trackUri || a.isPaused != b.isPaused){
+      return false;
+    }
+
+    if (a.playBackPosition != b.playBackPosition){
+      return false;
+    }
+
+
+
+    return true;
+  }
+
 }

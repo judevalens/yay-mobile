@@ -37,7 +37,7 @@ class Authorization extends ChangeNotifier {
   Authorization(App spotifyApi,FirebaseAuth auth) {
     this.spotifyApi = spotifyApi;
     firebaseAuth = auth;
-    connectionState =  new StreamController();
+    connectionState =  new StreamController.broadcast();
 
     print("did not wait");
   }
