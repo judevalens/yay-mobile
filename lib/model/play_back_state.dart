@@ -34,6 +34,8 @@ class PlayBackState extends ChangeNotifier{
   @JsonKey(disallowNullValue: true, name: "time_stamp")
   int timeStamp;
 
+  Map<String,dynamic>rawState;
+
 
   bool isFresh;
 

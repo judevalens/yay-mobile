@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/controllers/PlayBackController.dart';
+import 'package:yay/misc/marquee/marquee.dart';
 import 'package:yay/model/play_back_state.dart';
 import 'package:yay/screens/player/progressBarPainter.dart';
 
@@ -23,6 +25,8 @@ class PlayerPageState extends State<PlayerPage> {
   String imgSrc =
       "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
   Color controlsColor;
+
+  PlayBackController _playBackController = App.getInstance().playBackController;
 
   @override
   initState() {
@@ -78,18 +82,29 @@ class PlayerPageState extends State<PlayerPage> {
                       ),
                     ),
                     Container(
-                      margin: EdgeInsets.fromLTRB(0, 5 , 0, 0),
-                      child:Row(
+                      margin: EdgeInsets.fromLTRB(0, 5, 0, 0),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(positionFormatter(_playBackState.playBackPosition),style:
-                          new TextStyle(color: Colors.white),),
-                          Text(positionFormatter(_playBackState.track.duration),style:
-                          new TextStyle(color: Colors.white),)
+                          Text(
+                            positionFormatter(_playBackState.playBackPosition),
+                            style: new TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            positionFormatter(_playBackState.track.duration),
+                            style: new TextStyle(color: Colors.white),
+                          )
                         ],
-                      ) ,
+                      ),
                     ),
-
+                    Container(
+                      width: 250,
+                      height: 30,
+                      child: ChangeNotifierProvider.value(
+                        value: _playBackState,
+                        child: Marquee(_playBackState.playBackPosition.toString(),TextStyle(color: Colors.yellow, fontSize: 20),key: UniqueKey()),
+                    )
+                    ),
                   ],
                 ),
                 Row(
@@ -118,6 +133,12 @@ class PlayerPageState extends State<PlayerPage> {
     return min.toString() + ":" + secondReminder.toString();
   }
 
+  Widget trackInfo(String track) {
+    print("artist 1 ");
+    print(_playBackController.currentPlayBackState.rawState["track"]["artist"]["name"]);
+    return null;
+  }
+
   Widget playButton() {
     return new IconButton(
       enableFeedback: true,
@@ -130,8 +151,7 @@ class PlayerPageState extends State<PlayerPage> {
         color: controlsColor,
       ),
       onPressed: () {
-
-      App.getInstance().playBackController.resumeMusic();
+        App.getInstance().playBackController.resumeMusic();
       },
       iconSize: 65,
     );
@@ -144,13 +164,12 @@ class PlayerPageState extends State<PlayerPage> {
       splashRadius: 65,
       highlightColor: Colors.white60,
       hoverColor: Colors.white,
-
       icon: new Icon(
         Icons.pause_circle_filled,
         color: controlsColor,
       ),
       onPressed: () {
-      App.getInstance().playBackController.pauseMusic();
+        App.getInstance().playBackController.pauseMusic();
       },
       iconSize: 65,
     );

@@ -5,11 +5,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/model/play_back_state.dart';
-enum playerMode {
-  NORMAL,LISTENING,STREAMING
-}
+
+enum playerMode { NORMAL, LISTENING, STREAMING }
+
 class PlayBackController {
   static const String PLAY_BACK_CHANNEL_NAME = "playBackStateTunnel";
   static const String MC_UPDATE = "updatePlayerState";
@@ -23,6 +24,7 @@ class PlayBackController {
   static const String MC_GET_PLAY_BACK_STATE = "getPlayBackState";
   MethodChannel playBackChannel = new MethodChannel(PLAY_BACK_CHANNEL_NAME);
   Isolate playerUpdateIsolate;
+
   // main thread receiver port
   ReceivePort positionUpdaterRp;
   SendPort positionUpdaterSendPort;
@@ -36,41 +38,46 @@ class PlayBackController {
 
   playerMode currentMode = playerMode.NORMAL;
 
-  PlayBackController(){
+  StreamController<Tuple2<int, int>> trackPositionStreamController;
+
+  PlayBackController() {
     isInitialized = false;
     currentPlayBackState = PlayBackState.empty();
     watchAuthorization();
   }
 
-
-
   /// Set up an isolate to update the playBack position. Calls method to subscribe to the spotify playback
   ///
 
   init() async {
+
+    trackPositionStreamController = new StreamController.broadcast();
+
     positionUpdaterRp = new ReceivePort();
-    playBackChannel.setMethodCallHandler((call) {
-      switch (call.method) {
-        case MC_UPDATE:
-          print("calling updatePlayerState");
-          print("playBackState");
-          print(call.arguments);
-          var playBackJson =  jsonDecode(call.arguments);
-          PlayBackState playBackState = PlayBackState.fromJson(playBackJson);
-          print("playBackState 2");
-          print(playBackState);
-          updatePlayerState(playBackState);
+    playBackChannel.setMethodCallHandler(
+      (call) {
+        switch (call.method) {
+          case MC_UPDATE:
+            print("calling updatePlayerState");
+            print("playBackState");
+            print(call.arguments);
+            var playBackJson = jsonDecode(call.arguments);
+            PlayBackState playBackState = PlayBackState.fromJson(playBackJson);
+            print("playBackState 2");
+            print(playBackState);
+            updatePlayerState(playBackState);
+            currentPlayBackState.rawState = playBackJson;
 
-          if (currentMode == playerMode.STREAMING){
-            App.getInstance().roomController.streamPlayBackState(playBackJson);
-          }
+            if (currentMode == playerMode.STREAMING) {
+              App.getInstance().roomController.streamPlayBackState(playBackJson);
+            }
 
-          break;
-      }
+            break;
+        }
 
-      return null;
-    });
-
+        return null;
+      },
+    );
 
     positionUpdaterRp.listen((message) {
       print("new msg");
@@ -80,39 +87,35 @@ class PlayBackController {
         positionUpdaterSendPort = message;
         // once the isolate to update the progress is set up, we subscribe to the player playback  state
         playBackChannel.invokeMethod(MC_SUBSCRIBE_TO_PLAYBACK_STATE);
-        
-      }
-      else if(message is int){
-          print("received new position from isolate");
-          currentPlayBackState.setPlayBackPosition(message);
-          currentPlayBackState.isFresh = false;
-      }else if(message is bool){
+      } else if (message is int) {
+        print("received new position from isolate");
+        currentPlayBackState.setPlayBackPosition(message);
+        currentPlayBackState.isFresh = false;
+      } else if (message is bool) {
         isPositionUpdaterActive = message;
       }
     });
 
-
-    positionUpdaterIsolate =  await Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
+    positionUpdaterIsolate = await Isolate.spawn(updatePosition, positionUpdaterRp.sendPort);
     isInitialized = true;
-
   }
 
-  void watchAuthorization(){
+  void watchAuthorization() {
     App.getInstance().authorization.getConnectionState().listen((isConnected) {
-      if(isConnected){
-        if(!isInitialized){
-         init();
+      if (isConnected) {
+        if (!isInitialized) {
+          init();
         }
-      }else{
-        if(isInitialized){
+      } else {
+        if (isInitialized) {
           shutdown();
         }
       }
     });
   }
 
-  void shutdown(){
-   // positionUpdaterIsolate.kill();
+  void shutdown() {
+    // positionUpdaterIsolate.kill();
   }
 
   void updatePlayerState(PlayBackState playBackState) {
@@ -147,7 +150,6 @@ class PlayBackController {
             timer = null;
           }
           positionUpdaterSendPort.send(false);
-
         } else {
           if (timer == null) {
             positionUpdaterSendPort.send(true);
@@ -155,7 +157,6 @@ class PlayBackController {
               currentTrackPosition += 1;
               positionUpdaterSendPort.send(currentTrackPosition);
               positionUpdaterSendPort.send(true);
-
             });
           }
         }
@@ -166,35 +167,36 @@ class PlayBackController {
   void resumeMusic() {
     playBackChannel.invokeMethod(MC_RESUME);
   }
+
   void pauseMusic() {
     playBackChannel.invokeMethod(MC_PAUSE);
   }
+
   void seek(double position) {
     playBackChannel.invokeMethod(MC_SEEK, position);
   }
-  void next(){
+
+  void next() {
     playBackChannel.invokeMethod(MC_NEXT);
   }
-  void prev(){
+
+  void prev() {
     playBackChannel.invokeMethod(MC_PREV);
   }
 
-  void getArtWork(String imageUri){
+  void getArtWork(String imageUri) {
     print("sending call for artwork : " + imageUri);
-    playBackChannel.invokeMethod(MC_GET_ART_WORK,imageUri).then((value) {
+    playBackChannel.invokeMethod(MC_GET_ART_WORK, imageUri).then((value) {
       print("image cover");
       var imageByte = value as Uint8List;
       print(imageByte.length);
 
       currentPlayBackState.setCoverImage(imageByte);
       print(value);
-
     });
-
-
   }
 
-  void dragStart(double position){
+  void dragStart(double position) {
     isDragging = true;
     currentPlayBackState.isDragging = isDragging;
 
@@ -207,11 +209,11 @@ class PlayBackController {
     print("drag start!!!");
   }
 
-  drag(double position){
-      currentPlayBackState.setPlayBackPosition(position.toInt());
+  drag(double position) {
+    currentPlayBackState.setPlayBackPosition(position.toInt());
   }
 
-  dragEnd(double position){
+  dragEnd(double position) {
     isDragging = false;
     currentPlayBackState.isDragging = isDragging;
     PlayBackState _currentPlayBackState = new PlayBackState.clone(currentPlayBackState);
@@ -219,30 +221,21 @@ class PlayBackController {
     seek(position);
   }
 
+  setCurrentMode(playerMode mode) async {
+    currentMode = mode;
+    pauseMusic();
 
-      setCurrentMode(playerMode mode) async{
-      currentMode = mode;
-      pauseMusic();
-      /// give time to stop current track
-      await Future.delayed(new Duration(milliseconds: 500));
+    /// give time to stop current track
+    await Future.delayed(new Duration(milliseconds: 500));
   }
 
-
-  Future<Map<String,dynamic>> getPlayBackState() async {
-
-    var playerStateJSonString   = await playBackChannel.invokeMethod(MC_GET_PLAY_BACK_STATE);
+  Future<Map<String, dynamic>> getPlayBackState() async {
+    var playerStateJSonString = await playBackChannel.invokeMethod(MC_GET_PLAY_BACK_STATE);
 
     return jsonDecode(playerStateJSonString);
-
   }
 
-  void sync(Map<String,String> playbackState){
-  }
+  void sync(Map<String, String> playbackState) {}
 
-
-  void compareState(){
-
-  }
-
+  void compareState() {}
 }
-
