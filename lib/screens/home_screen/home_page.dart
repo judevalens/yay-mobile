@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,8 +79,74 @@ class HomePageState extends State<HomePage> {
     return Selector<Authorization, bool>(
       selector: (_, authorization) => authorization.isAuthorized(),
       builder: (context, isAuthorized, _) {
-        return isAuthorized ? buildHomePage() : LoginScreen();
+        return isAuthorized ? buildHomePage(context) : LoginScreen();
       },
+    );
+  }
+
+  Widget buildHomePage(BuildContext _context) {
+    return WillPopScope(
+      onWillPop: () {
+        return Future.value(false);
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomPadding: true,
+        appBar: AppBar(
+          title: Text("yay"),
+          actions: [
+            IconButton(
+                icon: new Icon(
+                  Icons.search_sharp,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  addSearchModalSheet(_context);
+                }),
+            IconButton(
+                icon: new Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return Setting();
+                  }));
+                })
+          ],
+        ),
+        body: IndexedStack(
+          index: _currentPageIndex,
+          children: [
+            ChangeNotifierProvider.value(
+              value: App.getInstance().playBackController.currentPlayBackState,
+              child: PlayerPage(),
+            ),
+            RoomListPage(App.getInstance().roomController),
+          ],
+        ),
+        floatingActionButton: getFloatingButton(context),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentPageIndex,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              title: Text("Home"),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.group_work),
+              title: Text("Rooms"),
+            ),
+          ],
+          onTap: (currentPageIndex) {
+            setState(() {
+              _currentPageIndex = currentPageIndex;
+            });
+          },
+        ),
+      ),
     );
   }
 
@@ -171,64 +238,62 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> addSearchModalSheet(BuildContext _context) {
+    String joinCode = "";
+    String roomName = "";
+    return showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (BuildContext context) {
+          return searchPage();
+        });
+  }
+
   Widget joinRoomExpandable() {
     return Container();
   }
 
-  Widget buildHomePage() {
-    return WillPopScope(
-      onWillPop: () {
-        return Future.value(false);
-      },
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        resizeToAvoidBottomPadding: true,
-        appBar: AppBar(
-          title: Text("yay"),
-          actions: [
-            IconButton(
-                icon: new Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                ),
-                color: Colors.white,
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return Setting();
-                  }));
-                })
-          ],
-        ),
-        body: IndexedStack(
-          index: _currentPageIndex,
-          children: [
-            ChangeNotifierProvider.value(
-              value: App.getInstance().playBackController.currentPlayBackState,
-              child: PlayerPage(),
-            ),
-            RoomListPage(App.getInstance().roomController),
-          ],
-        ),
-        floatingActionButton: getFloatingButton(context),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentPageIndex,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              title: Text("Home"),
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.group_work),
-              title: Text("Rooms"),
-            ),
-          ],
-          onTap: (currentPageIndex) {
-            setState(() {
-              _currentPageIndex = currentPageIndex;
-            });
-          },
-        ),
+  Widget searchPage() {
+    return Container(
+      padding: EdgeInsets.only(top: 10, bottom: MediaQuery.of(context).viewInsets.bottom
       ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          searchBar(),
+          Divider(),
+          Expanded(
+            child: resultContainer(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget searchBar() {
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Row(
+        children: [
+          IconButton(icon: Icon(Icons.keyboard_arrow_down_rounded), onPressed: null),
+          Expanded(
+            child: Container(
+              child: TextField(
+                decoration: InputDecoration(hintText: "Search for a song "),
+                onChanged: (text) {},
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget resultContainer() {
+    return Container(
+      width: double.infinity,
+      alignment: Alignment.center,
+      child: Text("No result yet ..."),
     );
   }
 }

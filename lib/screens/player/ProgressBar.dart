@@ -35,8 +35,8 @@ class ProgressBarState extends State<ProgressBar> {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Selector<PlayBackState, Tuple2<int, int>>(selector: (buildContext, playBackState) {
-      print("spotify is null");
-      print(playBackState);
+    //  print("spotify is null");
+     // print(playBackState);
 
 
         totalPos = playBackState.track.duration;

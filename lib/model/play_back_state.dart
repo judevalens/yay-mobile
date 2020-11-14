@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/model/track.dart';
 
@@ -71,6 +72,8 @@ class PlayBackState extends ChangeNotifier{
     isUnAvailable  = false;
     this.isPaused = _playBackState.isPaused;
     this.duration = _playBackState.duration;
+
+
     this.playBackPosition  = _playBackState.playBackPosition;
 
     if(this.track != null){
@@ -82,10 +85,27 @@ class PlayBackState extends ChangeNotifier{
     this.track = _playBackState.track;
     this.imageUri = _playBackState.imageUri;
 
+    App.getInstance().playBackController.trackPositionStreamController.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
+    App.getInstance().playBackController.trackPlayStateStreamController.add(this.isPaused);
+
 
     if(trackChanged){
-
       App.getInstance().playBackController.getArtWork(imageUri);
+
+      String artistList =  "";
+      int counter  = 0;
+      for (var value in this.track.artists) {
+        artistList += value.name;
+
+        counter++;
+
+        if (counter < this.track.artists.length){
+          artistList += ", ";
+        }
+
+      }
+
+      App.getInstance().playBackController.trackNameStreamController.add(Tuple2<String,String>(this.track.name,artistList));
       ///queryArtWOrk();
     }
 
@@ -97,7 +117,7 @@ class PlayBackState extends ChangeNotifier{
 
   void setCoverImage(Uint8List imageByte){
     this.coverImage = imageByte;
-    notifyListeners();
+    App.getInstance().playBackController.trackCoverStreamController.add(imageByte);
   }
 
   void queryArtWOrk(){
@@ -110,6 +130,8 @@ class PlayBackState extends ChangeNotifier{
 
   void setPlayBackPosition(int playBackPosition){
     this.playBackPosition =  playBackPosition;
+    App.getInstance().playBackController.trackPositionStreamController.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
+
     notifyListeners();
   }
 

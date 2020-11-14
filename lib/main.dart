@@ -10,8 +10,8 @@ import 'package:yay/screens/rooms_screen/room_page.dart';
 
 void main() {
   runApp(
-     MyApp(),
-    );
+    MyApp(),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -30,7 +30,7 @@ class MyAppState extends State<MyApp> {
 
   String initialRoute = "/splash";
   static const String homeRoute = "/home";
-  static const String loginRoute  = "/login";
+  static const String loginRoute = "/login";
   static const String splashRoute = "/splash";
 
   String currentRoute;
@@ -52,11 +52,15 @@ class MyAppState extends State<MyApp> {
     _isInitialized = App.getInstance().init();
 
     _isInitialized.then((value) {
-      homeWidgets = {"homeScreen":ChangeNotifierProvider.value(value : App.getInstance().authorization,child: HomePage(),), "loginScreen": LoginScreen()};
+      homeWidgets = {
+        "homeScreen": ChangeNotifierProvider.value(
+          value: App.getInstance().authorization,
+          child: HomePage(),
+        ),
+        "loginScreen": LoginScreen()
+      };
 
       print("is connected : $_isInitialized");
-
-
     });
     print(_isConnected);
   }
@@ -64,49 +68,87 @@ class MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     print("initial ? " + initialRoute);
     return MaterialApp(
-        theme: ThemeData(
+      theme: ThemeData(
           textTheme: TextTheme(),
           primaryColor: Color(0xFF821E20),
           accentColor: Color(0xFF6C1719),
-            backgroundColor: Color(0xFF1f2021),
-          primaryColorDark: Color(0xFF6C1719)
-        ),
-        title: "YAY",
-      home:FutureBuilder<bool>(
-          future: _isInitialized,
-          builder: (BuildContext context, AsyncSnapshot<bool> initialized) {
-            Widget w;
+          backgroundColor: Color(0xFF1f2021),
+          primaryColorDark: Color(0xFF6C1719)),
+      title: "YAY",
+      home: FutureBuilder<bool>(
+        future: _isInitialized,
+        builder: (BuildContext context, AsyncSnapshot<bool> initialized) {
+          Widget w;
 
-            if(initialized.hasData){
-              w = homeWidgets['homeScreen'];
-            }else{
-              w = getSplashScreen();
-            }
-            return w;
-          },
-        ),
+          if (initialized.hasData) {
+            w = homeWidgets['homeScreen'];
+          } else {
+            w = getSplashScreen(context);
+          }
+          return w;
+        },
+      ),
       routes: {
-          "/home": (context) => homeWidgets['homeScreen'],
-          "/loginScreen": (context) => LoginScreen(),
-          "/splash": (context) => getSplashScreen()
+        "/home": (context) => homeWidgets['homeScreen'],
+        "/loginScreen": (context) => LoginScreen(),
+        "/splash": (context) => getSplashScreen(context)
       },
-      );
+    );
   }
 
-  Widget getHome(String route){
-      switch(route){
-        case splashRoute:
-          return getSplashScreen();
-        case homeRoute:
-          return ChangeNotifierProvider(create: (_) => App.getInstance().authorization,child: homeWidgets['homeScreen'],);
-        case loginRoute:
-          return LoginScreen();
-        default:
-          return getSplashScreen();
-      }
+  Widget getHome(String route, BuildContext context) {
+    switch (route) {
+      case splashRoute:
+        return getSplashScreen(context);
+      case homeRoute:
+        return ChangeNotifierProvider(
+          create: (_) => App.getInstance().authorization,
+          child: homeWidgets['homeScreen'],
+        );
+      case loginRoute:
+        return LoginScreen();
+      default:
+        return getSplashScreen(context);
+    }
   }
 
-  Widget getSplashScreen(){
-    return Container(height: double.infinity,width: double.infinity,child: Text("Initializing....."),);
+  Widget getSplashScreen(BuildContext context) {
+    return Center(
+      child: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              flex: 2,
+              child: Container (
+                decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.white)),
+                padding: EdgeInsets.all(15),
+                child: Text("YAY",style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.white,
+                    decoration: TextDecoration.none
+                ),),
+
+              ) ,
+            )
+         ,
+           Spacer(flex: 1,),
+            Flexible(
+              flex: 2,
+                child: FractionallySizedBox(
+                  widthFactor: 0.8,
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.white,
+                    minHeight: 10,
+                  )),
+                ) ,
+
+          ],
+        ),
+      ),
+    );
   }
 }

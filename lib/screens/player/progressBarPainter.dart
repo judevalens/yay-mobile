@@ -9,7 +9,7 @@ class ProgressBarPainter extends CustomPainter {
   ProgressBarPainter.fromPercent(this.percent,this.progressBarColor) : super(repaint: null);
   @override
   void paint(Canvas canvas, Size size) {
-    print("painter width is .. : " + size.width.toString());
+   // print("painter width is .. : " + size.width.toString());
 
     var startingPosition = size.center(Offset(0, 0));
     var startingPosition2 = size.topLeft(Offset(0, 0));

@@ -1,5 +1,6 @@
 
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yay/model/artist.dart';
 part 'track.g.dart';
 
 @JsonSerializable()
@@ -16,7 +17,13 @@ class Track{
   @JsonKey(name: "name")
   String name;
 
-  Track(this.duration,this.imageUri,this.trackUri);
+  @JsonKey(name: "artist")
+  Artist artist;
+
+  @JsonKey(name: "artists")
+  List<Artist> artists;
+
+  Track(this.duration,this.imageUri,this.trackUri,this.name,this.artists);
 
   factory Track.fromJson(Map<String, dynamic> json) =>
       _$TrackFromJson(json);

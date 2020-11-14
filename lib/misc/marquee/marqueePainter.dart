@@ -15,7 +15,7 @@ class MarqueePainter extends CustomPainter{
     var offset = Offset(xPos, yPost);
     var offset2 = Offset(-xPos-500, yPost);
     _textPainter.layout();
-  //  _textPainter.paint(canvas, offset);
+    //  _textPainter.paint(canvas, offset);
 
 
 
@@ -27,8 +27,8 @@ class MarqueePainter extends CustomPainter{
     });
 
 
-    print("text width " + _textPainter.width.toDouble().toString());
-    print("canvas width " +size.width.toDouble().toString());
+   // print("text width " + _textPainter.width.toDouble().toString());
+   /// print("canvas width " +size.width.toDouble().toString());
 
   }
 

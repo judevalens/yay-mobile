@@ -58,6 +58,7 @@ class RoomItemState extends State<RoomItem> {
     switch(allowedAction){
       case RoomAction.JoinStream:
         textAction = "Join";
+        isActive = true;
         break;
       case RoomAction.leaveStream:
         textAction  = "Leave";
@@ -67,6 +68,7 @@ class RoomItemState extends State<RoomItem> {
         break;
       case RoomAction.StopStream:
         textAction  = "Stop";
+        isActive = true;
         break;
       case RoomAction.RoomIsInactive:
         textAction  = "Inactive";
@@ -123,7 +125,7 @@ class RoomItemState extends State<RoomItem> {
                         break;
                     }
 
-                  if (allowedAction != RoomAction.RoomIsInactive && false){
+                  if (allowedAction != RoomAction.RoomIsInactive){
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) {
@@ -176,7 +178,7 @@ class RoomItemState extends State<RoomItem> {
           Expanded(
             flex: 10,
             child: Text(
-              room["room_id"],
+              room["room_name"],
               overflow: TextOverflow.fade,
               softWrap: false,
               style: TextStyle(color: Colors.white),

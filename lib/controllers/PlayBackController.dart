@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
@@ -39,6 +40,9 @@ class PlayBackController {
   playerMode currentMode = playerMode.NORMAL;
 
   StreamController<Tuple2<int, int>> trackPositionStreamController;
+  StreamController<Uint8List> trackCoverStreamController;
+  StreamController<bool> trackPlayStateStreamController;
+  StreamController<Tuple2<String,String>> trackNameStreamController;
 
   PlayBackController() {
     isInitialized = false;
@@ -51,7 +55,10 @@ class PlayBackController {
 
   init() async {
 
-    trackPositionStreamController = new StreamController.broadcast();
+    trackPositionStreamController = new StreamController();
+    trackCoverStreamController = new StreamController();
+    trackPlayStateStreamController = new StreamController();
+    trackNameStreamController = new StreamController();
 
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler(
@@ -80,15 +87,14 @@ class PlayBackController {
     );
 
     positionUpdaterRp.listen((message) {
-      print("new msg");
-      print(message.runtimeType);
+      //print("new msg");
       if (message is SendPort) {
         print("set port");
         positionUpdaterSendPort = message;
         // once the isolate to update the progress is set up, we subscribe to the player playback  state
         playBackChannel.invokeMethod(MC_SUBSCRIBE_TO_PLAYBACK_STATE);
       } else if (message is int) {
-        print("received new position from isolate");
+      //  print("received new position from isolate");
         currentPlayBackState.setPlayBackPosition(message);
         currentPlayBackState.isFresh = false;
       } else if (message is bool) {
@@ -163,6 +169,9 @@ class PlayBackController {
       }
     });
   }
+
+
+
 
   void resumeMusic() {
     playBackChannel.invokeMethod(MC_RESUME);
