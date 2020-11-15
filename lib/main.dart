@@ -71,7 +71,8 @@ class MyAppState extends State<MyApp> {
       theme: ThemeData(
           textTheme: TextTheme(),
           primaryColor: Color(0xFF821E20),
-          accentColor: Color(0xFF6C1719),
+          primaryTextTheme:TextTheme() ,
+          accentColor: Colors.white,
           backgroundColor: Color(0xFF1f2021),
           primaryColorDark: Color(0xFF6C1719)),
       title: "YAY",

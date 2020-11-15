@@ -123,7 +123,6 @@ class PlayerPageState extends State<PlayerPage> {
         var pos = 0;
 
         if (snapshot.hasData) {
-          print("duration " + snapshot.data.item2.toString());
 
           duration = snapshot.data.item2;
           pos = snapshot.data.item1;
@@ -237,7 +236,7 @@ class PlayerPageState extends State<PlayerPage> {
         }else {
           image = defaultCover();
         }
-         return AnimatedSwitcher(duration: Duration(seconds: 2), child: Container(
+         return AnimatedSwitcher(duration: Duration(seconds: 1), child: Container(
            key: UniqueKey(),
         child: image,));
       },

@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
+import 'package:yay/controllers/LibraryController.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/controllers/RoomController.dart';
 
@@ -34,7 +35,7 @@ class App extends ChangeNotifier {
   Authorization authorization;
   PlayBackController playBackController;
   RoomController roomController;
-
+  BrowserController browserController;
   App();
 
 
@@ -64,6 +65,7 @@ class App extends ChangeNotifier {
     authorization = new Authorization(spotifyApi,firebaseAuth);
     playBackController = new PlayBackController();
     roomController = new RoomController(firebaseDatabase,firebaseAuth);
+    browserController = new BrowserController(authorization);
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
     await Future.delayed(new Duration(seconds: 0));

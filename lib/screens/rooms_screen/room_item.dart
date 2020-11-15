@@ -104,9 +104,9 @@ class RoomItemState extends State<RoomItem> {
                 ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => Theme.of(context).accentColor)),
+                          (states) => Theme.of(context).primaryColor)),
                   onPressed: () {
-
+                /*
                     switch(allowedAction){
                       case RoomAction.JoinStream:
                         _roomController.joinStream(room["room_id"]);
@@ -124,7 +124,7 @@ class RoomItemState extends State<RoomItem> {
                         Scaffold.of(context).showSnackBar(inActiveRoomSnackBar);
                         break;
                     }
-
+*/
                   if (allowedAction != RoomAction.RoomIsInactive){
                     Navigator.push(
                       context,

@@ -90,7 +90,8 @@ class Authorization extends ChangeNotifier {
 
     print("got code " + code);
 
-    // accessToken = accessTokenResult["access_token"];
+    accessToken = loginResponse["access_token"];
+    accessTokenExpireIn = loginResponse["expires_in"];
     isRemoteAppConnected = await connectToSpotifyRemoteApp();
 
     connectionState.add(true);
@@ -157,6 +158,10 @@ class Authorization extends ChangeNotifier {
     var getFreshTokeResponse =  await http.get(finalGetFreshTokenUrl);
 
     return  jsonDecode(getFreshTokeResponse.body);
+  }
+
+  String getSpotifyToken(){
+    return "Bearer "+accessToken;
   }
 
 /*

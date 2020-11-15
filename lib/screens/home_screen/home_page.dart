@@ -35,6 +35,9 @@ class HomePageState extends State<HomePage> {
     print("creates homePage\n");
   }
 
+  double statusBArHeight;
+  double navigationBArHeight;
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +88,8 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget buildHomePage(BuildContext _context) {
+    statusBArHeight = MediaQuery.of(context).padding.top;
+    navigationBArHeight = MediaQuery.of(context).padding.bottom;
     return WillPopScope(
       onWillPop: () {
         return Future.value(false);
@@ -102,7 +107,16 @@ class HomePageState extends State<HomePage> {
                 ),
                 color: Colors.white,
                 onPressed: () {
-                  addSearchModalSheet(_context);
+                  searchModalSheet(_context);
+                }),
+            IconButton(
+                icon: new Icon(
+                  Icons.my_library_music_sharp,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  playListModalSheet(_context);
                 }),
             IconButton(
                 icon: new Icon(
@@ -238,14 +252,29 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> addSearchModalSheet(BuildContext _context) {
+  Future<void> searchModalSheet(BuildContext _context) {
     String joinCode = "";
     String roomName = "";
     return showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
         builder: (BuildContext context) {
           return searchPage();
+        });
+  }
+
+  Future<void> playListModalSheet(BuildContext _context) {
+    String joinCode = "";
+    String roomName = "";
+    return showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+        builder: (BuildContext context) {
+          return playList(context);
         });
   }
 
@@ -255,11 +284,25 @@ class HomePageState extends State<HomePage> {
 
   Widget searchPage() {
     return Container(
-      padding: EdgeInsets.only(top: 10, bottom: MediaQuery.of(context).viewInsets.bottom
-      ),
+      height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - statusBArHeight,
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 10, right: 10),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              IconButton(icon: Icon(Icons.keyboard_arrow_down_rounded), onPressed: null),
+              Container(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Search",
+                  style: Theme.of(context).accentTextTheme.headline4,
+                ),
+              ),
+            ],
+          ),
+          Divider(),
           searchBar(),
           Divider(),
           Expanded(
@@ -272,15 +315,15 @@ class HomePageState extends State<HomePage> {
 
   Widget searchBar() {
     return Container(
-      padding: EdgeInsets.all(10),
       child: Row(
         children: [
-          IconButton(icon: Icon(Icons.keyboard_arrow_down_rounded), onPressed: null),
           Expanded(
             child: Container(
               child: TextField(
                 decoration: InputDecoration(hintText: "Search for a song "),
-                onChanged: (text) {},
+                onChanged: (text) {
+                  App.getInstance().browserController.search(text);
+                },
               ),
             ),
           ),
@@ -293,7 +336,107 @@ class HomePageState extends State<HomePage> {
     return Container(
       width: double.infinity,
       alignment: Alignment.center,
-      child: Text("No result yet ..."),
+      child: searchResultList(context),
+    );
+  }
+
+  Widget playList(BuildContext context) {
+    print("appbar " + AppBar().preferredSize.height.toString());
+    print("appbar " + statusBArHeight.toString());
+    print("appbar " + navigationBArHeight.toString());
+    print("appbar " + MediaQuery.of(context).viewInsets.bottom.toString());
+    return Container(
+      height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - statusBArHeight,
+      padding: EdgeInsets.only(
+        top: statusBArHeight,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 10,
+        right: 10,
+      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+        Row(
+          children: [
+            IconButton(icon: Icon(Icons.keyboard_arrow_down_rounded), onPressed: null),
+            Container(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Playlists",
+                style: Theme.of(context).accentTextTheme.headline4,
+              ),
+            ),
+          ],
+        ),
+        Divider(),
+        Expanded(child: new ListView()),
+      ]),
+    );
+  }
+
+  Widget searchResultList(BuildContext context) {
+    return StreamBuilder(
+        stream: App.getInstance().browserController.queryResponseStreamController.stream,
+        builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> responses) {
+          Widget w;
+
+          if (responses.hasData) {
+            List<Widget> responseItems = new List();
+
+            responses.data.forEach((element) {
+              responseItems.add(getSearchQueryItem(element));
+            });
+
+            w = ListView(
+              children: responseItems,
+            );
+          } else {
+            w = Text("No result yet");
+          }
+
+          return w;
+        });
+  }
+
+  Widget getSearchQueryItem(Map<String, dynamic> track) {
+    var imagesListLength = track["album"]["images"].length;
+    String artistList = "";
+    int counter = 0;
+    for (var value in track["artists"]) {
+      artistList += value["name"];
+
+      counter++;
+
+      if (counter < track["artists"].length) {
+        artistList += ", ";
+      }
+    }
+    return Container(
+      margin: EdgeInsets.only(top: 5, bottom: 5),
+      child: Row(
+        children: [
+          SizedBox(
+            height: 64,
+            width: 64,
+            child: Image.network(track["album"]["images"][1]["url"]),
+          ),
+          Expanded(
+            child: Container(
+              margin: EdgeInsets.only(left: 2),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(
+                  track["name"],
+                  style: Theme.of(context).accentTextTheme.button,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  artistList,
+                  style: Theme.of(context).accentTextTheme.bodyText2,
+                  overflow: TextOverflow.ellipsis,
+                )
+              ]),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
