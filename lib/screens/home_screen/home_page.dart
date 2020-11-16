@@ -5,8 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/screens/home_screen/PlayListBottomSheet.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
-import 'package:yay/screens/player/SearchBottomSheet.dart';
+import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/SearchBottomSheet.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
 import 'package:provider/provider.dart';
@@ -260,7 +261,7 @@ class HomePageState extends State<HomePage> {
     String joinCode = "";
     String roomName = "";
     return showModalBottomSheet<void>(
-        context: context,
+        context: _context,
         isScrollControlled: true,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
@@ -273,51 +274,17 @@ class HomePageState extends State<HomePage> {
     String joinCode = "";
     String roomName = "";
     return showModalBottomSheet<void>(
-        context: context,
+        context: _context,
         isScrollControlled: true,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
         builder: (BuildContext context) {
-          return playList(context);
+          return PlayListBottomSheet(statusBarHeight: statusBArHeight,);
         });
   }
 
-  Widget joinRoomExpandable() {
-    return Container();
-  }
 
 
-  Widget playList(BuildContext context) {
-    print("appbar " + AppBar().preferredSize.height.toString());
-    print("appbar " + statusBArHeight.toString());
-    print("appbar " + navigationBArHeight.toString());
-    print("appbar " + MediaQuery.of(context).viewInsets.bottom.toString());
-    return Container(
-      height: MediaQuery.of(context).size.height - AppBar().preferredSize.height - statusBArHeight,
-      padding: EdgeInsets.only(
-        top: statusBArHeight,
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 10,
-        right: 10,
-      ),
-      child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-        Row(
-          children: [
-            IconButton(icon: Icon(Icons.keyboard_arrow_down_rounded), onPressed: null),
-            Container(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Playlists",
-                style: Theme.of(context).accentTextTheme.headline4,
-              ),
-            ),
-          ],
-        ),
-        Divider(),
-        Expanded(child: new ListView()),
-      ]),
-    );
-  }
 
 
   Future<void> trackShowOption(BuildContext context) {

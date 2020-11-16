@@ -2,6 +2,7 @@ buildscript {
     repositories {
         google()
         jcenter()
+
     }
 
     dependencies {
@@ -14,6 +15,10 @@ allprojects {
     repositories {
         google()
         jcenter()
+        mavenCentral()
+        maven {
+            url "https://giphy.bintray.com/giphy-sdk"
+        }
     }
 }
 
@@ -28,3 +33,4 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
