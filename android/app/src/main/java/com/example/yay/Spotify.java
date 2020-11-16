@@ -65,6 +65,7 @@ public class Spotify {
     private static final String SUBSCRIBE_TO_PLAYBACK_STATE  = "SubscribeToPlayBackState";
     private static final String  UNSUBSCRIBE_TO_PLAYBACK_STATE = "UnSubscribeToPlayBackState";
     private static final String  MC_UPDATE_METHOD_NAME = "updatePlayerState";
+    private static  final String MC_START = "start";
     private static  final String MC_RESUME = "resume";
     private static  final String MC_PAUSE = "pause";
     private static  final String MC_SEEK = "seek";
@@ -144,6 +145,13 @@ public class Spotify {
                     case UNSUBSCRIBE_TO_PLAYBACK_STATE:
                         UnSubscribeToPlayBackState();
                         result.success(null);
+                        break;
+                    case MC_START:
+                        if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
+                            String trackID = (String) call.arguments;
+                            Log.d("spotify", "spot " + trackID);
+                            mSpotifyAppRemote.getPlayerApi().play(trackID);
+                        }
                         break;
                     case MC_RESUME:
                         if (mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()){
@@ -269,17 +277,21 @@ public class Spotify {
                 boolean isBrandNewState = (System.currentTimeMillis()-playerStateTimeStamp) >= newPlayerStateThreshold;
                 playerStateTimeStamp = System.currentTimeMillis();
                 Log.d("spotify playback", "spotify playback : player state changed!!!!!!");
+                Log.d("spotify playback", "spotify playback : player is null " + (playerState == null));
                 Log.d("spotify playback", "spotify playback: isPaused : " + playerState.isPaused);
                 Log.d("spotify playback", "spotify playback: playback timestamp " + System.currentTimeMillis());
                 Log.d("spotify playback", "spotify playback: isBrandNewState :" + isBrandNewState);
+                Log.d("spotify playback", "spotify playback: testing :" + playerState.track.name);
                 JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
                 playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
 
-                if(isBrandNewState){
+               // if(isBrandNewState){
+                    Log.d("spotify playback", "spotify playback: isBrandNewState 2:" + playerStateJsonElement);
+
                     playBackStateTunnel.invokeMethod(MC_UPDATE_METHOD_NAME, playerStateJson.toString());
-                }
+               // }
 
             }
         });
@@ -329,7 +341,7 @@ public class Spotify {
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
                 playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
-
+                
                response.success(playerStateJson.toString());
             }
         });

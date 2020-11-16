@@ -93,7 +93,7 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
     textWidth = _textPainter.width;
     dxOffset2 =  widget.containerWidth;
 
-    print("my width " + _textPainter.width.toString());
+    //print("my width " + _textPainter.width.toString());
     _controller = AnimationController(vsync: this, duration: Duration(seconds: 15));
 
 
@@ -112,8 +112,8 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
 
       //dxOffset  = widget.containerWidth - _controller.value*(textWidth+widget.containerWidth);
       //dxOffset *= -1;
-      print("odd offset "  + dxOffset.toString());
-      print("odd value "  + _controller.value.toString());
+     // print("odd offset "  + dxOffset.toString());
+     // print("odd value "  + _controller.value.toString());
 
 
       if (cycleCounter == 0){
@@ -123,8 +123,8 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
       }else{
         dxOffset  = widget.containerWidth - _controller.value*(textWidth+widget.containerWidth);
         dxOffset *= -1;
-        print("odd offset "  + dxOffset.toString());
-        print("odd value "  + _controller.value.toString());
+       // print("odd offset "  + dxOffset.toString());
+     //   print("odd value "  + _controller.value.toString());
       }
 
 
@@ -135,7 +135,7 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
 
         xOffsets[0] = -dxOffset;
 
-        print("screen Space " + screenSPace.toString());
+       // print("screen Space " + screenSPace.toString());
       });
 
     });
@@ -190,8 +190,8 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
 
     //dxOffset  = widget.containerWidth - _controller.value*(textWidth+widget.containerWidth);
     //dxOffset *= -1;
-    print("odd offset "  + dxOffset.toString());
-    print("odd value "  + _controller.value.toString());
+   // print("odd offset "  + dxOffset.toString());
+   // print("odd value "  + _controller.value.toString());
 
 
     if (cycleCounter == 0){
@@ -201,8 +201,8 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
     }else{
       dxOffset  = widget.containerWidth - _controller.value*(textWidth+widget.containerWidth);
       dxOffset *= -1;
-      print("odd offset "  + dxOffset.toString());
-      print("odd value "  + _controller.value.toString());
+    //  print("odd offset "  + dxOffset.toString());
+     /// print("odd value "  + _controller.value.toString());
     }
 
 
@@ -213,7 +213,7 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
 
       xOffsets[0] = -dxOffset;
 
-      print("screen Space " + screenSPace.toString());
+   //   print("screen Space " + screenSPace.toString());
     });
   }
 

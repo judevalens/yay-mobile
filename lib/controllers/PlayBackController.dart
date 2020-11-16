@@ -16,6 +16,7 @@ class PlayBackController {
   static const String PLAY_BACK_CHANNEL_NAME = "playBackStateTunnel";
   static const String MC_UPDATE = "updatePlayerState";
   static const String MC_SUBSCRIBE_TO_PLAYBACK_STATE = "SubscribeToPlayBackState";
+  static const String MC_START = "start";
   static const String MC_RESUME = "resume";
   static const String MC_PAUSE = "pause";
   static const String MC_SEEK = "seek";
@@ -170,6 +171,11 @@ class PlayBackController {
     });
   }
 
+
+  void start(String musicID){
+    playBackChannel.invokeMethod(MC_START,musicID);
+
+  }
 
 
 

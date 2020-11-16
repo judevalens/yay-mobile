@@ -236,7 +236,7 @@ class PlayerPageState extends State<PlayerPage> {
         }else {
           image = defaultCover();
         }
-         return AnimatedSwitcher(duration: Duration(seconds: 1), child: Container(
+         return AnimatedSwitcher(duration: Duration(milliseconds: 100), child: Container(
            key: UniqueKey(),
         child: image,));
       },
