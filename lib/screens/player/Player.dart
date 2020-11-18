@@ -15,6 +15,7 @@ import '';
 import 'ProgressBar.dart';
 
 class PlayerPage extends StatefulWidget {
+  PlayerPage();
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -22,7 +23,7 @@ class PlayerPage extends StatefulWidget {
   }
 }
 
-class PlayerPageState extends State<PlayerPage> {
+class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMixin{
   int playStatus = 0;
   String imgSrc =
       "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
@@ -37,6 +38,7 @@ class PlayerPageState extends State<PlayerPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     controlsColor = Theme.of(context).primaryColor;
     // TODO: implement build
     return Selector<PlayBackState, bool>(selector: (_, _playBackState) {
@@ -58,7 +60,7 @@ class PlayerPageState extends State<PlayerPage> {
         alignment: Alignment.center,
         decoration: BoxDecoration(color: Theme.of(context).backgroundColor),
         child: FractionallySizedBox(
-          widthFactor: 0.8,
+          widthFactor: 0.9,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
@@ -82,6 +84,8 @@ class PlayerPageState extends State<PlayerPage> {
                 children: [previousButton(), resumePauseStream(), nextButton()],
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               ),
+
+              Container(child: IconButton(icon: Icon(Icons.keyboard_arrow_up_sharp, color: Colors.white,), onPressed: () {  },),),
             ],
           ),
         ),
@@ -298,4 +302,8 @@ class PlayerPageState extends State<PlayerPage> {
 
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }

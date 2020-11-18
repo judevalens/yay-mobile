@@ -15,6 +15,8 @@ class BrowserController{
   // ignore: close_sinks
   StreamController<List<Map<String,dynamic>>> userPlayListStreamController = new StreamController.broadcast();
 
+  StreamController<Map<String,dynamic>> userIndividualPlayListStreamController = new StreamController.broadcast();
+
 
   List<Map<String,dynamic>> playList = new List();
 
@@ -52,6 +54,24 @@ class BrowserController{
 
     });
   }
+
+  void individualPlayList(String playListID){
+    var url = Uri.https("api.spotify.com",
+        "/v1/playlists/" + playListID,{
+        });
+
+    http.get(url,headers: {
+      "Authorization": _authorization.getSpotifyToken()
+    }).then((value) {
+      print("indivdual playList \n" + value.body);
+
+      var response = jsonDecode(value.body);
+      userIndividualPlayListStreamController.add(response);
+
+
+
+    });
+    }
 
   void search(String query){
     print("query : " + query);

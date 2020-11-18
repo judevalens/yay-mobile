@@ -95,7 +95,88 @@ class _RoomPageState extends State<RoomPage> {
     return FractionallySizedBox(
       widthFactor: 0.95,
       child: Container(
-      //  margin: EdgeInsets.all(2),
+        //  margin: EdgeInsets.all(2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(30),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Container(
+                    margin: EdgeInsets.all(5),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.music_note,
+                        color: Colors.white,
+                      ),
+                      onPressed: null,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.all(2),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.add,
+                          color: Colors.white,
+                        ),
+                        onPressed: null),
+                  ),
+                  Container(
+                    margin: EdgeInsets.all(2),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.mood,
+                          color: Colors.white,
+                        ),
+                        onPressed: null),
+                  ),
+                  Container(
+                    margin: EdgeInsets.all(1),
+                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black12),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.textsms,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            showTextInput = !showTextInput;
+                          });
+                        }),
+                  ),
+                ],
+              ),
+            ),
+            /*Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.all(Radius.circular(30)),
+              ),
+              margin: EdgeInsets.only(bottom: 5),
+              height: 5,
+            )*/
+          ],
+        ),
+      ),
+    );
+  }
+  Widget actionBar2() {
+    return FractionallySizedBox(
+      widthFactor: 0.95,
+      child: Container(
+        //  margin: EdgeInsets.all(2),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,

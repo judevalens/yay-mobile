@@ -7,6 +7,7 @@ import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/PlayListBottomSheet.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
+import 'package:yay/screens/player/RoomPlayerPage.dart';
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/SearchBottomSheet.dart';
 import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
@@ -45,7 +46,7 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    searchFocus =  new FocusNode(canRequestFocus: false);
+    searchFocus = new FocusNode(canRequestFocus: false);
     _screens[ScreenType.Player] = ChangeNotifierProvider.value(
       value: App.getInstance().playBackController.currentPlayBackState,
       child: PlayerPage(),
@@ -139,23 +140,23 @@ class HomePageState extends State<HomePage> {
         body: IndexedStack(
           index: _currentPageIndex,
           children: [
-            ChangeNotifierProvider.value(
-              value: App.getInstance().playBackController.currentPlayBackState,
-              child: PlayerPage(),
-            ),
+            PlayerRoom(),
             RoomListPage(App.getInstance().roomController),
           ],
         ),
         floatingActionButton: getFloatingButton(context),
         bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: Theme.of(context).primaryColor,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white54,
           currentIndex: _currentPageIndex,
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.music_note_sharp),
               title: Text("Home"),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.group_work),
+              icon: Icon(Icons.group),
               title: Text("Rooms"),
             ),
           ],
@@ -279,13 +280,11 @@ class HomePageState extends State<HomePage> {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
         builder: (BuildContext context) {
-          return PlayListBottomSheet(statusBarHeight: statusBArHeight,);
+          return PlayListBottomSheet(
+            statusBarHeight: statusBArHeight,
+          );
         });
   }
-
-
-
-
 
   Future<void> trackShowOption(BuildContext context) {
     return showDialog(
