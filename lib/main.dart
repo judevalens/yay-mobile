@@ -70,11 +70,11 @@ class MyAppState extends State<MyApp> {
     return MaterialApp(
       theme: ThemeData(
           textTheme: TextTheme(),
-          primaryColor: Color(0xFF821E20),
+          primaryColor: Color(0xFF501213),
           primaryTextTheme:TextTheme() ,
           accentColor: Colors.white,
-          backgroundColor: Color(0xFF1f2021),
-          primaryColorDark: Color(0xFF6C1719)),
+          backgroundColor: Color(0xFF0D0303),
+          ),
       title: "YAY",
       home: FutureBuilder<bool>(
         future: _isInitialized,

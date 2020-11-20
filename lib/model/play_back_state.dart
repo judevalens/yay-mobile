@@ -86,6 +86,7 @@ class PlayBackState extends ChangeNotifier{
     this.imageUri = _playBackState.imageUri;
 
     App.getInstance().playBackController.trackPositionStreamController.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
+    App.getInstance().playBackController.sTrackPositionStreamController.controller.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
     App.getInstance().playBackController.trackPlayStateStreamController.add(this.isPaused);
 
 
@@ -106,6 +107,7 @@ class PlayBackState extends ChangeNotifier{
       }
 
       App.getInstance().playBackController.trackNameStreamController.add(Tuple2<String,String>(this.track.name,artistList));
+      App.getInstance().playBackController.sTrackNameStreamController.controller.add(Tuple2<String,String>(this.track.name,artistList));
       ///queryArtWOrk();
     }
 
@@ -118,6 +120,7 @@ class PlayBackState extends ChangeNotifier{
   void setCoverImage(Uint8List imageByte){
     this.coverImage = imageByte;
     App.getInstance().playBackController.trackCoverStreamController.add(imageByte);
+    App.getInstance().playBackController.sTrackCoverStreamController.controller.add(imageByte);
   }
 
   void queryArtWOrk(){

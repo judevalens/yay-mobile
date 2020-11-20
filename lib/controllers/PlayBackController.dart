@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/misc/SingleSubsStream.dart';
 import 'package:yay/model/play_back_state.dart';
 
 enum playerMode { NORMAL, LISTENING, STREAMING }
@@ -40,14 +41,20 @@ class PlayBackController {
 
   playerMode currentMode = playerMode.NORMAL;
 
+  // ignore: close_sinks
   StreamController<Tuple2<int, int>> trackPositionStreamController;
   StreamController<Uint8List> trackCoverStreamController;
   StreamController<bool> trackPlayStateStreamController;
   StreamController<Tuple2<String,String>> trackNameStreamController;
+  SingleSCMultipleSubscriptions<Tuple2<int, int>> sTrackPositionStreamController;
+  SingleSCMultipleSubscriptions<Tuple2<String, String>> sTrackNameStreamController;
+  SingleSCMultipleSubscriptions<Uint8List> sTrackCoverStreamController;
 
   PlayBackController() {
     isInitialized = false;
     currentPlayBackState = PlayBackState.empty();
+
+
     watchAuthorization();
   }
 
@@ -60,6 +67,11 @@ class PlayBackController {
     trackCoverStreamController = new StreamController();
     trackPlayStateStreamController = new StreamController();
     trackNameStreamController = new StreamController();
+
+    sTrackPositionStreamController = new SingleSCMultipleSubscriptions();
+    sTrackNameStreamController = new SingleSCMultipleSubscriptions();
+    sTrackCoverStreamController = new SingleSCMultipleSubscriptions();
+
 
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler(
@@ -179,6 +191,7 @@ class PlayBackController {
 
 
 
+
   void resumeMusic() {
     playBackChannel.invokeMethod(MC_RESUME);
   }
@@ -245,8 +258,8 @@ class PlayBackController {
   }
 
   Future<Map<String, dynamic>> getPlayBackState() async {
+    print("requesting state");
     var playerStateJSonString = await playBackChannel.invokeMethod(MC_GET_PLAY_BACK_STATE);
-
     return jsonDecode(playerStateJSonString);
   }
 

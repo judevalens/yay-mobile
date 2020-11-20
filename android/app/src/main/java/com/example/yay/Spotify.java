@@ -39,6 +39,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import timber.log.Timber;
 
 
 public class Spotify {
@@ -336,12 +337,11 @@ public class Spotify {
         mSpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
             @Override
             public void onResult(PlayerState playerState) {
-                Log.d("spotify playback", "player state changed!!!!!!");
+                Timber.d("player state changed!!!!!!");
                 JsonElement playerStateJsonElement = gson.toJsonTree(playerState);
                 JsonObject playerStateJson = playerStateJsonElement.getAsJsonObject();
                 playerStateJson.addProperty("image_uri", playerState.track.imageUri.raw);
                 playerStateJson.addProperty("time_stamp", System.currentTimeMillis());
-                
                response.success(playerStateJson.toString());
             }
         });

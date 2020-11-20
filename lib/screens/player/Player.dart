@@ -9,13 +9,16 @@ import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
 import 'package:yay/model/play_back_state.dart';
-import 'package:yay/screens/player/progressBarPainter.dart';
+import 'package:yay/screens/player/RoomPlayerPage.dart';
 
 import '';
 import 'ProgressBar.dart';
 
 class PlayerPage extends StatefulWidget {
-  PlayerPage();
+  final goTo pageSwitcher;
+
+  PlayerPage({this.pageSwitcher});
+
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -23,7 +26,7 @@ class PlayerPage extends StatefulWidget {
   }
 }
 
-class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMixin{
+class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMixin {
   int playStatus = 0;
   String imgSrc =
       "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
@@ -39,18 +42,18 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    controlsColor = Theme.of(context).primaryColor;
+    controlsColor = Theme.of(context).accentColor;
     // TODO: implement build
     return Selector<PlayBackState, bool>(selector: (_, _playBackState) {
       return _playBackState.isUnAvailable;
     }, builder: (context, isUnAvailable, child) {
       print("player is null");
       print(isUnAvailable);
-      return _buildPlayer(isUnAvailable);
+      return _buildPlayer(isUnAvailable, widget.pageSwitcher);
     });
   }
 
-  Widget _buildPlayer(bool isUnAvailable) {
+  Widget _buildPlayer(bool isUnAvailable, goTo pageSwitcher) {
     if (isUnAvailable) {
       return emptyPlayBackState();
     } else {
@@ -68,12 +71,19 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
                 widthFactor: 1,
                 child: AspectRatio(
                   aspectRatio: 1 / 1,
-                  child: Container(child: artWork()),
+                  child: Container(
+                      child: Card(
+                    child: FractionallySizedBox(
+                      widthFactor: 0.9,
+                      child: artWork(),
+                    ),
+                    color: Colors.white10,
+                    elevation: 10,
+                    shadowColor: Colors.black,
+                  )),
                 ),
               ),
-
-              trackNameArtistStream(),
-
+              trackInfo(),
               Column(
                 children: [
                   progressBar(),
@@ -84,8 +94,18 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
                 children: [previousButton(), resumePauseStream(), nextButton()],
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               ),
-
-              Container(child: IconButton(icon: Icon(Icons.keyboard_arrow_up_sharp, color: Colors.white,), onPressed: () {  },),),
+              Container(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_downward_sharp,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    pageSwitcher(1);
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -121,13 +141,12 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
 
   Widget trackPosition() {
     return StreamBuilder<Tuple2<int, int>>(
-      stream: _playBackController.trackPositionStreamController.stream,
+      stream: _playBackController.sTrackPositionStreamController.getStream(),
       builder: (_, AsyncSnapshot<Tuple2<int, int>> snapshot) {
         var duration = 0;
         var pos = 0;
 
         if (snapshot.hasData) {
-
           duration = snapshot.data.item2;
           pos = snapshot.data.item1;
         }
@@ -150,12 +169,6 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
         );
       },
     );
-  }
-
-  Widget trackInfo(String track) {
-    print("artist 1 ");
-    print(_playBackController.currentPlayBackState.rawState["track"]["artist"]["name"]);
-    return null;
   }
 
   Widget playButton() {
@@ -237,12 +250,15 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
         Widget image;
         if (snapShot.hasData) {
           image = Image.memory(snapShot.data);
-        }else {
+        } else {
           image = defaultCover();
         }
-         return AnimatedSwitcher(duration: Duration(milliseconds: 100), child: Container(
-           key: UniqueKey(),
-        child: image,));
+        return AnimatedSwitcher(
+            duration: Duration(milliseconds: 600),
+            child: Container(
+              key: UniqueKey(),
+              child: image,
+            ));
       },
     );
   }
@@ -260,47 +276,33 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
     );
   }
 
-  Widget trackNameArtistStream() {
+  Widget trackInfo() {
     return StreamBuilder(
-      stream: _playBackController.trackNameStreamController.stream,
-      builder: (_, AsyncSnapshot<Tuple2<String, String>> snapShot) {
+        stream: _playBackController.trackNameStreamController.stream,
+        builder: (_, AsyncSnapshot<Tuple2<String, String>> snapShot) {
+          var songTitle = "No data";
+          var artists = songTitle;
 
+          if (snapShot.hasData) {
+            songTitle = snapShot.data.item1 != null ? snapShot.data.item1 : "No data";
+            artists = snapShot.data.item2 != null ? snapShot.data.item2 : "No data";
 
-        var songTitle =  "No data";
-        var artists = songTitle;
-
-
-        if (snapShot.hasData){
-             songTitle =  snapShot.data.item1 != null ? snapShot.data.item1 : "No data";
-             artists =  snapShot.data.item2 != null ? snapShot.data.item2 : "No data";
-
-             print("title has changed " +  snapShot.data.item1);
-
-
-        }
+            print("title has changed " + snapShot.data.item1);
+          }
 
           return Column(
             children: [
               Container(
-                child: MMarqueeState(
-                    songTitle,
-                  TextStyle(color: Colors.white, fontSize: 25),
-                    key : UniqueKey()
-                ),
+                child: MMarqueeState(songTitle, TextStyle(color: Colors.white, fontSize: 25),
+                    key: UniqueKey()),
               ),
-
               Container(
-                child: MMarqueeState(
-                    artists,
-                    TextStyle(color: Colors.white, fontSize: 20),
-                    key : UniqueKey()
-                ),
+                child: MMarqueeState(artists, TextStyle(color: Colors.white, fontSize: 20),
+                    key: UniqueKey()),
               )
             ],
           );
-        }
-
-    );
+        });
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/PlayListBottomSheet.dart';
+import 'package:yay/screens/home_screen/RoomBottomSheet.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
 import 'package:yay/screens/player/RoomPlayerPage.dart';
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/SearchBottomSheet.dart';
@@ -49,7 +50,7 @@ class HomePageState extends State<HomePage> {
     searchFocus = new FocusNode(canRequestFocus: false);
     _screens[ScreenType.Player] = ChangeNotifierProvider.value(
       value: App.getInstance().playBackController.currentPlayBackState,
-      child: PlayerPage(),
+      child: PlayerPage(pageSwitcher: null,),
     );
 
     _screens[ScreenType.Room] = ChangeNotifierProvider.value(
@@ -70,7 +71,7 @@ class HomePageState extends State<HomePage> {
       case ScreenType.Player:
         w = ChangeNotifierProvider.value(
           value: App.spotifyApi,
-          child: PlayerPage(),
+          child: PlayerPage(pageSwitcher: null,),
         );
         break;
       case ScreenType.Room:
@@ -101,10 +102,12 @@ class HomePageState extends State<HomePage> {
         return Future.value(false);
       },
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        resizeToAvoidBottomPadding: true,
+        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomPadding: false,
         appBar: AppBar(
-          title: Text("yay"),
+          title: Container( padding: EdgeInsets.all(4), decoration: BoxDecoration(
+            border: Border.all(width: 4,color: Colors.white)
+          ), child:Text("YaY",),),
           actions: [
             IconButton(
                 icon: new Icon(
@@ -123,6 +126,15 @@ class HomePageState extends State<HomePage> {
                 color: Colors.white,
                 onPressed: () {
                   playListModalSheet(_context);
+                }),
+            IconButton(
+                icon: new Icon(
+                  Icons.group_sharp,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  roomModalSheet(_context);
                 }),
             IconButton(
                 icon: new Icon(
@@ -145,7 +157,7 @@ class HomePageState extends State<HomePage> {
           ],
         ),
         floatingActionButton: getFloatingButton(context),
-        bottomNavigationBar: BottomNavigationBar(
+          /*  bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Theme.of(context).primaryColor,
           selectedItemColor: Colors.white,
           unselectedItemColor: Colors.white54,
@@ -165,7 +177,7 @@ class HomePageState extends State<HomePage> {
               _currentPageIndex = currentPageIndex;
             });
           },
-        ),
+        )*/
       ),
     );
   }
@@ -278,9 +290,22 @@ class HomePageState extends State<HomePage> {
         context: _context,
         isScrollControlled: true,
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+        RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
         builder: (BuildContext context) {
           return PlayListBottomSheet(
+            statusBarHeight: statusBArHeight,
+          );
+        });
+  }
+  Future<void> roomModalSheet(BuildContext _context) {
+
+    return showModalBottomSheet<void>(
+        context: _context,
+        isScrollControlled: true,
+        shape:
+        RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+        builder: (BuildContext context) {
+          return RoomBottomSheet(
             statusBarHeight: statusBArHeight,
           );
         });

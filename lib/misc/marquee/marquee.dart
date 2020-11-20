@@ -247,7 +247,6 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
         ),
       )
 
-
       ,
     );
   }
