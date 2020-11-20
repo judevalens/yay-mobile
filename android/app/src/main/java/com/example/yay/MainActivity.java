@@ -39,6 +39,7 @@ public class MainActivity extends FlutterActivity {
     MethodChannel.Result loginResult;
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
+        this.sup
         super.configureFlutterEngine(flutterEngine);
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
         playBackStateTunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PLAY_BACK_STATE_CHANNEL);
