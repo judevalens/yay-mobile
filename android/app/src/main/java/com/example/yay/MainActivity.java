@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterFragmentActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -25,7 +26,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.socket.client.*;
 import io.socket.emitter.Emitter;
 
-public class MainActivity extends FlutterActivity {
+public class MainActivity extends FlutterFragmentActivity {
     String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
     String REDIRECT_URI = "http://com.example.yay/";
     SpotifyAppRemote mSpotifyAppRemote;
@@ -37,13 +38,15 @@ public class MainActivity extends FlutterActivity {
     MethodChannel playBackStateTunnel;
     Spotify spotify;
     MethodChannel.Result loginResult;
+    MyGiphy myGiphy;
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
-        this.sup
         super.configureFlutterEngine(flutterEngine);
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
         playBackStateTunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PLAY_BACK_STATE_CHANNEL);
-        spotify = new Spotify(this,this,tunnel,playBackStateTunnel);
+        myGiphy = new MyGiphy(this);
+
+        spotify = new Spotify(this,this,tunnel,playBackStateTunnel,myGiphy);
         try {
             SocketIONetwork socketIONetwork = new SocketIONetwork();
         } catch (URISyntaxException e) {
@@ -65,6 +68,9 @@ public class MainActivity extends FlutterActivity {
                         case "isAppRemoteConnected":
                             boolean isConnected = spotify.mSpotifyAppRemote != null && spotify.mSpotifyAppRemote.isConnected();
                             result.success(isConnected);
+                            break;
+                        case "showGiphy":
+                            myGiphy.show();;
                             break;
 
                     }

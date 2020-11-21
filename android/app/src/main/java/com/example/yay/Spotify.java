@@ -77,11 +77,13 @@ public class Spotify {
 
     private long playerStateTimeStamp = 0;
     private long newPlayerStateThreshold = 250;
-    public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel) {
+    MyGiphy myGiphy;
+    public Spotify(Context mContext, Activity activity, MethodChannel tunnel,MethodChannel playBackStateTunnel, MyGiphy myGiphy) {
         this.context = mContext;
         this.activity = activity;
         this.tunnel = tunnel;
         this.playBackStateTunnel = playBackStateTunnel;
+        this.myGiphy = myGiphy;
         setUpPlayBackChannel();
     }
 

@@ -98,7 +98,7 @@ class _MyRoomState extends State<MyRoom> with AutomaticKeepAliveClientMixin {
     }
 
     return Container(
-      padding: EdgeInsets.only(bottom: bottomPadding),
+      padding: MediaQuery.of(context).viewInsets,
       height: double.infinity,
       width: double.infinity,
       child: Column(
@@ -167,24 +167,9 @@ class _MyRoomState extends State<MyRoom> with AutomaticKeepAliveClientMixin {
             child: IconButton(
               color: Theme.of(context).primaryColor,
               onPressed: () {
-                // _focusNode.unfocus();
+                //_focusNode.unfocus();
 
-
-                if (isCustomKeyBoardOpen){
-                  setState(() {
-                    bottomPadding = 0 ;
-                    customKeyBoard.remove();
-                    isCustomKeyBoardOpen = false;
-                  });
-                }else{
-                  setState(() {
-                    bottomPadding = keyBoardHeight;
-                    showKeyBoard(context);
-
-                  });
-                }
-
-
+                App.getInstance().authorization.authenticationChannel.invokeListMethod("showGiphy");
 
               },
               icon: Icon(Icons.send),
