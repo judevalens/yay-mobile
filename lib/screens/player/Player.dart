@@ -9,13 +9,13 @@ import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
 import 'package:yay/model/play_back_state.dart';
-import 'package:yay/screens/player/RoomPlayerPage.dart';
+import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 
 import '';
 import 'ProgressBar.dart';
 
 class PlayerPage extends StatefulWidget {
-  final goTo pageSwitcher;
+  final PageSwitcher pageSwitcher;
 
   PlayerPage({this.pageSwitcher});
 
@@ -53,7 +53,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
     });
   }
 
-  Widget _buildPlayer(bool isUnAvailable, goTo pageSwitcher) {
+  Widget _buildPlayer(bool isUnAvailable, PageSwitcher pageSwitcher) {
     if (isUnAvailable) {
       return emptyPlayBackState();
     } else {
@@ -77,8 +77,8 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
                       widthFactor: 0.9,
                       child: artWork(),
                     ),
-                    color: Colors.white10,
-                    elevation: 10,
+                    color: Colors.white12,
+                    elevation: 20,
                     shadowColor: Colors.black,
                   )),
                 ),
@@ -113,7 +113,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
     }
   }
 
-  String positionFormatter(int _durationMS) {
+  String formatTime(int _durationMS) {
     int durationMS = _durationMS == null ? 0 : _durationMS;
 
     int second = durationMS ~/ 1000;
@@ -157,11 +157,11 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                positionFormatter(pos),
+                formatTime(pos),
                 style: new TextStyle(color: Colors.white),
               ),
               Text(
-                positionFormatter(duration),
+                formatTime(duration),
                 style: new TextStyle(color: Colors.white),
               )
             ],
@@ -254,7 +254,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
           image = defaultCover();
         }
         return AnimatedSwitcher(
-            duration: Duration(milliseconds: 600),
+            duration: Duration(milliseconds: 1000),
             child: Container(
               key: UniqueKey(),
               child: image,

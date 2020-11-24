@@ -126,7 +126,8 @@ public class Spotify {
                         @Override
                         public void onFailure(Throwable throwable) {
                             if (connectToSpotifyAppRemoteResult != null) {
-                                connectToSpotifyAppRemoteResult.error("loginFailed", null, null);
+                              connectToSpotifyAppRemoteResult.error("loginFailed", null, null);
+
                             }
                         }
                     });

@@ -1,11 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/controllers/ChatController.dart';
 
 class SearchBottomSheet extends StatefulWidget {
-  final double statusBArHeight;
+  final double statusBarHeight;
 
-  SearchBottomSheet(this.statusBArHeight);
+  SearchBottomSheet(this.statusBarHeight);
 
   @override
   _SearchBottomSheetState createState() => _SearchBottomSheetState();
@@ -34,8 +37,13 @@ class _SearchBottomSheetState extends State<SearchBottomSheet> {
     return Container(
       height: MediaQuery.of(context).size.height -
           AppBar().preferredSize.height -
-          widget.statusBArHeight,
-      padding: EdgeInsets.only(left: 10,right: 10),
+          widget.statusBarHeight,
+      padding: EdgeInsets.only(
+        top: widget.statusBarHeight,
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 10,
+        right: 10,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -127,7 +135,7 @@ class SearchResponseItem extends StatefulWidget {
   final Map<String, dynamic> track;
   final FocusNode searchBarFocusNode;
 
-  SearchResponseItem(this.track, this.searchBarFocusNode):super(key: UniqueKey());
+  SearchResponseItem(this.track, this.searchBarFocusNode):super(key: ValueKey(track["id"]));
 
   @override
   _SearchResponseItemState createState() => _SearchResponseItemState();
@@ -207,8 +215,11 @@ class _SearchResponseItemState extends State<SearchResponseItem> {
         ///// searchFocus.unfocus();
       },
       onSelected: (value) {
-        widget.searchBarFocusNode.unfocus();
-        //FocusScope.of(context).unfocus();searchFocus.unfocus();
+
+        if(value == 2){
+          App.getInstance().roomController.chatController.sendObject(widget.track, ChatItemType(ChatItemType.SUGGESTION));
+        }
+
       },
       itemBuilder: (context) {
         return <PopupMenuEntry<int>>[
@@ -218,15 +229,15 @@ class _SearchResponseItemState extends State<SearchResponseItem> {
           ),
           const PopupMenuItem<int>(
             child: Text("add to queue"),
-            value: 0,
+            value: 1,
           ),
           const PopupMenuItem<int>(
             child: Text("Suggest to room"),
-            value: 0,
+            value: 2,
           ),
           const PopupMenuItem<int>(
             child: Text("Open in spotify"),
-            value: 0,
+            value: 3,
           ),
         ];
       },

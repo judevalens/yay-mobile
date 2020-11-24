@@ -9,6 +9,8 @@ import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
+import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/misc/SingleSubsStream.dart';
 import 'package:yay/model/play_back_state.dart';
 import 'package:yay/model/room.dart';
 import 'package:uuid/uuid.dart';
@@ -20,14 +22,16 @@ enum RoomAction { JoinStream, StartStream, StopStream, leaveStream, RoomIsInacti
 class RoomController extends ChangeNotifier {
   static const String startRoomUrl = "http://129.21.70.250:8000/startRoom";
 
-  FirebaseDatabase db;
-  FirebaseAuth auth;
+  FirebaseDatabase _database;
+  FirebaseAuth _auth;
 
   Map<String, dynamic> myRooms = new Map();
   StreamController<Map<String, dynamic>> list = new StreamController();
+  SingleSCMultipleSubscriptions<Map<String, dynamic>> roomListStreamController =
+      new SingleSCMultipleSubscriptions();
   DatabaseReference currentRoom;
   // Used to set room inactive when room leader disconnect unexpectedly
-  DatabaseReference  currentRoomActiveState;
+  DatabaseReference currentRoomActiveState;
   String currentRoomID;
   OnDisconnect currentRoomOnDisconnect;
   StreamSubscription<Event> currentRoomPlayBackState;
@@ -37,20 +41,23 @@ class RoomController extends ChangeNotifier {
   bool isInRoom = false;
   bool isStreaming = false;
 
-  bool isInitialized =false;
+  bool isInitialized = false;
 
-  RoomController(this.db, this.auth) {
+  ChatController chatController;
+
+  RoomController(this._database, this._auth) {
     watchAuthorization();
   }
 
-  void watchAuthorization(){
+  void watchAuthorization() {
     App.getInstance().authorization.getConnectionState().listen((isConnected) {
-      if(isConnected){
-        if(!isInitialized){
+      if (isConnected) {
+        if (!isInitialized) {
           init();
+          chatController = new ChatController(this, _auth, _database);
         }
-      }else{
-        if(isInitialized){
+      } else {
+        if (isInitialized) {
           // shutdown();
         }
       }
@@ -66,59 +73,53 @@ class RoomController extends ChangeNotifier {
       roomName = joinCode;
     }
 
-    var roomID = Uuid().v1();
+    var roomRef = _database.reference().child("rooms").push();
 
-    var roomRef = db.reference().child("rooms").child(roomID);
-
-    var newRoom = new Room(roomID, joinCode, auth.currentUser.uid, null, null);
-
-    var joinCodeRef = db.reference().child("join_codes").child(joinCode);
+    var joinCodeRef = _database.reference().child("join_codes").child(joinCode);
 
     joinCodeRef.set(roomRef.key);
 
     roomRef.set({
-      "room_id": roomID,
+      "room_id": roomRef.key,
       "room_name": roomName,
       "join_code": joinCode,
-      "leader": auth.currentUser.uid,
+      "leader": _auth.currentUser.uid,
       "members": {},
       "is_active": false,
       "play_back_state": {}
     });
 
-    var userRef = db
+    var userRef = _database
         .reference()
         .child("users")
-        .child(auth.currentUser.uid)
+        .child(_auth.currentUser.uid)
         .child("rooms")
-        .child(roomID)
+        .child(roomRef.key)
         .set({"mine": true});
 
     print("created room");
   }
 
-
-
   Future<void> joinRoom(String joinCode) async {
-    var joinCodeRef = db.reference().child("join_codes").child(joinCode);
+    var joinCodeRef = _database.reference().child("join_codes").child(joinCode);
     dynamic roomID = (await joinCodeRef.once()).value;
     logger.d("joining room , roomID :" + (roomID == null).toString());
     if (roomID != null) {
       logger.d(roomID);
-      var roomMembersRef = db.reference().child("rooms").child(roomID).child("members");
+      var roomMembersRef = _database.reference().child("rooms").child(roomID).child("members");
 
       var notInRoom =
-          (await roomMembersRef.equalTo(null, key: auth.currentUser.uid).once()).value == null;
+          (await roomMembersRef.equalTo(null, key: _auth.currentUser.uid).once()).value == null;
 
       print("isInRoom");
       print(notInRoom);
 
-      if (true) {
-        roomMembersRef.child(auth.currentUser.uid).set(false);
-        db
+      if (notInRoom) {
+        roomMembersRef.child(_auth.currentUser.uid).set(false);
+        _database
             .reference()
             .child("users")
-            .child(auth.currentUser.uid)
+            .child(_auth.currentUser.uid)
             .child("rooms")
             .child(roomID)
             .set({"mine": false});
@@ -127,81 +128,83 @@ class RoomController extends ChangeNotifier {
   }
 
   Future<bool> joinStream(String roomID) async {
-    var roomToJoinRef = db.reference().child("rooms").child(roomID);
+    var roomToJoinRef = _database.reference().child("rooms").child(roomID);
     var roomToJoin = (await roomToJoinRef.once()).value;
 
     if (!roomToJoin["is_active"]) {
       return false;
     }
-      // Before joining a new room, user must leave its current room if applicable
-      if (isInRoom) {
-        stop();
-      }
+    // Before joining a new room, user must leave its current room if applicable
+    if (isInRoom) {
+      leaveStream();
+    }
 
-      currentRoom = db.reference().child("rooms").child(roomID);
+    currentRoom = _database.reference().child("rooms").child(roomID);
 
-      // member state ref
-    var memberRef  = currentRoom.child("members").child(userID);
+    // member state ref
+    var memberRef = currentRoom.child("members").child(userID);
 
-      // let the room know when a member disconnect unexpectedly
-      currentRoomOnDisconnect = memberRef.onDisconnect();
-      currentRoomOnDisconnect.set(false);
-      memberRef.set(true);
+    // let the room know when a member disconnect unexpectedly
+    currentRoomOnDisconnect = memberRef.onDisconnect();
+    currentRoomOnDisconnect.set(false);
+    memberRef.set(true);
+    currentRoomID = currentRoom.key;
+    isInRoom = true;
+    chatController.loadChat();
+    // update the playback mode, so we can be in sync with the room
+    await App.getInstance().playBackController.setCurrentMode(playerMode.LISTENING);
 
-      // update the playback mode, so we can be in sync with the room
-      await App.getInstance().playBackController.setCurrentMode(playerMode.LISTENING);
-
-      // listening for play back state updates
-      currentRoomPlayBackState = currentRoom.child("play_back_state").onValue.listen((event) {
-        if (playerMode.LISTENING == App.getInstance().playBackController.currentMode) {
-          Map<String, dynamic> leaderPlayBackState = Map.from(event.snapshot.value);
-          App.getInstance().playBackController.sync(leaderPlayBackState);
-        }
-      });
-
-    // watch room state. when inactive  members shall stop listening for updates from this room.
-    currentRoomState =  currentRoom.child("is_active").onValue.listen((event) {
-      var isActive = event.snapshot.value;
-      if (!isActive){
-        leaveStream();
+    // listening for play back state updates
+    currentRoomPlayBackState = currentRoom.child("play_back_state").onValue.listen((event) {
+      if (playerMode.LISTENING == App.getInstance().playBackController.currentMode) {
+        Map<String, dynamic> leaderPlayBackState = Map.from(event.snapshot.value);
+       // App.getInstance().playBackController.sync(leaderPlayBackState);
       }
     });
 
+    // watch room state. when inactive  members shall stop listening for updates from this room.
+    currentRoomState = currentRoom.child("is_active").onValue.listen((event) {
+      var isActive = event.snapshot.value;
+      if (!isActive) {
+        leaveStream();
+
+      }
+    });
 
     return true;
   }
 
   // determines the correct way to stop . stop stream or leave room;
-  void stop(){
-
-    if (isStreaming){
+  void stop() {
+    if (isStreaming) {
       stopStreaming();
-    }else{
+    } else {
       leaveStream();
     }
-
   }
 
   void sendKeepAlive() {}
 
   void leaveStream() async {
-    if (currentRoom != null){
+    if (currentRoom != null) {
       currentRoom.child("members").child(userID).set(false);
+      currentRoomID = null;
+      isInRoom = false;
       currentRoomPlayBackState.cancel();
       currentRoomState.cancel();
+      chatController.leaveChat();
       await App.getInstance().playBackController.setCurrentMode(playerMode.NORMAL);
-    }else{
+    } else {
       logger.i("current room is null; can't leave stream");
     }
-
   }
 
   void streamToRoom(String roomID) async {
     if (isInRoom) {
       stop();
     }
-    currentRoom = db.reference().child("rooms").child(roomID);
-     currentRoomActiveState = currentRoom.child("is_active");
+    currentRoom = _database.reference().child("rooms").child(roomID);
+    currentRoomActiveState = currentRoom.child("is_active");
 
     // set is_active to false if roomLeader disconnect unexpectedly
     // this will close the room for all of the other members
@@ -211,10 +214,16 @@ class RoomController extends ChangeNotifier {
 
     currentRoomActiveState.onValue.listen((event) {
       logger.d("room status changes \n isActive " + event.snapshot.value.toString());
+      var isActive = event.snapshot.value;
+      if (!isActive) {
+        stopStreaming();
+      }
     });
 
     isInRoom = true;
     isStreaming = true;
+    currentRoomID = currentRoom.key;
+    chatController.loadChat();
     await App.getInstance().playBackController.setCurrentMode(playerMode.STREAMING);
     var currentPlayBackState = App.getInstance().playBackController.getPlayBackState();
 
@@ -225,19 +234,19 @@ class RoomController extends ChangeNotifier {
 
   /// Stops streaming to a room
   void stopStreaming() async {
-    if (currentRoom !=null){
+    if (currentRoom != null) {
       logger.d("stopped streaming");
       currentRoom.child("is_active").set(false);
       isInRoom = false;
       isStreaming = false;
+      chatController.leaveChat();
       await App.getInstance().playBackController.setCurrentMode(playerMode.NORMAL);
-    }else{
+    } else {
       logger.i("current room is null; cant stop streaming");
     }
-
   }
 
-  void streamPlayBackState(Map<String,dynamic> currentPlayBackState) {
+  void streamPlayBackState(Map<String, dynamic> currentPlayBackState) {
     currentRoom.child("play_back_state").update(currentPlayBackState);
   }
 
@@ -277,10 +286,10 @@ class RoomController extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    userID = auth.currentUser.uid;
+    userID = _auth.currentUser.uid;
 
-
-    var roomsRef = (db.reference().child("users").child(auth.currentUser.uid).child("rooms"));
+    var roomsRef =
+        (_database.reference().child("users").child(_auth.currentUser.uid).child("rooms"));
     var roomList = (await roomsRef.once()).value;
     // addRoom(roomList);
 
@@ -305,7 +314,7 @@ class RoomController extends ChangeNotifier {
   }
 
   void addNewRoom(String roomID) async {
-    var roomRef = db.reference().child("rooms").child(roomID);
+    var roomRef = _database.reference().child("rooms").child(roomID);
 
     roomRef.onValue.listen((event) {
       print("child changed !!!");
@@ -318,6 +327,7 @@ class RoomController extends ChangeNotifier {
       checkRoomState();
 
       list.add(myRooms);
+      roomListStreamController.controller.add(myRooms);
     });
   }
 
@@ -326,7 +336,7 @@ class RoomController extends ChangeNotifier {
       Map<String, dynamic> roomListMap = new Map.from(roomList);
       roomListMap.forEach((key, value) async {
         logger.d("key : " + key);
-        var roomValue = (await db.reference().child("rooms").child(key).once()).value;
+        var roomValue = (await _database.reference().child("rooms").child(key).once()).value;
         var roomKey = key;
         Map<String, dynamic> myRoom = Map.from(roomValue);
         myRooms[roomKey] = myRoom;
@@ -349,7 +359,7 @@ class RoomController extends ChangeNotifier {
   }
 
   Stream<Map<String, dynamic>> myRoomsStream() {
-    return list.stream.asBroadcastStream();
+    return roomListStreamController.getStream();
   }
 
   Future<void> listRoom(Map<dynamic, dynamic> roomsData) async {}

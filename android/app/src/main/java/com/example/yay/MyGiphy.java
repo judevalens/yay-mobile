@@ -13,6 +13,7 @@ import com.giphy.sdk.ui.Giphy;
 import com.giphy.sdk.ui.GiphyFrescoHandler;
 import com.giphy.sdk.ui.themes.GPHTheme;
 import com.giphy.sdk.ui.themes.GridType;
+import com.giphy.sdk.ui.views.GPHMediaView;
 import com.giphy.sdk.ui.views.GiphyDialogFragment;
 
 import io.flutter.embedding.android.FlutterFragmentActivity;

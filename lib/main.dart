@@ -6,7 +6,6 @@ import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
-import 'package:yay/screens/rooms_screen/room_page.dart';
 
 void main() {
   runApp(
@@ -70,10 +69,10 @@ class MyAppState extends State<MyApp> {
     return MaterialApp(
       theme: ThemeData(
           textTheme: TextTheme(),
-          primaryColor: Color(0xFF501213),
+          primaryColor:Color(0xFF590004),//Color(0xFF501213),
           primaryTextTheme:TextTheme() ,
           accentColor: Colors.white,
-          backgroundColor: Color(0xFF0D0303),
+          backgroundColor:Color(0xFF111111),
           ),
       title: "YAY",
       home: FutureBuilder<bool>(

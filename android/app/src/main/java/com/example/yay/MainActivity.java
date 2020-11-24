@@ -5,12 +5,20 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.giphy.sdk.core.models.Media;
+import com.giphy.sdk.ui.GPHContentType;
+import com.giphy.sdk.ui.views.GiphyDialogFragment;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,16 +33,19 @@ import io.flutter.plugin.common.MethodChannel;
 
 import io.socket.client.*;
 import io.socket.emitter.Emitter;
+import timber.log.Timber;
 
-public class MainActivity extends FlutterFragmentActivity {
+public class MainActivity extends FlutterFragmentActivity implements GiphyDialogFragment.GifSelectionListener{
     String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
     String REDIRECT_URI = "http://com.example.yay/";
     SpotifyAppRemote mSpotifyAppRemote;
     private static final String CHANNEL = "yay.homepage/spotify";
+    private static final String GIPHY_CHANNEL = "yay.homepage/giphy";
     private static final String PLAY_BACK_STATE_CHANNEL = "playBackStateTunnel";
     private final String SOCKET_ADDRESS = "http://192.168.1.4:5000";
     private io.socket.client.Socket socketio;
     MethodChannel tunnel;
+    MethodChannel giphyChannel;
     MethodChannel playBackStateTunnel;
     Spotify spotify;
     MethodChannel.Result loginResult;
@@ -43,6 +54,7 @@ public class MainActivity extends FlutterFragmentActivity {
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
         tunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL);
+        giphyChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), GIPHY_CHANNEL);
         playBackStateTunnel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), PLAY_BACK_STATE_CHANNEL);
         myGiphy = new MyGiphy(this);
 
@@ -56,11 +68,11 @@ public class MainActivity extends FlutterFragmentActivity {
                 (call, result) -> {
                     switch (call.method) {
                         case "connectToSpotifyApp":
-                           Log.d("connection","connectToSpotifyAppRemote");
+                            Timber.d("connectToSpotifyAppRemote");
                            spotify.connectToSpotifyAppRemote(result);
                            break;
                         case "getCode":
-                            Log.d("login", "login with spotify");
+                            Timber.d("login with spotify");
                             spotify.getCode();
                             loginResult = result;
                             //result.success("true");
@@ -69,14 +81,20 @@ public class MainActivity extends FlutterFragmentActivity {
                             boolean isConnected = spotify.mSpotifyAppRemote != null && spotify.mSpotifyAppRemote.isConnected();
                             result.success(isConnected);
                             break;
-                        case "showGiphy":
-                            myGiphy.show();;
-                            break;
 
                     }
 
                 }
         );
+
+        giphyChannel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
+            @Override
+            public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+                if ("showGiphyPad".equals(call.method)) {
+                    myGiphy.show();
+                }
+            }
+        });
 
 
 
@@ -163,5 +181,29 @@ public class MainActivity extends FlutterFragmentActivity {
 
         });
     }
-    
+
+    @Override
+    public void didSearchTerm(@NotNull String s) {
+
+    }
+
+    @Override
+    public void onDismissed(@NotNull GPHContentType gphContentType) {
+
+    }
+
+    @Override
+    public void onGifSelected(@NotNull Media media, @Nullable String s, @NotNull GPHContentType gphContentType) {
+        Gson gson = new Gson();
+       JsonElement mediaJSON =  gson.toJsonTree(media);
+
+
+        JsonObject giphy = new JsonObject();
+
+        giphy.add("media", mediaJSON);
+        giphy.add("contentType", gson.toJsonTree(gphContentType));
+
+       giphyChannel.invokeMethod("insertMedia",giphy.toString());
+
+    }
 }

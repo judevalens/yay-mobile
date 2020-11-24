@@ -12,6 +12,9 @@ import '../ChannelConst.dart';
 
 class Authorization extends ChangeNotifier {
   static const String USER_EMAIL_PREFERENCE_ATTR = "userEmail";
+  static const String USER_PROFILE_URL_PREFERENCE_ATTR = "userProfile";
+  static const String USER_DISPLAY_NAME_PREFERENCE_ATTR = "userDisplayName";
+  static const String USER_IMAGE_URL_PREFERENCE_ATTR = "userImageURL";
   static const String LOGIN_STATUS_PREFERENCE_ATTR = "isConnected";
   static const String ACCESS_TOKEN_PREFERENCE_ATTR = "accessToken";
   App spotifyApi;
@@ -22,7 +25,10 @@ class Authorization extends ChangeNotifier {
   bool isSignIn;
   bool isRemoteAppConnected;
   String userEmail;
-
+  String userDisplayName;
+  String userProfileUrl;
+  String userImageUrl;
+Map<String,dynamic> userInfo;
 
   FirebaseAuth firebaseAuth;
 
@@ -44,7 +50,9 @@ class Authorization extends ChangeNotifier {
 
   Future<void> init() async {
     userEmail = App.getInstance().appSharedPreferences.get(USER_EMAIL_PREFERENCE_ATTR);
-    isSignIn = App.getInstance().appSharedPreferences.get(LOGIN_STATUS_PREFERENCE_ATTR);
+    userDisplayName = App.getInstance().appSharedPreferences.get(USER_DISPLAY_NAME_PREFERENCE_ATTR);
+    userProfileUrl = App.getInstance().appSharedPreferences.get(USER_PROFILE_URL_PREFERENCE_ATTR);
+    userImageUrl = App.getInstance().appSharedPreferences.get(USER_IMAGE_URL_PREFERENCE_ATTR);
     await loginFlow();
 
     return;
@@ -70,7 +78,9 @@ class Authorization extends ChangeNotifier {
     isRemoteAppConnected = await connectToSpotifyRemoteApp();
     var tokenResponse = await getToken(firebaseAuth.currentUser.uid);
     accessToken = tokenResponse["access_token"];
+    print(tokenResponse["expires_in"]);
     accessTokenExpireIn = tokenResponse["expires_in"];
+    userInfo = tokenResponse;
     return isRemoteAppConnected;
   }
 
@@ -91,7 +101,16 @@ class Authorization extends ChangeNotifier {
     print("got code " + code);
 
     accessToken = loginResponse["access_token"];
-    accessTokenExpireIn = loginResponse["expires_in"];
+    accessTokenExpireIn = int.parse(loginResponse["expires_in"]);
+
+    userDisplayName = loginResponse["display_name"];
+    userImageUrl = loginResponse["picture"];
+    userProfileUrl = loginResponse["profile"];
+
+    App.getInstance().appSharedPreferences.setString(USER_DISPLAY_NAME_PREFERENCE_ATTR,userDisplayName);
+    App.getInstance().appSharedPreferences.setString(USER_PROFILE_URL_PREFERENCE_ATTR,userProfileUrl);
+    App.getInstance().appSharedPreferences.setString(USER_IMAGE_URL_PREFERENCE_ATTR,userImageUrl);
+
     isRemoteAppConnected = await connectToSpotifyRemoteApp();
 
     connectionState.add(true);

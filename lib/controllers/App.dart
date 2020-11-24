@@ -13,6 +13,7 @@ import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/LibraryController.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/controllers/RoomController.dart';
+import 'package:yay/controllers/ChatController.dart';
 
 import '../ChannelConst.dart';
 import 'package:http/http.dart' as http;

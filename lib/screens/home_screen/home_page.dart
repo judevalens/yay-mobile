@@ -6,11 +6,10 @@ import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/PlayListBottomSheet.dart';
-import 'package:yay/screens/home_screen/RoomBottomSheet.dart';
+import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/rooms_screen/RoomBottomSheet.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
-import 'package:yay/screens/player/RoomPlayerPage.dart';
+import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/SearchBottomSheet.dart';
-import 'package:yay/screens/rooms_screen/room_page.dart';
 import 'package:yay/screens/player/Player.dart';
 import 'package:provider/provider.dart';
 import 'package:yay/screens/setting_screen/setting_screen.dart';
@@ -55,7 +54,6 @@ class HomePageState extends State<HomePage> {
 
     _screens[ScreenType.Room] = ChangeNotifierProvider.value(
       value: App.getInstance().nt,
-      child: RoomListPage(App.getInstance().roomController),
     );
   }
 
@@ -75,10 +73,7 @@ class HomePageState extends State<HomePage> {
         );
         break;
       case ScreenType.Room:
-        w = ChangeNotifierProvider.value(
-          value: App.getInstance().nt,
-          child: RoomListPage(App.getInstance().roomController),
-        );
+        // TODO: Handle this case.
         break;
     }
     return w;
@@ -153,10 +148,8 @@ class HomePageState extends State<HomePage> {
           index: _currentPageIndex,
           children: [
             PlayerRoom(),
-            RoomListPage(App.getInstance().roomController),
           ],
         ),
-        floatingActionButton: getFloatingButton(context),
           /*  bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Theme.of(context).primaryColor,
           selectedItemColor: Colors.white,
@@ -184,10 +177,9 @@ class HomePageState extends State<HomePage> {
 
   FloatingActionButton getFloatingButton(BuildContext context) {
     FloatingActionButton w;
-    if (screenTypes[_currentPageIndex] == ScreenType.Room) {
       w = FloatingActionButton(
         onPressed: () {
-          addRoomModalSheet(context);
+          //addRoomModalSheet(context);
         },
         focusColor: Theme.of(context).accentColor,
         backgroundColor: Theme.of(context).primaryColorDark,
@@ -196,79 +188,10 @@ class HomePageState extends State<HomePage> {
           color: Colors.white,
         ),
       );
-    }
 
     return w;
   }
 
-  Future<void> addRoomModalSheet(BuildContext context) {
-    String joinCode = "";
-    String roomName = "";
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return FractionallySizedBox(
-          heightFactor: 1,
-          widthFactor: 0.5,
-          child: Container(
-            alignment: Alignment.center,
-            height: double.infinity,
-            width: double.infinity,
-            padding: MediaQuery.of(context).viewInsets,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Add/Join a room",
-                    style: TextStyle(color: Theme.of(context).accentColor, fontSize: 20)),
-                Divider(
-                  thickness: 2,
-                ),
-                TextField(
-                  decoration: InputDecoration(labelText: "Enter Join Code"),
-                  onChanged: (code) {
-                    joinCode = code;
-                  },
-                ),
-                Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateColor.resolveWith(
-                              (states) => Theme.of(context).accentColor)),
-                      onPressed: () {
-                        App.getInstance().roomController.joinRoom(joinCode);
-                      },
-                      child: Text("Join room"),
-                    )),
-                Divider(
-                  thickness: 2,
-                ),
-                TextField(
-                  decoration: InputDecoration(labelText: "Enter Join Code"),
-                  onChanged: (name) {
-                    roomName = name;
-                  },
-                ),
-                Container(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateColor.resolveWith(
-                            (states) => Theme.of(context).accentColor)),
-                    onPressed: () {
-                      App.getInstance().roomController.createRoom(roomName);
-                    },
-                    child: Text("Create room"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   Future<void> searchModalSheet(BuildContext _context) {
     String joinCode = "";

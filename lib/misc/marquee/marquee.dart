@@ -141,7 +141,6 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
     });
 
     Timer(Duration(milliseconds: 1000), (){
-
       if (textWidth > widget.containerWidth){
         _controller.forward();
       }

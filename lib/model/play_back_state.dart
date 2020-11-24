@@ -134,7 +134,7 @@ class PlayBackState extends ChangeNotifier{
   void setPlayBackPosition(int playBackPosition){
     this.playBackPosition =  playBackPosition;
     App.getInstance().playBackController.trackPositionStreamController.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
-
+    App.getInstance().playBackController.sTrackPositionStreamController.controller.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
     notifyListeners();
   }
 
