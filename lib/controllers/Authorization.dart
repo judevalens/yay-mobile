@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -37,13 +38,20 @@ Map<String,dynamic> userInfo;
 
   MethodChannel authenticationChannel = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
 
-  static const String remoteLoginUrl = "http://129.21.70.250:8000/login";
-  static const String freshTokenUrl = "http://129.21.70.250:8000/getFreshToken";
+  static const String remoteLoginUrl = "https://192.168.1.7:8000/login";
+  static const String freshTokenUrl = "https://192.168.1.7:8000/getFreshToken";
+
+  HttpClient _httpClient;
 
   Authorization(App spotifyApi,FirebaseAuth auth) {
     this.spotifyApi = spotifyApi;
     firebaseAuth = auth;
     connectionState =  new StreamController.broadcast();
+    SecurityContext context = SecurityContext();
+    context.
+    _httpClient = new HttpClient();
+
+    print("remoteLoginUrl " + remoteLoginUrl);
 
     print("did not wait");
   }
@@ -171,7 +179,7 @@ Map<String,dynamic> userInfo;
     print("sending req");
 
     var getFreshTokenUrl = Uri.parse(freshTokenUrl);
-    var finalGetFreshTokenUrl  =  Uri.http(getFreshTokenUrl.authority, getFreshTokenUrl.path,{
+    var finalGetFreshTokenUrl  =  Uri.https(getFreshTokenUrl.authority, getFreshTokenUrl.path,{
       "userUUID": userUUID
     });
     var getFreshTokeResponse =  await http.get(finalGetFreshTokenUrl);

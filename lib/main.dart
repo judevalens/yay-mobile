@@ -141,7 +141,7 @@ class MyAppState extends State<MyApp> {
                 child: FractionallySizedBox(
                   widthFactor: 0.8,
                   child: LinearProgressIndicator(
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.black26,
                     minHeight: 10,
                   )),
                 ) ,

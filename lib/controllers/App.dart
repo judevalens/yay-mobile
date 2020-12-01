@@ -69,7 +69,7 @@ class App extends ChangeNotifier {
     browserController = new BrowserController(authorization);
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
-    await Future.delayed(new Duration(seconds: 0));
+    await Future.delayed(new Duration(seconds: 2));
     return true;
   }
 
