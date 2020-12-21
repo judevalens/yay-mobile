@@ -30,6 +30,10 @@ public class MyGiphy  {
 
     }
 
+    public MyGiphy() {
+        
+    }
+
 
     public  void show(){
         GiphyFrescoHandler handler = Giphy.INSTANCE.getFrescoHandler();

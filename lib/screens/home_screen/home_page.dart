@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/screens%20v2/home/home.dart';
 import 'package:yay/screens/home_screen/PlayListBottomSheet.dart';
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/rooms_screen/RoomBottomSheet.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
@@ -141,6 +142,17 @@ class HomePageState extends State<HomePage> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
                     return Setting();
                   }));
+                }),
+            IconButton(
+                icon: new Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                ),
+                color: Colors.white,
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return Home();
+                  }));
                 })
           ],
         ),
@@ -150,6 +162,8 @@ class HomePageState extends State<HomePage> {
             PlayerRoom(),
           ],
         ),
+
+
           /*  bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Theme.of(context).primaryColor,
           selectedItemColor: Colors.white,

@@ -1,13 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
+import 'package:yay/misc/httpsPatch.dart';
 
 void main() {
+  HttpOverrides.global = new MyHttpOverrides();
   runApp(
     MyApp(),
   );
@@ -45,6 +50,7 @@ class MyAppState extends State<MyApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     currentRoute = splashRoute;
     print("isNull");
     print(App.spotifyApi);

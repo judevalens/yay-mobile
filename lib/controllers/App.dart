@@ -5,11 +5,14 @@ import 'dart:isolate';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yay/controllers/Authorization.dart';
+import 'package:yay/controllers/FeedController.dart';
 import 'package:yay/controllers/LibraryController.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/controllers/RoomController.dart';
@@ -32,11 +35,13 @@ class App extends ChangeNotifier {
   FirebaseApp firebaseApp;
   FirebaseDatabase firebaseDatabase;
   FirebaseAuth firebaseAuth;
+  FirebaseFirestore firebaseFirestore;
   Network nt;
   Authorization authorization;
   PlayBackController playBackController;
   RoomController roomController;
   BrowserController browserController;
+  FeedController feedController;
   App();
 
 
@@ -54,6 +59,7 @@ class App extends ChangeNotifier {
     firebaseApp = await Firebase.initializeApp();
     firebaseAuth = FirebaseAuth.instance;
     firebaseDatabase = FirebaseDatabase.instance;
+    firebaseFirestore = FirebaseFirestore.instance;
 
     App.getInstance().appSharedPreferences =
         await SharedPreferences.getInstance();
@@ -67,8 +73,12 @@ class App extends ChangeNotifier {
     playBackController = new PlayBackController();
     roomController = new RoomController(firebaseDatabase,firebaseAuth);
     browserController = new BrowserController(authorization);
+    feedController = FeedController(firebaseFirestore);
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
+    var s = await feedController.fetch(0);
+    print("snap shot res : " + s.toString() + " start index " + feedController.startIndex.toString() + " end index "+feedController.endIndex.toString());
+
     await Future.delayed(new Duration(seconds: 2));
     return true;
   }

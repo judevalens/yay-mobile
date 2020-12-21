@@ -18,6 +18,15 @@ class Authorization extends ChangeNotifier {
   static const String USER_IMAGE_URL_PREFERENCE_ATTR = "userImageURL";
   static const String LOGIN_STATUS_PREFERENCE_ATTR = "isConnected";
   static const String ACCESS_TOKEN_PREFERENCE_ATTR = "accessToken";
+  static const String loginUrl = "https://192.168.1.8:8000/auth/login";
+  static const String spotifyLoginLoginUrl = "https://192.168.1.8:8000/auth/spotifyLogin";
+  static const String freshTokenUrl = "https://192.168.1.8:8000/auth/spotifyGetFreshToken";
+  static const String twitterRequestToken = "https://192.168.1.8:8000/auth/getTwitterRequestToken";
+  static const String twitterAuthenticationUrl = "https://api.twitter.com/oauth/authenticate";
+  static const String twitterAccessTokenUrl = "https://192.168.1.8:8000/auth/getTwitterAccessToken";
+  static const String TwitterAuthenticationCallbackUrl = "https://127.0.0.1/twitterCallback/";
+
+
   App spotifyApi;
   String accessToken;
   int accessTokenExpireIn;
@@ -29,29 +38,23 @@ class Authorization extends ChangeNotifier {
   String userDisplayName;
   String userProfileUrl;
   String userImageUrl;
-Map<String,dynamic> userInfo;
-
+  Map<String,dynamic> userInfo;
   FirebaseAuth firebaseAuth;
-
   int maxTokenDuration = 3600;
   StreamController<bool> connectionState;
-
   MethodChannel authenticationChannel = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
 
-  static const String remoteLoginUrl = "https://192.168.1.7:8000/login";
-  static const String freshTokenUrl = "https://192.168.1.7:8000/getFreshToken";
+  Map<String,dynamic> spotifyLoginData;
+  Map<String,dynamic> twitterLoginData;
 
-  HttpClient _httpClient;
 
   Authorization(App spotifyApi,FirebaseAuth auth) {
     this.spotifyApi = spotifyApi;
     firebaseAuth = auth;
     connectionState =  new StreamController.broadcast();
-    SecurityContext context = SecurityContext();
-    context.
-    _httpClient = new HttpClient();
 
-    print("remoteLoginUrl " + remoteLoginUrl);
+
+    print("remoteLoginUrl " + loginUrl);
 
     print("did not wait");
   }
@@ -66,7 +69,6 @@ Map<String,dynamic> userInfo;
     return;
   }
 
-
   Stream<bool> getConnectionState(){
     return connectionState.stream;
   }
@@ -74,7 +76,7 @@ Map<String,dynamic> userInfo;
   Future<void> loginFlow() async {
      bool isLoggedIn;
     if(firebaseAuth.currentUser != null){
-    var isConnected =  await softLogin();
+    var isConnected =  await spotifySoftLogin();
       connectionState.add(true);
       setIsAuthorized(isConnected);
     }else{
@@ -82,7 +84,7 @@ Map<String,dynamic> userInfo;
     }
   }
 
-  Future<bool> softLogin() async {
+  Future<bool> spotifySoftLogin() async {
     isRemoteAppConnected = await connectToSpotifyRemoteApp();
     var tokenResponse = await getToken(firebaseAuth.currentUser.uid);
     accessToken = tokenResponse["access_token"];
@@ -92,38 +94,66 @@ Map<String,dynamic> userInfo;
     return isRemoteAppConnected;
   }
 
-  Future<bool> hardLogin() async {
+  Future<bool> spotifyHardLogin() async {
     String code = await authenticationChannel.invokeMethod("getCode");
 
     print("getting code");
     print("got result");
-    var loginResponse = await remoteLogin(code);
+    var spotifyLoginResponse = await spotifyRemoteLogin(code);
 
     print("hard login answer");
-    print(loginResponse);
-
-    var userCredential = await firebaseAuth.signInWithCustomToken(loginResponse["custom_token"]);
-
-    var firebaseAuthSuccessful = userCredential != null;
+    print(spotifyLoginResponse);
 
     print("got code " + code);
 
-    accessToken = loginResponse["access_token"];
-    accessTokenExpireIn = int.parse(loginResponse["expires_in"]);
-
-    userDisplayName = loginResponse["display_name"];
-    userImageUrl = loginResponse["picture"];
-    userProfileUrl = loginResponse["profile"];
-
-    App.getInstance().appSharedPreferences.setString(USER_DISPLAY_NAME_PREFERENCE_ATTR,userDisplayName);
-    App.getInstance().appSharedPreferences.setString(USER_PROFILE_URL_PREFERENCE_ATTR,userProfileUrl);
-    App.getInstance().appSharedPreferences.setString(USER_IMAGE_URL_PREFERENCE_ATTR,userImageUrl);
-
+    accessToken = spotifyLoginResponse["access_token"];
+    accessTokenExpireIn = spotifyLoginResponse["expires_in"];
     isRemoteAppConnected = await connectToSpotifyRemoteApp();
 
-    connectionState.add(true);
+    // will be used in the final authentication step
+    spotifyLoginData = spotifyLoginResponse;
 
-    return Future<bool>.value(isRemoteAppConnected && firebaseAuthSuccessful);
+  // if we get the spotify access token and we are connected to the remote app , we move to the next step
+    return spotifyLoginResponse["status_code"] == 200 && isRemoteAppConnected;
+  }
+
+  // TODO must return a more comprehensive status
+  Future<bool> hardLogin() async{
+http.Request loginReq = http.Request("POST",Uri.parse(loginUrl));
+loginReq.body = jsonEncode({
+  "spotifyLoginData": spotifyLoginData,
+  "twitterLoginData": twitterLoginData
+});
+loginReq.headers["Content-Type"] = "application/json";
+
+    var loginResponse = await loginReq.send();
+
+    var loginResponseBody = await loginResponse.stream.bytesToString();
+
+    var loginResponseJson  = jsonDecode(loginResponseBody);
+
+    print("res from login : " + loginResponseJson.toString());
+
+    if (loginResponseJson["status_code"] == 200){
+      userDisplayName = spotifyLoginData["display_name"];
+      userImageUrl = spotifyLoginData["picture"];
+      userProfileUrl = spotifyLoginData["profile"];
+      App.getInstance().appSharedPreferences.setString(USER_DISPLAY_NAME_PREFERENCE_ATTR,userDisplayName);
+      App.getInstance().appSharedPreferences.setString(USER_PROFILE_URL_PREFERENCE_ATTR,userProfileUrl);
+      App.getInstance().appSharedPreferences.setString(USER_IMAGE_URL_PREFERENCE_ATTR,userImageUrl);
+     var userCredential = await firebaseAuth.signInWithCustomToken(loginResponseJson["custom_token"]);
+
+      // TODO must check sign in with firebaseAuth fails
+      isSignIn = userCredential != null;
+      connectionState.add(true);
+      return isSignIn;
+
+
+    }else{
+      return false;
+    }
+
+
   }
 
   void connectionStateListener(){
@@ -165,12 +195,12 @@ Map<String,dynamic> userInfo;
         .setString(ACCESS_TOKEN_PREFERENCE_ATTR, jsonEncode(accessResponse));
   }
 
-  Future<Map<String,dynamic>> remoteLogin(String code) async {
+  Future<Map<String,dynamic>> spotifyRemoteLogin(String code) async {
     print("sending req");
-      var  loginResponse =  await http.post(remoteLoginUrl, headers: {
+      var  loginResponse =  await http.post(spotifyLoginLoginUrl, headers: {
       'Content-type': 'application/json',
     }, body: jsonEncode({
-      "Code" : code,
+      "access_code" : code,
     }));
     return  jsonDecode(loginResponse.body);
 
@@ -180,7 +210,7 @@ Map<String,dynamic> userInfo;
 
     var getFreshTokenUrl = Uri.parse(freshTokenUrl);
     var finalGetFreshTokenUrl  =  Uri.https(getFreshTokenUrl.authority, getFreshTokenUrl.path,{
-      "userUUID": userUUID
+      "user_uuid": userUUID
     });
     var getFreshTokeResponse =  await http.get(finalGetFreshTokenUrl);
 
@@ -191,22 +221,29 @@ Map<String,dynamic> userInfo;
     return "Bearer "+accessToken;
   }
 
-/*
-  void updatedToken(String accessToken){
-    tokenRefresher =    Timer.periodic(new Duration(hours: 58), (timer) {
-          authenticationChannel.invokeMethod("getToken");
-          String authorizationHeader = CLIENT_ID + ":" + CLIENT_SECRET;
-          Base64Encoder base64encoder  = new Base64Encoder();
-          String AuthorizationHeader64 =  " Basic " + base64encoder.convert(authorizationHeader.runes.toList());
-
-
-          Uri url = Uri.parse("https://accounts.spotify.com/api/token");
-          http.Request  req = new http.Request("POST", url);
-
-          req.
-          
-      });
+  Future<Map<String,dynamic>> twitterGetRequestToken() async{
+    Map<String,dynamic> res;
+    var response = await http.get(twitterRequestToken);
+    print('RES FROM TWITTER REQUEST ' + response.body);
+    var responseJson = jsonDecode(response.body);
+    print(responseJson);
+    responseJson["action"] = "sendToTwitter";
+    responseJson["url"] = twitterAuthenticationUrl + "?oauth_token="+responseJson["oauth_token"];
+    return responseJson;
   }
-  */
-
+  Future<bool> twitterAccessToken(String url) async{
+    Uri uri = Uri.parse(url);
+    var oauthToken = uri.queryParameters["oauth_token"];
+    var oauthVerifier = uri.queryParameters["oauth_verifier"];
+    var accessTokenUrl = twitterAccessTokenUrl+"?oauth_token="+oauthToken+"&oauth_verifier="+oauthVerifier;
+    print("OAUTH TOKEN : " + oauthToken + ", oauthVerifier : " +oauthVerifier);
+   Map<String,dynamic> res;
+    var response = await http.get(accessTokenUrl);
+    print('RES FROM TWITTER REQUEST ' + response.body);
+    var loginResponse = jsonDecode(response.body);
+    print(loginResponse);
+    twitterLoginData = loginResponse;
+    print("twitter status code " + (loginResponse["status_code"] == 200).toString());
+    return loginResponse["status_code"] == 200;
+  }
 }
