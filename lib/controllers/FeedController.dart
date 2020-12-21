@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
+
+import 'App.dart';
 
 class FeedController {
   List<Map<String, dynamic>> data;
@@ -13,12 +16,18 @@ class FeedController {
   Query feedItemQuery;
   CollectionReference feedItemCol;
   FirebaseFirestore firebaseFirestore;
+  FirebaseAuth _firebaseAuth;
   SingleSCMultipleSubscriptions<List<Map<String, dynamic>>> feedStream = new SingleSCMultipleSubscriptions();
-  String selectionField = "time_stamp";
+  String selectionField = "sorting_timestamp";
 
-  FeedController(this.firebaseFirestore) {
-    data = List(bufferSize);
-    feedItemCol = firebaseFirestore.collection("users_feed").doc("test").collection("items");
+  FeedController(this.firebaseFirestore,this._firebaseAuth) {
+    data = List();
+
+    App.getInstance().authorization.getConnectionState().listen((isConnected) {
+      if (isConnected) {
+        feedItemCol = firebaseFirestore.collection("users_feed").doc(_firebaseAuth.currentUser.uid).collection("items");
+      }
+    });
 
     /*for(int i = 0; i < 1500; i++){
       feedItemCol.add({
@@ -27,13 +36,16 @@ class FeedController {
     }*/
   }
 
-  classicFetch() async {
-    var snapshot = await query(1);
+  classicFetch(int dir) async {
+    await Future.delayed(Duration(seconds: 2));
+    var snapshot = await query(dir);
     var snapShotData  = snapshot.docs;
 
     snapShotData.forEach((element) {
       data.add(element.data());
     });
+
+    feedStream.controller.add(data);
   }
 
 
@@ -85,7 +97,7 @@ class FeedController {
     } else if (direction > 0) {
       feedItemQuery = feedItemCol
           .orderBy(selectionField, descending: false)
-          .startAfter([(data[bufferSize - 1][selectionField] as int)]).limit(lowerSize);
+          .startAfter([(data[data.length - 1][selectionField] as int)]).limit(lowerSize);
     } else {
       feedItemQuery = feedItemCol.orderBy(selectionField, descending: false).limit(bufferSize);
     }

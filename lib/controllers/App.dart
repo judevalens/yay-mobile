@@ -73,13 +73,11 @@ class App extends ChangeNotifier {
     playBackController = new PlayBackController();
     roomController = new RoomController(firebaseDatabase,firebaseAuth);
     browserController = new BrowserController(authorization);
-    feedController = FeedController(firebaseFirestore);
+    feedController = FeedController(firebaseFirestore,firebaseAuth);
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
-    var s = await feedController.fetch(0);
-    print("snap shot res : " + s.toString() + " start index " + feedController.startIndex.toString() + " end index "+feedController.endIndex.toString());
 
-    await Future.delayed(new Duration(seconds: 2));
+    await Future.delayed(new Duration(seconds: 0));
     return true;
   }
 

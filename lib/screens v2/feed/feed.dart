@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/screens%20v2/feed/FeedContent.dart';
 
 class Feed extends StatefulWidget {
   @override
@@ -11,6 +12,13 @@ ScrollController _controller = new ScrollController();
 List<Map<String, dynamic>> data;
 
 class _FeedState extends State<Feed> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    App.getInstance().feedController.classicFetch(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -32,34 +40,66 @@ class _FeedState extends State<Feed> {
 
   Widget feedSliverList() {
     return StreamBuilder(
-      stream: App.getInstance().feedController.feedStream.getStream(),
-      initialData: App.getInstance().feedController.data,
-      builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-        data = snapshot.data;
-        return SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-          print("index before is " +
-              index.toString() +
-              ", start at " +
-              App.getInstance().feedController.startIndex.toString() +
-              " , end at " +
-              App.getInstance().feedController.endIndex.toString());
+        stream: App
+            .getInstance()
+            .feedController
+            .feedStream
+            .getStream(),
+        builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+          data = snapshot.data;
 
-          print("cyclic index is : " + (index%90).toString());
+          if (snapshot.hasData) {
+            return SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  Widget w;
 
-          if (index == App.getInstance().feedController.endIndex) {
-            App.getInstance().feedController.fetch(1);
-          } else if (index == App.getInstance().feedController.startIndex && index != 0) {
-            App.getInstance().feedController.fetch(-1);
+                  print("index is " + index.toString() + "length " + data.length.toString());
+
+                  if (index == data.length) {
+                    w = Container(
+                      alignment: Alignment.center,
+                      margin: EdgeInsets.only(bottom: 5),
+                      child: SizedBox(
+                          height: 50,
+                          width: 50,
+                          child: CircularProgressIndicator(backgroundColor: Theme
+                              .of(context)
+                              .primaryColor,)
+                      ),
+                    );
+
+                    App
+                        .getInstance()
+                        .feedController
+                        .classicFetch(1);
+                  } else {
+                    var itemId = (data[index])["item_id"];
+                    w = FeedContent(key: ValueKey(itemId), itemData: data[index],);
+                  }
+
+                  return w;
+                }, childCount: data.length + 1)
+            );
+          } else {
+            return emptyListLoader();
           }
+        });
+  }
 
-          print("index " + ((App.getInstance().feedController.startIndex+index) % App.getInstance().feedController.bufferSize).toString()+ " | "+ App.getInstance().feedController.data.toString());
-
-          return ListTile(
-            title: Text("item " + data[(App.getInstance().feedController.startIndex+index) % App.getInstance().feedController.bufferSize]["time_stamp"].toString()),
-          );
-        },childCount:  App.getInstance().feedController.endIndex+1)
-        );},
+  Widget emptyListLoader() {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Container(
+        height: double.infinity,
+        alignment: Alignment.center,
+        child: SizedBox(
+            height: 50,
+            width: 50,
+            child: CircularProgressIndicator(backgroundColor: Theme
+                .of(context)
+                .primaryColor,)
+        ),
+      ),
     );
   }
 
@@ -76,4 +116,5 @@ class _FeedState extends State<Feed> {
       slivers: [sliverAppBar(), feedSliverList()],
     );
   }
+
 }
