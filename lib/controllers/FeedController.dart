@@ -6,13 +6,18 @@ import 'package:yay/misc/SingleSubsStream.dart';
 import 'App.dart';
 
 class FeedController {
+  static const String USER_TYPE = "user";
+  static const String ARTIST_TYPE = "artist";
+  static const String TWEET_TYPE = "tweet";
+
   List<Map<String, dynamic>> data;
   int startIndex = 0;
   int endIndex = 0;
-  Tuple2<int,int> indexRange ;
-  int upperSize = 100;
-  int lowerSize = 100;
-  int bufferSize = 200;
+  Tuple2<int, int> indexRange;
+
+  int upperSize = 10;
+  int lowerSize = 10;
+  int bufferSize = 10;
   Query feedItemQuery;
   CollectionReference feedItemCol;
   FirebaseFirestore firebaseFirestore;
@@ -37,20 +42,29 @@ class FeedController {
   }
 
   classicFetch(int dir) async {
-    await Future.delayed(Duration(seconds: 2));
     var snapshot = await query(dir);
-    var snapShotData  = snapshot.docs;
+    var snapShotData = snapshot.docs;
 
-    snapShotData.forEach((element) {
-      data.add(element.data());
-    });
+    print("fetching ....");
+
+    for (QueryDocumentSnapshot itemInfoSnapShot in snapShotData) {
+      print("querrying item");
+      var itemInfoData = itemInfoSnapShot.data();
+      var itemContent = await queryFeedItem(itemInfoData);
+      print("info data : " + itemInfoData.toString());
+      print("info content : " + itemContent.data().toString());
+      var item = {
+        "content": itemContent.data(),
+        "info": itemInfoData,
+      };
+      data.add(item);
+    }
 
     feedStream.controller.add(data);
   }
 
 
- Future<int> fetch (int direction) async{
-
+  Future<int> fetch (int direction) async{
     var snapshot = await query(direction);
     var snapShotData  = snapshot.docs;
     int i = 0;
@@ -67,9 +81,7 @@ class FeedController {
       i++;
     });
 
-
     feedStream.controller.add(data);
-
 
 
     print("timestamp BATCH START, size :"+ snapshot.size.toString() +"\n");
@@ -88,24 +100,24 @@ class FeedController {
   }
 
   Future<QuerySnapshot> query(int direction) async{
-    indexRange = range(bufferSize, startIndex, endIndex, direction, upperSize, lowerSize);
 
     if (direction < 0) {
       feedItemQuery = feedItemCol
-          .orderBy(selectionField, descending: false)
+          .orderBy(selectionField, descending: true)
           .endBefore([(data[0][selectionField] as int)]).limitToLast(upperSize);
     } else if (direction > 0) {
+      print("data length " + data.length.toString() + "last timestamp " + data[data.length - 1]["info"][selectionField].toString());
+      var lowerBound =  data[data.length - 1]["info"][selectionField];
       feedItemQuery = feedItemCol
-          .orderBy(selectionField, descending: false)
-          .startAfter([(data[data.length - 1][selectionField] as int)]).limit(lowerSize);
+          .orderBy(selectionField, descending: true)
+          .startAfter([lowerBound]).limit(lowerSize);
     } else {
-      feedItemQuery = feedItemCol.orderBy(selectionField, descending: false).limit(bufferSize);
+      feedItemQuery = feedItemCol.orderBy(selectionField, descending: true).limit(bufferSize);
     }
     return feedItemQuery.get();
   }
 
-  Tuple2<int, int> range(
-      int bufferSize, startIndex, endIndex, direction, upperBuffer, lowerBuffer) {
+  Tuple2<int, int> range(int bufferSize, startIndex, endIndex, direction, upperBuffer, lowerBuffer) {
     if (direction == 0) {
       startIndex = 0;
       endIndex += bufferSize;
@@ -119,6 +131,26 @@ class FeedController {
       endIndex += lowerBuffer;
     }
     return Tuple2<int, int>(startIndex, endIndex);
+  }
+
+  Future<DocumentSnapshot> queryFeedItem(Map<String, dynamic> itemInfo) {
+    DocumentReference itemColRed;
+    var itemID = itemInfo["item_id"] as String;
+    var itemType = itemInfo["content_type"] as String;
+    var creatorSpotifyID = itemInfo["created_by_spotify_id"] as String;
+    var creatorTwitterID = itemInfo["created_by_twitter_id"] as String;
+    var creatorType = ARTIST_TYPE;
+
+    if (creatorType == ARTIST_TYPE) {
+      if (itemType == TWEET_TYPE) {
+        print("its a tweet,  twitterID  " +creatorTwitterID + ", item ID " +  itemID);
+        itemColRed =
+            firebaseFirestore.collection("artists_twitter_feeds").doc(creatorTwitterID).collection(
+                "tweets").doc(itemID);
+      }
+    }
+
+    return itemColRed.get();
   }
 
   int max(int a, b) {

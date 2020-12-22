@@ -22,18 +22,22 @@ class _FeedState extends State<Feed> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: feedBody(),
+      child: feedBody(context),
     );
   }
 
-  Widget sliverAppBar() {
+
+
+  Widget sliverAppBar(BuildContext context) {
     return SliverAppBar(
       title: Text("YAY"),
       leading: null,
       pinned: true,
       automaticallyImplyLeading: false,
       floating: true,
-      flexibleSpace: Placeholder(),
+      flexibleSpace: Container(
+        child: Text("Feed",style: Theme.of(context).accentTextTheme.headline2,),
+      ),
       expandedHeight: 200,
     );
   }
@@ -47,7 +51,7 @@ class _FeedState extends State<Feed> {
             .getStream(),
         builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
           data = snapshot.data;
-
+          print("sliver list");
           if (snapshot.hasData) {
             return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
@@ -67,16 +71,14 @@ class _FeedState extends State<Feed> {
                               .primaryColor,)
                       ),
                     );
-
                     App
                         .getInstance()
                         .feedController
                         .classicFetch(1);
-                  } else {
-                    var itemId = (data[index])["item_id"];
-                    w = FeedContent(key: ValueKey(itemId), itemData: data[index],);
+                  }else{
+                    print("myssksk " + data[index].toString());
+                    w = FeedContent(key: ValueKey(data[index]["id_str"]),itemData: data[index],);
                   }
-
                   return w;
                 }, childCount: data.length + 1)
             );
@@ -103,7 +105,7 @@ class _FeedState extends State<Feed> {
     );
   }
 
-  Widget feedBody() {
+  Widget feedBody(BuildContext context) {
     _controller.addListener(() {
       print("viewport " + _controller.position.viewportDimension.toString());
       print("scrolling, position :" +
@@ -113,8 +115,10 @@ class _FeedState extends State<Feed> {
     });
     return CustomScrollView(
       controller: _controller,
-      slivers: [sliverAppBar(), feedSliverList()],
+      slivers: [sliverAppBar(context), feedSliverList()],
     );
   }
+
+
 
 }

@@ -66,6 +66,8 @@ flutter:
     - assets/spotify_logo_green.png
     - assets/Spotify_Icon_RGB_White.png
     - assets/
+    - assets/tweet_icons/
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 

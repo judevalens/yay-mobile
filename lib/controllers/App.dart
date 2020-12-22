@@ -44,8 +44,6 @@ class App extends ChangeNotifier {
   FeedController feedController;
   App();
 
-
-
   static App getInstance() {
     if (spotifyApi == null) {
       spotifyApi = new App();
