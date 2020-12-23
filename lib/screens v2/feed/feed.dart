@@ -33,8 +33,12 @@ class _FeedState extends State<Feed> {
   Widget sliverAppBar(BuildContext context) {
     return SliverAppBar(
       title: Text(
-        "Yay",
-        style: Theme.of(context).primaryTextTheme.headline6,
+        "YaY",
+        style: TextStyle(
+          fontSize: 20,
+          color: Theme.of(context).colorScheme.secondary,
+            fontWeight: FontWeight.bold
+        ),
       ),
       leading: null,
       pinned: true,

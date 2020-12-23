@@ -123,12 +123,12 @@ class _FeedContentState extends State<FeedContent> {
                 userName,
                 softWrap: true,
                 overflow: TextOverflow.clip,
-                style: Theme.of(context).accentTextTheme.headline6,
+                style: Theme.of(context).textTheme.headline6,
               ),
             ),
             Text(
               screenName,
-              style: Theme.of(context).accentTextTheme.subtitle1,
+              style: Theme.of(context).textTheme.bodyText2,
             ),
           ],
         )),
@@ -140,7 +140,7 @@ class _FeedContentState extends State<FeedContent> {
     return Container(
         alignment: Alignment.centerLeft,
         margin: EdgeInsets.only(top: 20,bottom: 20),
-        child: Text(tweetText, style: Theme.of(context).accentTextTheme.bodyText1));
+        child: Text(tweetText, style: Theme.of(context).textTheme.bodyText1));
   }
 
   Widget actionButton() {

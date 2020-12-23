@@ -12,8 +12,9 @@ typedef SeekCallBack = void Function(double pos);
 class ProgressBar extends StatefulWidget {
   final int height, width;
   final SeekCallBack seekCallBack;
-
-  ProgressBar({this.height, this.width, this.seekCallBack});
+  final Color progressBarColor;
+  final Color progressBarBackground;
+  ProgressBar({this.height, this.width, this.seekCallBack, this.progressBarColor, this.progressBarBackground});
 
   @override
   State<StatefulWidget> createState() {
@@ -24,6 +25,7 @@ class ProgressBar extends StatefulWidget {
 
 class ProgressBarState extends State<ProgressBar> {
   final SeekCallBack seekCallBack;
+
   int height;
 
   ProgressBarState({this.height, this.seekCallBack});
@@ -74,7 +76,7 @@ class ProgressBarState extends State<ProgressBar> {
 
         },
         child: CustomPaint(
-          painter: ProgressBarPainter.fromPercent(percent, Theme.of(context).primaryColor,Colors.red),
+          painter: ProgressBarPainter.fromPercent(percent, widget.progressBarColor,widget.progressBarBackground),
           child: FractionallySizedBox(
             widthFactor: 1,
             child: SizedBox(

@@ -44,11 +44,11 @@ class PlayBackController {
   // ignore: close_sinks
   StreamController<Tuple2<int, int>> trackPositionStreamController;
   StreamController<Uint8List> trackCoverStreamController;
-  StreamController<bool> trackPlayStateStreamController;
   StreamController<Tuple2<String,String>> trackNameStreamController;
   SingleSCMultipleSubscriptions<Tuple2<int, int>> sTrackPositionStreamController;
   SingleSCMultipleSubscriptions<Tuple2<String, String>> sTrackNameStreamController;
   SingleSCMultipleSubscriptions<Uint8List> sTrackCoverStreamController;
+  SingleSCMultipleSubscriptions<bool> trackPlayStateStreamController;
 
   PlayBackController() {
     isInitialized = false;
@@ -65,7 +65,7 @@ class PlayBackController {
 
     trackPositionStreamController = new StreamController();
     trackCoverStreamController = new StreamController();
-    trackPlayStateStreamController = new StreamController();
+    trackPlayStateStreamController = new SingleSCMultipleSubscriptions();
     trackNameStreamController = new StreamController();
 
     sTrackPositionStreamController = new SingleSCMultipleSubscriptions();

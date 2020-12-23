@@ -2,14 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/misc/httpsPatch.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
-import 'package:yay/misc/httpsPatch.dart';
 
 void main() {
   HttpOverrides.global = new MyHttpOverrides();
@@ -74,12 +71,26 @@ class MyAppState extends State<MyApp> {
     print("initial ? " + initialRoute);
     return MaterialApp(
       theme: ThemeData(
-          textTheme: TextTheme(),
-          primaryColor:Color(0xFF590004),//Color(0xFF501213),
-          primaryTextTheme:TextTheme() ,
-          accentColor: Colors.white,
-          backgroundColor:Color(0xFF111111),
-          ),
+        textTheme: Typography.blackRedmond,
+        primaryColor:Color(0xFFf5f5f5) ,
+        accentColor: Color(0xFFb71c1c),
+        colorScheme: ColorScheme(
+          primary: Color(0xFFf5f5f5),
+          primaryVariant: Color(0xFFc2c2c2),
+          secondary: Color(0xFFb71c1c),
+          secondaryVariant: Color(0xFF7f0000),
+          surface: Color(0xFFf5f5f5),
+          background: Color(0xFFf5f5f5),
+          brightness: Brightness.light,
+          error: Colors.red,
+          onError: Colors.white,
+          onBackground: Colors.black,
+          onSecondary: Colors.white,
+          onSurface: Colors.black, onPrimary: Colors.black,
+        ),
+
+        backgroundColor:  Color(0xFFf5f5f5),
+      ),
       title: "YAY",
       home: FutureBuilder<bool>(
         future: _isInitialized,

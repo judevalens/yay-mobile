@@ -2,30 +2,29 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
-import 'package:yay/model/play_back_state.dart';
+
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
-import 'package:yay/screens%20v2/player/ProgressBar.dart';
 
+import 'ProgressBar.dart';
 
-class PlayerPage extends StatefulWidget {
+class Player extends StatefulWidget {
   final PageSwitcher pageSwitcher;
 
-  PlayerPage({this.pageSwitcher});
+  Player({this.pageSwitcher});
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return PlayerPageState();
+    return PlayerState();
   }
 }
 
-class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMixin {
+class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
   int playStatus = 0;
   String imgSrc =
       "https://static.standard.co.uk/s3fs-public/thumbnails/image/2019/09/20/15/animalistic-imagery-runs-throughout-the-exhibition.jpg";
@@ -41,15 +40,10 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    controlsColor = Theme.of(context).accentColor;
+    controlsColor = Theme.of(context).colorScheme.secondary;
     // TODO: implement build
-    return Selector<PlayBackState, bool>(selector: (_, _playBackState) {
-      return _playBackState.isUnAvailable;
-    }, builder: (context, isUnAvailable, child) {
-      print("player is null");
-      print(isUnAvailable);
-      return _buildPlayer(isUnAvailable, widget.pageSwitcher);
-    });
+
+    return _buildPlayer(false, null);
   }
 
   Widget _buildPlayer(bool isUnAvailable, PageSwitcher pageSwitcher) {
@@ -57,29 +51,24 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
       return emptyPlayBackState();
     } else {
       return Container(
+        padding: MediaQuery.of(context).padding,
         width: double.infinity,
         height: double.infinity,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: Theme.of(context).backgroundColor),
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.background),
         child: FractionallySizedBox(
           widthFactor: 0.9,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              FractionallySizedBox(
-                widthFactor: 1,
-                child: AspectRatio(
-                  aspectRatio: 1 / 1,
-                  child: Container(
-                      child: Card(
-                    child: FractionallySizedBox(
-                      widthFactor: 0.9,
-                      child: artWork(),
-                    ),
-                    color: Colors.white12,
-                    elevation: 20,
-                    shadowColor: Colors.black,
-                  )),
+              Material(
+                elevation: 15,
+                child: FractionallySizedBox(
+                  widthFactor: 0.9,
+                  child: AspectRatio(
+                    aspectRatio: 1 / 1,
+                    child: artWork(),
+                  ),
                 ),
               ),
               trackInfo(),
@@ -112,6 +101,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
     }
   }
 
+  // TODO DOESNT BELONG HERE
   String formatTime(int _durationMS) {
     int durationMS = _durationMS == null ? 0 : _durationMS;
 
@@ -132,10 +122,10 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
     return ChangeNotifierProvider.value(
       value: App.getInstance().playBackController.currentPlayBackState,
       child: ProgressBar(
-        height: 10,
+        height: 5,
         seekCallBack: App.getInstance().playBackController.seek,
-          progressBarColor: Theme.of(context).colorScheme.secondary,
-        progressBarBackground: Theme.of(context).colorScheme.onBackground,
+        progressBarColor: Theme.of(context).colorScheme.secondary,
+        progressBarBackground: Colors.black12,
       ),
     );
   }
@@ -159,11 +149,11 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
             children: [
               Text(
                 formatTime(pos),
-                style: new TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
               ),
               Text(
                 formatTime(duration),
-                style: new TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
               )
             ],
           ),
@@ -173,64 +163,76 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
   }
 
   Widget playButton() {
-    return new IconButton(
-      enableFeedback: true,
-      splashColor: Colors.white,
-      splashRadius: 65,
-      highlightColor: Colors.white60,
-      hoverColor: Colors.white,
-      icon: new Icon(
-        Icons.play_circle_filled,
-        color: controlsColor,
+    return Material(
+      type: MaterialType.transparency,
+      color: controlsColor,
+      //  shape: CircleBorder(),
+      child: new RawMaterialButton(
+        padding: EdgeInsets.all(5.0),
+        shape: CircleBorder(),
+        child: new Icon(
+          Icons.play_circle_filled,
+          size: 70,
+          color: controlsColor,
+        ),
+        onPressed: () async {
+          App.getInstance().playBackController.resumeMusic();
+        },
       ),
-      onPressed: () {
-        App.getInstance().playBackController.resumeMusic();
-      },
-      iconSize: 65,
     );
   }
 
   Widget pauseButton() {
-    return new IconButton(
-      enableFeedback: true,
-      splashColor: Colors.white,
-      splashRadius: 65,
-      highlightColor: Colors.white60,
-      hoverColor: Colors.white,
-      icon: new Icon(
-        Icons.pause_circle_filled,
-        color: controlsColor,
+    return Material(
+      type: MaterialType.transparency,
+      color: controlsColor,
+      //  shape: CircleBorder(),
+      child: new RawMaterialButton(
+        padding: EdgeInsets.all(5.0),
+        shape: CircleBorder(),
+        child: new Icon(
+          Icons.pause_circle_filled,
+          size: 70,
+          color: controlsColor,
+        ),
+        onPressed: () {
+          App.getInstance().playBackController.pauseMusic();
+        },
       ),
-      onPressed: () {
-        App.getInstance().playBackController.pauseMusic();
-      },
-      iconSize: 65,
     );
   }
 
   Widget previousButton() {
-    return new IconButton(
-      icon: new Icon(
-        Icons.skip_previous,
-        color: controlsColor,
+    return Material(
+      type: MaterialType.transparency,
+      child: new RawMaterialButton(
+        shape: CircleBorder(),
+        child: new Icon(
+          Icons.skip_previous,
+          size: 50,
+          color: controlsColor,
+        ),
+        onPressed: () {
+          App.getInstance().playBackController.prev();
+        },
       ),
-      onPressed: () {
-        App.getInstance().playBackController.prev();
-      },
-      iconSize: 50,
     );
   }
 
   Widget nextButton() {
-    return new IconButton(
-      icon: new Icon(
-        Icons.skip_next,
-        color: controlsColor,
+    return Material(
+      type: MaterialType.transparency,
+      child: new RawMaterialButton(
+        shape: CircleBorder(),
+        child: new Icon(
+          Icons.skip_next,
+          size: 50,
+          color: controlsColor,
+        ),
+        onPressed: () {
+          App.getInstance().playBackController.next();
+        },
       ),
-      onPressed: () {
-        App.getInstance().playBackController.next();
-      },
-      iconSize: 50,
     );
   }
 
@@ -246,7 +248,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
 
   Widget artWork() {
     return StreamBuilder(
-      stream: _playBackController.trackCoverStreamController.stream,
+      stream: _playBackController.sTrackCoverStreamController.getStream(),
       builder: (_, AsyncSnapshot<Uint8List> snapShot) {
         Widget image;
         if (snapShot.hasData) {
@@ -255,9 +257,10 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
           image = defaultCover();
         }
         return AnimatedSwitcher(
+            key: ValueKey("my animated switcher"),
             duration: Duration(milliseconds: 1000),
             child: Container(
-              key: UniqueKey(),
+              key: ValueKey(image),
               child: image,
             ));
       },
@@ -279,7 +282,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
 
   Widget trackInfo() {
     return StreamBuilder(
-        stream: _playBackController.trackNameStreamController.stream,
+        stream: _playBackController.sTrackNameStreamController.getStream(),
         builder: (_, AsyncSnapshot<Tuple2<String, String>> snapShot) {
           var songTitle = "No data";
           var artists = songTitle;
@@ -294,11 +297,13 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
           return Column(
             children: [
               Container(
-                child: MMarqueeState(songTitle, TextStyle(color: Colors.white, fontSize: 25),
+                child: MMarqueeState(songTitle,
+                    TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 30, fontWeight: FontWeight.bold),
                     key: UniqueKey()),
               ),
               Container(
-                child: MMarqueeState(artists, TextStyle(color: Colors.white, fontSize: 20),
+                child: MMarqueeState(artists,
+                    TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 20),
                     key: UniqueKey()),
               )
             ],
