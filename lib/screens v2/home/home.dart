@@ -15,8 +15,13 @@ class _HomeState extends State<Home> {
       body:Feed() /*IndexedStack(
         children: [Feed(), Player(), Me()],
       )*/,
-      bottomNavigationBar: BottomNavigationBar(
-        items: [BottomNavigationBarItem(icon: Icon(Icons.home_outlined),label: "Home"),BottomNavigationBarItem(icon: Icon(Icons.music_note_sharp), label: "Music"),BottomNavigationBarItem(icon: Icon(Icons.person_outlined),label: "Me"),],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(width: 0.2, style: BorderStyle.solid,color: Colors.grey),)
+        ),
+        child: BottomNavigationBar(
+          items: [BottomNavigationBarItem(icon: Icon(Icons.home_outlined),label: "Home"),BottomNavigationBarItem(icon: Icon(Icons.music_note_sharp), label: "Music"),BottomNavigationBarItem(icon: Icon(Icons.person_outlined),label: "Me"),],
+        ),
       ),
     );
   }

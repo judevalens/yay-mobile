@@ -10,6 +10,7 @@ class Feed extends StatefulWidget {
 
 ScrollController _controller = new ScrollController();
 List<Map<String, dynamic>> data;
+double statusBarHeight;
 
 class _FeedState extends State<Feed> {
   @override
@@ -21,24 +22,27 @@ class _FeedState extends State<Feed> {
 
   @override
   Widget build(BuildContext context) {
+    statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Container(
+      color: Colors.white,
       child: feedBody(context),
     );
   }
 
-
-
   Widget sliverAppBar(BuildContext context) {
     return SliverAppBar(
-      title: Text("YAY"),
+      title: Text(
+        "Yay",
+        style: Theme.of(context).primaryTextTheme.headline6,
+      ),
       leading: null,
       pinned: true,
       automaticallyImplyLeading: false,
       floating: true,
-      flexibleSpace: Container(
-        child: Text("Feed",style: Theme.of(context).accentTextTheme.headline2,),
-      ),
+      flexibleSpace: Placeholder(),
       expandedHeight: 200,
+
     );
   }
 
@@ -59,10 +63,13 @@ class _FeedState extends State<Feed> {
 
                   print("index is " + index.toString() + "length " + data.length.toString());
 
+                 var itemIndex = index ~/ 2;
+
+
                   if (index == data.length) {
                     w = Container(
                       alignment: Alignment.center,
-                      margin: EdgeInsets.only(bottom: 5),
+                      margin: EdgeInsets.only(bottom: 5,top: 5),
                       child: SizedBox(
                           height: 50,
                           width: 50,
@@ -75,9 +82,11 @@ class _FeedState extends State<Feed> {
                         .getInstance()
                         .feedController
                         .classicFetch(1);
+                  }else if (index.isEven){
+                    print("myssksk " + data[itemIndex].toString());
+                    w = FeedContent(key: ValueKey(data[itemIndex]["id_str"]),itemData: data[itemIndex],itemIndex: itemIndex,);
                   }else{
-                    print("myssksk " + data[index].toString());
-                    w = FeedContent(key: ValueKey(data[index]["id_str"]),itemData: data[index],);
+                    w = Divider(height: 0,);
                   }
                   return w;
                 }, childCount: data.length + 1)

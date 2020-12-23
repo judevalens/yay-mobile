@@ -34,6 +34,7 @@ dependencies:
   firebase_auth: "^0.18.1+2"
   firebase_database: "^4.1.1"
   cloud_firestore: null
+  jiffy: ^3.0.1
 
   uuid: ^2.2.2
   logger: ^0.9.4
