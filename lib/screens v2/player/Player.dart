@@ -32,6 +32,8 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
 
   PlayBackController _playBackController = App.getInstance().playBackController;
 
+  int tweetFlowContainerHeight = 350;
+
   @override
   initState() {
     super.initState();
@@ -43,63 +45,87 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
     controlsColor = Theme.of(context).colorScheme.secondary;
     // TODO: implement build
 
-    return _buildPlayer(false, null);
+    return body(context);
   }
 
-  Widget _buildPlayer(bool isUnAvailable, PageSwitcher pageSwitcher) {
-    if (isUnAvailable) {
-      return emptyPlayBackState();
-    } else {
-      return Container(
-        padding: MediaQuery.of(context).padding,
-        width: double.infinity,
-        height: double.infinity,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.background),
-        child: FractionallySizedBox(
-          widthFactor: 0.9,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Material(
-                elevation: 15,
-                child: FractionallySizedBox(
-                  widthFactor: 0.9,
-                  child: AspectRatio(
-                    aspectRatio: 1 / 1,
-                    child: artWork(),
-                  ),
-                ),
-              ),
-              trackInfo(),
-              Column(
-                children: [
-                  progressBar(),
-                  trackPosition(),
+  Widget body(BuildContext context){
+    return Container(
+      height: double.infinity,
+      width: double.infinity,
+      child: LayoutBuilder(builder: (context,constraint){
+        print("constraint " + constraint.maxHeight.toString());
+
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraint.maxHeight,
+            ),
+            child:FractionallySizedBox(
+              widthFactor: 0.9,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  _buildPlayer(constraint.maxHeight-(tweetFlowContainerHeight*0.2),context),
+                  Container(
+                    width: double.infinity,
+                    color: Theme.of(context).colorScheme.primary,
+                    height: 350,
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [Text("Tweet Flow"),Expanded(child: Container(child: Text("No tweet found"),))],
+                    ),
+                  )
                 ],
               ),
-              Row(
-                children: [previousButton(), resumePauseStream(), nextButton()],
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            ),
+          ),
+        );
+
+      }),
+    );
+  }
+
+  Widget _buildPlayer(double height,BuildContext context) {
+    return Container(
+      height: height,
+      child: Column(children: [
+        Container(
+          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top+50, bottom: 50),
+          child: FractionallySizedBox(
+            widthFactor: 0.9,
+            child: Material(
+              elevation: 25,
+              child: AspectRatio(
+                aspectRatio: 1 / 1,
+                child: artWork(),
               ),
-              Container(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.arrow_downward_sharp,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    pageSwitcher(1);
-                  },
-                ),
-              ),
+            ),
+          ),
+        ),
+        Container(
+            margin: EdgeInsets.symmetric(vertical: 5),
+            child: trackInfo(context)),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            children: [
+              progressBar(context),
+              trackPosition(context),
             ],
           ),
         ),
-      );
-    }
+        Container(
+          margin: EdgeInsets.only(bottom: 10),
+
+          child: Row(
+            children: [previousButton(), resumePauseStream(), nextButton()],
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          ),
+        )
+      ],),
+    );
   }
+
 
   // TODO DOESNT BELONG HERE
   String formatTime(int _durationMS) {
@@ -118,7 +144,7 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
     return min.toString() + ":" + secondString;
   }
 
-  Widget progressBar() {
+  Widget progressBar(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: App.getInstance().playBackController.currentPlayBackState,
       child: ProgressBar(
@@ -130,7 +156,7 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget trackPosition() {
+  Widget trackPosition(BuildContext context) {
     return StreamBuilder<Tuple2<int, int>>(
       stream: _playBackController.sTrackPositionStreamController.getStream(),
       builder: (_, AsyncSnapshot<Tuple2<int, int>> snapshot) {
@@ -280,7 +306,7 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget trackInfo() {
+  Widget trackInfo(BuildContext context) {
     return StreamBuilder(
         stream: _playBackController.sTrackNameStreamController.getStream(),
         builder: (_, AsyncSnapshot<Tuple2<String, String>> snapShot) {
@@ -294,19 +320,22 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
             print("title has changed " + snapShot.data.item1);
           }
 
-          return Column(
-            children: [
-              Container(
-                child: MMarqueeState(songTitle,
-                    TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 30, fontWeight: FontWeight.bold),
-                    key: UniqueKey()),
-              ),
-              Container(
-                child: MMarqueeState(artists,
-                    TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 20),
-                    key: UniqueKey()),
-              )
-            ],
+          return Container(
+
+            child: Column(
+              children: [
+                Container(
+                  child: MMarqueeState(songTitle,
+                      TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 30, fontWeight: FontWeight.bold),
+                      key: UniqueKey()),
+                ),
+                Container(
+                  child: MMarqueeState(artists,
+                      TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 20),
+                      key: UniqueKey()),
+                )
+              ],
+            ),
           );
         });
   }

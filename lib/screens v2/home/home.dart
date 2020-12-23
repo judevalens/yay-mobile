@@ -18,6 +18,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
+        sizing: StackFit.expand,
         index: currentIndex,
         children: [_feed, _playerPage, _me],
       ),
