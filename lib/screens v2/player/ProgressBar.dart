@@ -68,6 +68,7 @@ class ProgressBarState extends State<ProgressBar> {
           double posToSeek = percent * totalPos;
           App.getInstance().playBackController.drag(posToSeek);
 
+
         },
         onHorizontalDragEnd: (DragEndDetails dragEndDetails) {
           double posToSeek = percent * totalPos;

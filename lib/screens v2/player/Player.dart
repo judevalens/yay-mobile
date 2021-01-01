@@ -8,6 +8,7 @@ import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
 
+import 'TweetFlow.dart';
 import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 
 import 'ProgressBar.dart';
@@ -65,16 +66,8 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  _buildPlayer(constraint.maxHeight-(tweetFlowContainerHeight*0.2),context),
-                  Container(
-                    width: double.infinity,
-                    color: Theme.of(context).colorScheme.primary,
-                    height: 350,
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [Text("Tweet Flow"),Expanded(child: Container(child: Text("No tweet found"),))],
-                    ),
-                  )
+                  _buildPlayer(constraint.maxHeight - (tweetFlowContainerHeight * 0.15), context),
+                  TweetFlow(tweetFlowContainerHeight: tweetFlowContainerHeight,)
                 ],
               ),
             ),
@@ -90,41 +83,40 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
       height: height,
       child: Column(children: [
         Container(
-          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top+50, bottom: 50),
-          child: FractionallySizedBox(
-            widthFactor: 0.9,
-            child: Material(
-              elevation: 25,
-              child: AspectRatio(
-                aspectRatio: 1 / 1,
-                child: artWork(),
+            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 50, bottom: 50),
+            child: FractionallySizedBox(
+              widthFactor: 0.9,
+              child: Material(
+                elevation: 25,
+                child: AspectRatio(
+                  aspectRatio: 1 / 1,
+                  child: artWork(),
+                ),
               ),
             ),
           ),
-        ),
-        Container(
-            margin: EdgeInsets.symmetric(vertical: 5),
-            child: trackInfo(context)),
-        Container(
-          margin: EdgeInsets.symmetric(vertical: 10),
-          child: Column(
-            children: [
-              progressBar(context),
-              trackPosition(context),
-            ],
+          Container(margin: EdgeInsets.symmetric(vertical: 5), child: trackInfo(context)),
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              children: [
+                progressBar(context),
+                trackPosition(context),
+              ],
+            ),
           ),
-        ),
-        Container(
-          margin: EdgeInsets.only(bottom: 10),
-
-          child: Row(
-            children: [previousButton(), resumePauseStream(), nextButton()],
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          ),
-        )
-      ],),
+          Container(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [previousButton(), resumePauseStream(), nextButton()],
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            ),
+          )
+        ],
+      ),
     );
   }
+
 
 
   // TODO DOESNT BELONG HERE

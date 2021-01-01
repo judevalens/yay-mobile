@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
@@ -49,6 +47,7 @@ class PlayBackController {
   SingleSCMultipleSubscriptions<Tuple2<String, String>> sTrackNameStreamController;
   SingleSCMultipleSubscriptions<Uint8List> sTrackCoverStreamController;
   SingleSCMultipleSubscriptions<bool> trackPlayStateStreamController;
+  SingleSCMultipleSubscriptions<bool> newTrackStreamController;
 
   PlayBackController() {
     isInitialized = false;
@@ -71,7 +70,7 @@ class PlayBackController {
     sTrackPositionStreamController = new SingleSCMultipleSubscriptions();
     sTrackNameStreamController = new SingleSCMultipleSubscriptions();
     sTrackCoverStreamController = new SingleSCMultipleSubscriptions();
-
+    newTrackStreamController = new SingleSCMultipleSubscriptions();
 
     positionUpdaterRp = new ReceivePort();
     playBackChannel.setMethodCallHandler(

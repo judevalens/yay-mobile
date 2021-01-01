@@ -1,4 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
+/*import 'package:json_annotation/json_annotation.dart';
 import 'package:yay/model/sync_play_back_state.dart';
 
 part 'room.g.dart';
@@ -23,3 +23,4 @@ class Room {
 
   Map<String, dynamic> toJson() => _$RoomToJson(this);
 }
+*/

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/misc/httpsPatch.dart';
+import 'package:yay/screens%20v2/home/home.dart';
 import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
 
@@ -55,10 +56,7 @@ class MyAppState extends State<MyApp> {
 
     _isInitialized.then((value) {
       homeWidgets = {
-        "homeScreen": ChangeNotifierProvider.value(
-          value: App.getInstance().authorization,
-          child: HomePage(),
-        ),
+        "homeScreen": Home(),
         "loginScreen": LoginScreen()
       };
 

@@ -4,6 +4,7 @@ import 'package:flutter/painting.dart';
 import 'package:intl/intl.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/FeedController.dart';
+import 'package:yay/screens%20v2/feed/tweet.dart';
 
 class FeedContent extends StatefulWidget {
   final Map<String, dynamic> itemData;
@@ -61,14 +62,14 @@ class _FeedContentState extends State<FeedContent> {
     Widget w;
 
     if (itemType == FeedController.TWEET_TYPE) {
-      w = buildTweet();
+      w = FeedTweet(itemData: widget.itemData,itemIndex: widget.itemIndex,tweetType: "normal",);
     }
 
     return w;
   }
 
   Widget buildTweet() {
-    Color c = widget.itemIndex.isEven ? Colors.white : Color(0xfff8f9fa);
+    Color c = widget.itemIndex.isEven ? Colors.white : Theme.of(context).colorScheme.primary;
     return Container(
       padding: EdgeInsets.all(10),
       alignment: Alignment.center,
@@ -100,38 +101,65 @@ class _FeedContentState extends State<FeedContent> {
 
   Widget tweetHeader() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Container(
-          margin: EdgeInsets.only(right: 5),
-          height: 50,
-          width: 50,
-          decoration:
-              BoxDecoration(border: Border.all(width: 1), borderRadius: BorderRadius.circular(25)),
-          child: ClipOval(
-            child: Image.network(
-              profilePictureUrl,
-              fit: BoxFit.fill,
-            ),
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                margin: EdgeInsets.only(right: 5),
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                    border: Border.all(width: 3,color: Theme.of(context).colorScheme.secondary), borderRadius: BorderRadius.circular(25)),
+                child: ClipOval(
+                  child: Image.network(
+                    profilePictureUrl,
+                    fit: BoxFit.fill,
+                  ),
+                ),
+              ),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    child: Text(
+                      userName,
+                      softWrap: true,
+                      overflow: TextOverflow.clip,
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                  ),
+                  Text(
+                    screenName,
+                    style: Theme.of(context).textTheme.bodyText2,
+                  ),
+                ],
+              )),
+            ],
           ),
         ),
         Expanded(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              child: Text(
-                userName,
-                softWrap: true,
-                overflow: TextOverflow.clip,
-                style: Theme.of(context).textTheme.headline6,
+          child: Container(
+            width: 50,
+            height: 50,
+            alignment: Alignment.centerRight,
+
+            child: Material(
+              type: MaterialType.transparency,
+              shape: CircleBorder(),
+              child: InkWell(
+                customBorder: CircleBorder(),
+                onTap: () {},
+                child: ImageIcon(
+                  AssetImage("assets/Twitter_Logo_Blue.png"),
+                  size: 50,
+                ),
               ),
             ),
-            Text(
-              screenName,
-              style: Theme.of(context).textTheme.bodyText2,
-            ),
-          ],
-        )),
+          ),
+        )
       ],
     );
   }
@@ -151,6 +179,8 @@ class _FeedContentState extends State<FeedContent> {
           child: Container(
             child: ImageIcon(
               AssetImage("assets/tweet_icons/speech-bubble.png"),
+              color: Theme.of(context).colorScheme.secondary,
+
             ),
           ),
         ),
@@ -161,6 +191,8 @@ class _FeedContentState extends State<FeedContent> {
           flex: 12,
           child: ImageIcon(
             AssetImage("assets/tweet_icons/retweet.png"),
+            color: Theme.of(context).colorScheme.secondary,
+
           ),
         ),
         Spacer(
@@ -170,6 +202,8 @@ class _FeedContentState extends State<FeedContent> {
           flex: 12,
           child: ImageIcon(
             AssetImage("assets/tweet_icons/heart.png"),
+            color: Theme.of(context).colorScheme.secondary,
+
           ),
         )
       ],
@@ -181,7 +215,7 @@ class _FeedContentState extends State<FeedContent> {
       children: [
         Flexible(child: actionButton()),
         Container(
-          child: Text(tweetDate),
+          child: Text(tweetDate,style: Theme.of(context).textTheme.button,),
         )
       ],
     );

@@ -89,10 +89,11 @@ class PlayBackState extends ChangeNotifier{
     App.getInstance().playBackController.sTrackPositionStreamController.controller.add(new Tuple2<int,int>(this.playBackPosition,this.track.duration));
     App.getInstance().playBackController.trackPlayStateStreamController.controller.add(this.isPaused);
 
+    print("current artists " + this.track.artists.toString());
 
     if(trackChanged){
       App.getInstance().playBackController.getArtWork(imageUri);
-
+      App.getInstance().playBackController.newTrackStreamController.controller.add(true);
       String artistList =  "";
       int counter  = 0;
       for (var value in this.track.artists) {
