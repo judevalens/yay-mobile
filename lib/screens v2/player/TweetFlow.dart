@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/misc/SingleSubsStream.dart';
 import 'package:yay/screens%20v2/feed/tweet.dart';
 
 class TweetFlow extends StatefulWidget {
@@ -13,6 +14,17 @@ class TweetFlow extends StatefulWidget {
 }
 
 class _TweetFlowState extends State<TweetFlow> {
+  PageController _pageController = PageController();
+  SingleSCMultipleSubscriptions<int> pageCounterStream = SingleSCMultipleSubscriptions();
+  int currentIndex = 0;
+  int totalPage = 0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return _buildTweetFlow();
@@ -47,12 +59,6 @@ class _TweetFlowState extends State<TweetFlow> {
               alignment: Alignment.center,
               child: tweetFlowItem2(),
             ),
-          ),
-          Container(
-            alignment: Alignment.centerRight,
-            child: Text("1/50",style: TextStyle(
-              fontSize: 20
-            ),),
           ),
           Divider(
             thickness: 2,
@@ -119,33 +125,16 @@ class _TweetFlowState extends State<TweetFlow> {
           return StreamBuilder(
               stream: App.getInstance().tweetFlowController.tweetFlowStream.getStream(),
               builder: (context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
-                Widget w;
                 if (snapshot.hasData) {
                   var tweetFlow = snapshot.data;
                   if (tweetFlow["status"] == 200) {
                     var tweetsDynamic = tweetFlow["tweetFlow"]["tweets"] as List<dynamic>;
                     var tweets = tweetsDynamic.cast<Map<String, dynamic>>();
-                    print("tweets");
-                    print(tweets);
-
-                    return PageView.builder(
-                      itemCount: tweets.length,
-                      scrollDirection: Axis.horizontal,
-                      itemBuilder: (BuildContext context, int index) {
-                        return ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: constraint.maxWidth),
-                          child: Container(
-                            child: FeedTweet(
-                              itemData: tweets[index],
-                              itemIndex: index,
-                              tweetType: "tweetFlow",
-                              key: ValueKey(tweets[index]["id_str"]),
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                    totalPage = tweets.length;
+                    pageCounterStream.controller.add(0);
+                    return builtItemList(tweets, constraint.maxWidth);
                   } else if (tweetFlow["status"] == 100) {
+                    currentIndex = 0;
                     return loading();
                   }
                 }
@@ -155,17 +144,99 @@ class _TweetFlowState extends State<TweetFlow> {
       ),
     );
   }
+
+  Widget builtItemList(List<Map<String, dynamic>> tweets, double maxWidth) {
+    return Column(
+      children: [
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: tweets.length,
+            scrollDirection: Axis.horizontal,
+            onPageChanged: (index) {
+              pageCounterStream.controller.add(index);
+            },
+            itemBuilder: (BuildContext context, int index) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Container(
+                  height: double.infinity,
+                  child: FeedTweet(
+                    itemData: tweets[index],
+                    itemIndex: index,
+                    tweetType: "tweetFlow",
+                    key: ValueKey(tweets[index]["id_str"]),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        PageCounter(
+          totalPage: tweets.length,
+          pageCounterStream: pageCounterStream.getStream(),
+        )
+      ],
+    );
+  }
+
+  Widget emptyTweetFlow() {
+    return Container(
+      child: Text("No tweets to show"),
+    );
+  }
+
+  Widget loading() {
+    return Container(
+      alignment: Alignment.center,
+      child: CircularProgressIndicator(),
+    );
+  }
 }
 
-Widget emptyTweetFlow() {
-  return Container(
-    child: Text("No tweets to show"),
-  );
+class PageCounter extends StatefulWidget {
+  final int totalPage;
+  final Stream<int> pageCounterStream;
+
+  const PageCounter({Key key, this.totalPage, this.pageCounterStream}) : super(key: key);
+
+  @override
+  _PageCounterState createState() => _PageCounterState();
 }
 
-Widget loading() {
-  return Container(
-    alignment: Alignment.center,
-    child: CircularProgressIndicator(),
-  );
+class _PageCounterState extends State<PageCounter> {
+  String pageCounter = "";
+  int currentIndex = 0;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    pageCounter = padNumber(currentIndex + 1) + "/" + padNumber(widget.totalPage);
+  }
+
+  String padNumber(int x) {
+    if (x.toString().length == 1) {
+      return x.toString().padLeft(1, "0");
+    } else {
+      return x.toString();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      builder: (context, snapShot) {
+        currentIndex = snapShot.data != null ? snapShot.data : 0;
+        pageCounter = padNumber(currentIndex + 1) + "/" + padNumber(widget.totalPage);
+        return Container(
+          child: Text(
+            pageCounter,
+            style: TextStyle(fontSize: 20),
+          ),
+        );
+      },
+      stream: widget.pageCounterStream,
+    );
+  }
 }
