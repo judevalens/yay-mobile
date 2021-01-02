@@ -345,15 +345,21 @@ class _FeedTweetState extends State<FeedTweet> {
   Widget buildTweetFlow(){
     return     Container(
       padding: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          border: Border.all(width: 0.1,),
 
+        ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           quoteTweetHeader(),
           Container(
-            alignment: Alignment.center,
-              margin: EdgeInsets.symmetric(vertical: 5),
-              child: Text(tweet.tweetText,style: Theme.of(context).textTheme.bodyText1,)),
+
+            alignment: Alignment.centerLeft,
+              margin: EdgeInsets.symmetric(vertical: 8),
+              child: Text(tweet.tweetText,style: TextStyle(
+                fontSize: 18,
+              ),overflow: TextOverflow.fade,softWrap: true,),),
         ],
       ),
     );

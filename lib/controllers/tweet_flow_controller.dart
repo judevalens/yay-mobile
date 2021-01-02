@@ -38,9 +38,9 @@ class TweetFlowController {
         .getStream()
         .listen((trackHasChanged) async {
       var currentPlayBackState = App.getInstance().playBackController.currentPlayBackState;
-                                                print("artistsss " + currentPlayBackState.track.toString());
+      print("artistsss " + currentPlayBackState.track.toString());
 
-       var artists = List.empty(growable: true);
+      var artists = List.empty(growable: true);
 
       for (var artist in currentPlayBackState.track.artists) {
         artists.add(artist.name);
@@ -56,6 +56,11 @@ class TweetFlowController {
 
       tweetFlow.then((tweetFlowRes){
         tweetFlowStream.controller.add(tweetFlowRes);
+      });
+
+
+      tweetFlowStream.controller.add({
+        "status": 100,
       });
 
 
