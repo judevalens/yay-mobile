@@ -12,18 +12,20 @@ import 'package:http/http.dart' as http;
 import '../ChannelConst.dart';
 
 class Authorization extends ChangeNotifier {
+  static const String ApiBaseUrl = "https://192.168.1.7:8000";
+
   static const String USER_EMAIL_PREFERENCE_ATTR = "userEmail";
   static const String USER_PROFILE_URL_PREFERENCE_ATTR = "userProfile";
   static const String USER_DISPLAY_NAME_PREFERENCE_ATTR = "userDisplayName";
   static const String USER_IMAGE_URL_PREFERENCE_ATTR = "userImageURL";
   static const String LOGIN_STATUS_PREFERENCE_ATTR = "isConnected";
   static const String ACCESS_TOKEN_PREFERENCE_ATTR = "accessToken";
-  static const String loginUrl = "https://192.168.1.7:8000/auth/login";
-  static const String spotifyLoginLoginUrl = "https://192.168.1.7:8000/auth/spotifyLogin";
-  static const String freshTokenUrl = "https://192.168.1.7:8000/auth/spotifyGetFreshToken";
-  static const String twitterRequestToken = "https://192.168.1.7:8000/auth/getTwitterRequestToken";
+  static const String loginUrl = ApiBaseUrl+"/auth/login";
+  static const String spotifyLoginLoginUrl = ApiBaseUrl+"/auth/spotifyLogin";
+  static const String freshTokenUrl = ApiBaseUrl+"/auth/spotifyGetFreshToken";
+  static const String twitterRequestToken = ApiBaseUrl+"/auth/getTwitterRequestToken";
   static const String twitterAuthenticationUrl = "https://api.twitter.com/oauth/authenticate";
-  static const String twitterAccessTokenUrl = "https://192.168.1.7:8000/auth/getTwitterAccessToken";
+  static const String twitterAccessTokenUrl = ApiBaseUrl+"/auth/getTwitterAccessToken";
   static const String TwitterAuthenticationCallbackUrl = "https://127.0.0.1/twitterCallback/";
 
 
@@ -152,7 +154,6 @@ loginReq.headers["Content-Type"] = "application/json";
     }else{
       return false;
     }
-
 
   }
 

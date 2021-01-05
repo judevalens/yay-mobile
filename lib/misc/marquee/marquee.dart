@@ -155,7 +155,6 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
     _text = text;
     _controller.stop();
 
-
     var inLineSpan = TextSpan(
         text: _text,
         style: widget._textStyle);
@@ -163,7 +162,6 @@ class _MarqueeAnimationState extends State<MarqueeAnimation> with SingleTickerPr
     _textPainter.layout();
     textWidth = _textPainter.width;
     _tween = new Tween(begin: 0, end : textWidth+widget.containerWidth);
-
 
     _tween.animate(_controller).addListener(() {
       animationController();

@@ -3,12 +3,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
 
 class TweetFlowController {
   var logger = Logger();
 
-  static const String tweetFlowUrl = "https://192.168.1.7:8000/content/tweetFlow";
+  static const String tweetFlowUrl = Authorization.ApiBaseUrl+"/content/tweetFlow";
   SingleSCMultipleSubscriptions<Map<String, dynamic>> tweetFlowStream =
       new SingleSCMultipleSubscriptions();
 

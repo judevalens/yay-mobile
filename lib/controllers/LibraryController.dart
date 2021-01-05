@@ -17,6 +17,11 @@ class BrowserController{
 
   StreamController<Map<String,dynamic>> userIndividualPlayListStreamController = new StreamController.broadcast();
 
+  // ignore: close_sinks
+  StreamController<List<Map<String,dynamic>>> artistQueryResponseStreamController = new StreamController.broadcast();
+  // ignore: close_sinks
+  StreamController<List<Map<String,dynamic>>> userQueryResponseStreamController = new StreamController.broadcast();
+
 
   List<Map<String,dynamic>> playList = new List();
 
@@ -103,4 +108,68 @@ class BrowserController{
       });
 
   }
+
+  void searchArtists(String query){
+    print("query : " + query);
+    var searchURL = Uri.https("api.spotify.com",
+        "/v1/search", {
+          "q": query, "type": "artist",
+          "limit": "45",
+        });
+    print("query2 : " + query);
+
+    print("url " + searchURL.toString());
+
+    http.get(searchURL,headers: {
+      "Authorization": _authorization.getSpotifyToken()
+    }).then((value) {
+      print("value from search \n ");
+      print(value.body);
+
+      var responses  = jsonDecode(value.body);
+
+      if (responses["artists"] != null){
+        List<Map<String,dynamic>> responseList = List.from(responses["artists"]["items"]);
+
+        artistQueryResponseStreamController.add(responseList);
+        print("n artist returned " + responses["artists"]["items"].toString());
+      }
+    });
+
+  }
+
+  void searchUsers(String query){
+
+    query = query.trim();
+
+    if (query.length == 0){
+      userQueryResponseStreamController.add(List.empty());
+    }else{
+
+      var searchUrl = Authorization.ApiBaseUrl + "/relation/searchUser?query="+query;
+
+      var searchRes = http.get(searchUrl);
+
+      searchRes.then((value){
+        var searchResponse  = jsonDecode(value.body);
+
+        print("user search");
+        print(searchResponse);
+
+        if( searchResponse["status"] == 200){
+          var users = searchResponse["users"].cast<Map<String,dynamic>>();
+          userQueryResponseStreamController.add(users);
+        }else{
+          // NOT A PRETTY SOLUTION
+          userQueryResponseStreamController.add(List.empty());
+        }
+      });
+
+    }
+
+
+
+   // http.get(searchUrl,)
+  }
+
 }

@@ -199,7 +199,7 @@ public class Spotify {
 
     public void getCode() {
         AuthorizationRequest.Builder builder = new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI);
-        builder.setScopes(new String[]{"user-read-email", "user-read-private", "app-remote-control", "playlist-read-private" ,"playlist-read-collaborative", "user-follow-read"});
+        builder.setScopes(new String[]{"user-read-email", "user-read-private", "app-remote-control", "playlist-read-private" ,"playlist-read-collaborative", "user-follow-read", "user-top-read"});
         AuthorizationRequest request = builder.build();
         AuthorizationClient.openLoginActivity(activity, AUTH_CODE_REQUEST_CODE, request);
         Log.d("get code", "get COde");
