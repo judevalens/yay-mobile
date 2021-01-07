@@ -203,7 +203,7 @@ class RoomItemState extends State<RoomItem> {
 
                   switch (allowedAction) {
                     case RoomAction.JoinStream:
-                      _roomController.joinStream(room["room_id"]);
+                      _roomController.enterChat(room["room_id"]);
                       break;
                     case RoomAction.leaveStream:
                       _roomController.leaveStream();

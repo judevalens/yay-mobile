@@ -1,21 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:yay/controllers/App.dart';
-import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
-import 'package:yay/model/play_back_state.dart';
-import 'package:yay/model/room.dart';
-import 'package:uuid/uuid.dart';
-import 'package:uuid/uuid_util.dart';
-import 'package:http/http.dart' as http;
+import 'package:yay/model/chat_model.dart';
 
 enum RoomAction { JoinStream, StartStream, StopStream, leaveStream, RoomIsInactive }
 
@@ -23,18 +18,21 @@ class RoomController extends ChangeNotifier {
   static const String startRoomUrl = "http://129.21.70.250:8000/startRoom";
 
   FirebaseDatabase _database;
+  FirebaseFirestore _firestore;
   FirebaseAuth _auth;
 
   Map<String, dynamic> myRooms = new Map();
   StreamController<Map<String, dynamic>> list = new StreamController();
-  SingleSCMultipleSubscriptions<Map<String, dynamic>> roomListStreamController =
+  SingleSCMultipleSubscriptions<Map<String, ChatModel>> roomListStreamController =
       new SingleSCMultipleSubscriptions();
   DatabaseReference currentRoom;
+
   // Used to set room inactive when room leader disconnect unexpectedly
   DatabaseReference currentRoomActiveState;
   String currentRoomID;
   OnDisconnect currentRoomOnDisconnect;
   StreamSubscription<Event> currentRoomPlayBackState;
+
   // room members subscribe to this stream
   StreamSubscription<Event> currentRoomState;
   String userID;
@@ -44,6 +42,11 @@ class RoomController extends ChangeNotifier {
   bool isInitialized = false;
 
   ChatController chatController;
+
+  SingleSCMultipleSubscriptions<Map<String, ChatModel>> sessionsListStream =
+      new SingleSCMultipleSubscriptions();
+
+  Map<String,ChatModel> chats= Map();
 
   RoomController(this._database, this._auth) {
     watchAuthorization();
@@ -66,47 +69,82 @@ class RoomController extends ChangeNotifier {
 
   Logger logger = new Logger();
 
-  Future<void> createRoom(String roomName) async {
+  Future<void> init() async {
+    userID = _auth.currentUser.uid;
+
+    var roomsRef =
+    (_database.reference().child("users").child(_auth.currentUser.uid).child("chats"));
+    var roomList = (await roomsRef.once()).value;
+    // addRoom(roomList);
+
+    roomsRef.onChildAdded.listen((event) {
+      print("child added");
+
+      var roomList = event.snapshot.value;
+      var chatId  = event.snapshot.key;
+      Map<String, dynamic> chatData = Map.from(event.snapshot.value);
+      print(roomList);
+      //addNewRoom(event.snapshot.key);
+
+      var chatStreamEvent = _database.reference().child("chats").child(chatId).onValue;
+      chats[event.snapshot.key] = ChatModel(chatId,chatData,chatStreamEvent,_database);
+      roomListStreamController.controller.add(chats);
+      // addRoom(roomList);
+    });
+
+    roomsRef.onChildChanged.listen((event) {
+      print("child changed");
+      print(roomList);
+    });
+
+    roomsRef.onChildRemoved.listen((event) {
+      var roomList = event.snapshot.value;
+      removeRoom(roomList);
+    });
+  }
+
+
+  Future<void> createSession(String roomName) async {
     var joinCode = randomString(5);
 
     if (roomName.length == 0) {
       roomName = joinCode;
     }
 
-    var roomRef = _database.reference().child("rooms").push();
+    var roomRef = _database.reference().child("chats").push();
 
     var joinCodeRef = _database.reference().child("join_codes").child(joinCode);
 
     joinCodeRef.set(roomRef.key);
 
     roomRef.set({
-      "room_id": roomRef.key,
-      "room_name": roomName,
+      "chat_name": roomName,
+      "chat_type": "group",
       "join_code": joinCode,
-      "leader": _auth.currentUser.uid,
-      "members": {},
+      "owner": _auth.currentUser.uid,
       "is_active": false,
       "play_back_state": {}
     });
 
-    var userRef = _database
+    // SAVE THIS ROOM FOR THE USER
+    _database
         .reference()
         .child("users")
         .child(_auth.currentUser.uid)
-        .child("rooms")
+        .child("chats")
         .child(roomRef.key)
         .set({"mine": true});
 
     print("created room");
   }
 
-  Future<void> joinRoom(String joinCode) async {
+  Future<void> joinGroupChat(String joinCode) async {
     var joinCodeRef = _database.reference().child("join_codes").child(joinCode);
     dynamic roomID = (await joinCodeRef.once()).value;
     logger.d("joining room , roomID :" + (roomID == null).toString());
     if (roomID != null) {
       logger.d(roomID);
-      var roomMembersRef = _database.reference().child("rooms").child(roomID).child("members");
+      var roomMembersRef = _database.reference().child("chats").child(roomID).child("members_id");
 
       var notInRoom =
           (await roomMembersRef.equalTo(null, key: _auth.currentUser.uid).once()).value == null;
@@ -115,23 +153,23 @@ class RoomController extends ChangeNotifier {
       print(notInRoom);
 
       if (notInRoom) {
-        roomMembersRef.child(_auth.currentUser.uid).set(false);
+        roomMembersRef.child(_auth.currentUser.uid).set(true);
         _database
             .reference()
             .child("users")
             .child(_auth.currentUser.uid)
-            .child("rooms")
+            .child("chats")
             .child(roomID)
             .set({"mine": false});
       }
     }
   }
 
-  Future<bool> joinStream(String roomID) async {
-    var roomToJoinRef = _database.reference().child("rooms").child(roomID);
-    var roomToJoin = (await roomToJoinRef.once()).value;
+  Future<bool> enterChat(String chatID) async {
+    var chatToJoinRef = _database.reference().child("rooms").child(chatID);
+    var chatToJoin = (await chatToJoinRef.once()).value;
 
-    if (!roomToJoin["is_active"]) {
+    if (!chatToJoin["is_active"]) {
       return false;
     }
     // Before joining a new room, user must leave its current room if applicable
@@ -139,10 +177,10 @@ class RoomController extends ChangeNotifier {
       leaveStream();
     }
 
-    currentRoom = _database.reference().child("rooms").child(roomID);
+    currentRoom = _database.reference().child("chats").child(chatID);
 
     // member state ref
-    var memberRef = currentRoom.child("members").child(userID);
+    var memberRef = currentRoom.child("members_id").child(userID);
 
     // let the room know when a member disconnect unexpectedly
     currentRoomOnDisconnect = memberRef.onDisconnect();
@@ -158,7 +196,7 @@ class RoomController extends ChangeNotifier {
     currentRoomPlayBackState = currentRoom.child("play_back_state").onValue.listen((event) {
       if (playerMode.LISTENING == App.getInstance().playBackController.currentMode) {
         Map<String, dynamic> leaderPlayBackState = Map.from(event.snapshot.value);
-       // App.getInstance().playBackController.sync(leaderPlayBackState);
+        // App.getInstance().playBackController.sync(leaderPlayBackState);
       }
     });
 
@@ -167,12 +205,19 @@ class RoomController extends ChangeNotifier {
       var isActive = event.snapshot.value;
       if (!isActive) {
         leaveStream();
-
       }
     });
 
     return true;
   }
+
+  loadChat(String chatID) {
+    _database.reference().child("chats").child(chatID).onChildAdded.listen((chatEvent) {
+      chatEvent.snapshot.value;
+    });
+  }
+
+
 
   // determines the correct way to stop . stop stream or leave room;
   void stop() {
@@ -184,10 +229,9 @@ class RoomController extends ChangeNotifier {
   }
 
   void sendKeepAlive() {}
-
   void leaveStream() async {
     if (currentRoom != null) {
-      currentRoom.child("members").child(userID).set(false);
+      currentRoom.child("members_id").child(userID).set(false);
       currentRoomID = null;
       isInRoom = false;
       currentRoomPlayBackState.cancel();
@@ -198,12 +242,11 @@ class RoomController extends ChangeNotifier {
       logger.i("current room is null; can't leave stream");
     }
   }
-
   void streamToRoom(String roomID) async {
     if (isInRoom) {
       stop();
     }
-    currentRoom = _database.reference().child("rooms").child(roomID);
+    currentRoom = _database.reference().child("chats").child(roomID);
     currentRoomActiveState = currentRoom.child("is_active");
 
     // set is_active to false if roomLeader disconnect unexpectedly
@@ -259,7 +302,7 @@ class RoomController extends ChangeNotifier {
     print("room " + roomID);
     print(room);
 
-    var isMyRoom = room["leader"] == App.getInstance().firebaseAuth.currentUser.uid;
+    var isMyRoom = room["owner"] == App.getInstance().firebaseAuth.currentUser.uid;
     var isActive = room.containsKey("is_active") ? room["is_active"] : false;
     var action = isMyRoom ? RoomAction.StartStream : RoomAction.JoinStream;
 
@@ -285,36 +328,9 @@ class RoomController extends ChangeNotifier {
     return null;
   }
 
-  Future<void> init() async {
-    userID = _auth.currentUser.uid;
-
-    var roomsRef =
-        (_database.reference().child("users").child(_auth.currentUser.uid).child("rooms"));
-    var roomList = (await roomsRef.once()).value;
-    // addRoom(roomList);
-
-    roomsRef.onChildAdded.listen((event) {
-      var roomList = event.snapshot.value;
-
-      print("child added");
-      print(roomList);
-      addNewRoom(event.snapshot.key);
-      // addRoom(roomList);
-    });
-
-    roomsRef.onChildChanged.listen((event) {
-      print("child changed");
-      print(roomList);
-    });
-
-    roomsRef.onChildRemoved.listen((event) {
-      var roomList = event.snapshot.value;
-      removeRoom(roomList);
-    });
-  }
 
   void addNewRoom(String roomID) async {
-    var roomRef = _database.reference().child("rooms").child(roomID);
+    var roomRef = _database.reference().child("chats").child(roomID);
 
     roomRef.onValue.listen((event) {
       print("child changed !!!");

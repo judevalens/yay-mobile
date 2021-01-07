@@ -2,16 +2,15 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
 import 'package:yay/model/play_back_state.dart';
-import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 import 'package:yay/screens%20v2/player/ProgressBar.dart';
 
+import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 
 class PlayerPage extends StatefulWidget {
   final PageSwitcher pageSwitcher;
@@ -134,7 +133,7 @@ class PlayerPageState extends State<PlayerPage> with AutomaticKeepAliveClientMix
       child: ProgressBar(
         height: 10,
         seekCallBack: App.getInstance().playBackController.seek,
-          progressBarColor: Theme.of(context).colorScheme.secondary,
+        progressBarColor: Theme.of(context).colorScheme.secondary,
         progressBarBackground: Theme.of(context).colorScheme.onBackground,
       ),
     );

@@ -121,7 +121,7 @@ class _MyRoomState extends State<MyRoom> with AutomaticKeepAliveClientMixin {
                 print("sending chat " + text);
                 _textEditingController.clear();
                 widget.roomController.chatController
-                    .sendContent(text, ChatItemType(ChatItemType.TEXT_CHAT));
+                    .sendContent("",text, ChatItemType(ChatItemType.TEXT_CHAT));
                 _focusNode.requestFocus();
               },
             ),

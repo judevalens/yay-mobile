@@ -79,14 +79,13 @@ class ChatController {
     messageStreamController.controller.add(messages);
   }
 
-  void sendContent(String content, ChatItemType chatItemTYpe) {
+  void sendContent(String chatID, String content, ChatItemType chatItemTYpe) {
     print("TEST WEIRD BUG");
-    print("sending text...... to room  " + this.roomController.currentRoomID);
+    print("sending msg...... to chat  " + chatID);
 
-    print("sending text...... to room  " + this.roomController.currentRoomID);
 
     var chatRef =
-        _database.reference().child("chatMessages").child(this.roomController.currentRoomID);
+        _database.reference().child("chat_messages").child(chatID);
     var newChatRef = chatRef.push();
 
     var chatData = {
@@ -94,6 +93,7 @@ class ChatController {
       "content": content,
       "contentType": chatItemTYpe.value,
       "senderID": _auth.currentUser.uid,
+      // TODO decide if we will use global variable or pass dependency
       "senderName": App.getInstance().authorization.userDisplayName,
       "chatID": newChatRef.key
     };

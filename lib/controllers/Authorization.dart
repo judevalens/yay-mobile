@@ -67,7 +67,6 @@ class Authorization extends ChangeNotifier {
     userProfileUrl = App.getInstance().appSharedPreferences.get(USER_PROFILE_URL_PREFERENCE_ATTR);
     userImageUrl = App.getInstance().appSharedPreferences.get(USER_IMAGE_URL_PREFERENCE_ATTR);
     await loginFlow();
-
     return;
   }
 

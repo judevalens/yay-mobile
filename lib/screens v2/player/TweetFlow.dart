@@ -81,8 +81,7 @@ class _TweetFlowState extends State<TweetFlow> {
                   if (tweetFlow["status"] == 200) {
                     var tweetsDynamic = tweetFlow["tweetFlow"]["tweets"] as List<dynamic>;
                     var tweets = tweetsDynamic.cast<Map<String, dynamic>>();
-                    print("tweets");
-                    print(tweets);
+
 
                     return ListView.separated(
                       itemCount: tweets.length,

@@ -48,14 +48,8 @@ class _FindState extends State<Find> with TickerProviderStateMixin {
 
   Widget sliverAppBar(BuildContext context) {
     return SliverAppBar(
-      title: Text(
-        "YaY",
-        style: TextStyle(
-            fontSize: 20,
-            color: Theme.of(context).colorScheme.secondary,
-            fontWeight: FontWeight.bold),
-      ),
-      leading: null,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      title: Text("Search"),
       pinned: true,
       snap: true,
       automaticallyImplyLeading: false,

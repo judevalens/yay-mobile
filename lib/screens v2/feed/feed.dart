@@ -32,17 +32,13 @@ class _FeedState extends State<Feed> {
 
   Widget sliverAppBar(BuildContext context) {
     return SliverAppBar(
-      title: Text(
-        "YaY",
-        style: TextStyle(
-          fontSize: 20,
-          color: Theme.of(context).colorScheme.secondary,
-            fontWeight: FontWeight.bold
+      title: Container(
+        child: Text("Feed"),
         ),
-      ),
+
       leading: null,
       pinned: true,
-      automaticallyImplyLeading: false,
+      automaticallyImplyLeading: true,
       floating: true,
       flexibleSpace: Placeholder(),
       expandedHeight: 200,
@@ -59,13 +55,11 @@ class _FeedState extends State<Feed> {
             .getStream(),
         builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
           data = snapshot.data;
-          print("sliver list");
           if (snapshot.hasData) {
             return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
                   Widget w;
 
-                  print("index is " + index.toString() + "length " + data.length.toString());
 
                  var itemIndex = index ~/ 2;
 
@@ -87,7 +81,6 @@ class _FeedState extends State<Feed> {
                         .feedController
                         .classicFetch(1);
                   }else if (index.isEven){
-                    print("myssksk " + data[itemIndex].toString());
                     w = FeedContent(key: ValueKey(data[itemIndex]["id_str"]),itemData: data[itemIndex],itemIndex: itemIndex,);
                   }else{
                     w = Divider(height: 0,);
@@ -120,11 +113,7 @@ class _FeedState extends State<Feed> {
 
   Widget feedBody(BuildContext context) {
     _controller.addListener(() {
-      print("viewport " + _controller.position.viewportDimension.toString());
-      print("scrolling, position :" +
-          _controller.position.pixels.toString() +
-          " atEdge : " +
-          _controller.position.atEdge.toString());
+
     });
     return CustomScrollView(
       controller: _controller,

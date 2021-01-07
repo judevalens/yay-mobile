@@ -83,6 +83,7 @@ class App extends ChangeNotifier {
      tweetFlowController = TweetFlowController("");
     // wait to for the app the connect to the spotify remote sdk
     await authorization.init();
+    await userProfileController.init();
 
     await Future.delayed(new Duration(seconds: 0));
     return true;

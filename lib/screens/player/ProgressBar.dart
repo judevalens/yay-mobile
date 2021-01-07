@@ -1,11 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/model/play_back_state.dart';
 import 'package:yay/screens/player/progressBarPainter.dart';
-
-import 'dart:math' as math;
 
 typedef SeekCallBack = void Function(double pos);
 
@@ -31,29 +31,29 @@ class ProgressBarState extends State<ProgressBar> {
   int totalPos = 0;
   int currentPos = 0;
   double percent = 0;
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return Selector<PlayBackState, Tuple2<int, int>>(selector: (buildContext, playBackState) {
-    //  print("spotify is null");
-     // print(playBackState);
+      //  print("spotify is null");
+      // print(playBackState);
 
-
-        totalPos = playBackState.track.duration;
-        currentPos = playBackState.playBackPosition;
-        percent = currentPos / totalPos;
+      totalPos = playBackState.track.duration;
+      currentPos = playBackState.playBackPosition;
+      percent = currentPos / totalPos;
 
       return playBackState.playBackPosition != null
           ? Tuple2<int, int>(playBackState.playBackPosition, playBackState.track.duration)
           : 0;
     }, builder: (BuildContext context, Tuple2<int, int> value, Widget child) {
       return GestureDetector(
-        onHorizontalDragStart: (DragStartDetails dragStartDetails){
+        onHorizontalDragStart: (DragStartDetails dragStartDetails) {
           percent = dragStartDetails.localPosition.dx / (context.size.width);
           percent = math.min(percent, 1);
           percent = math.max(0, percent);
           double posToSeek = percent * totalPos;
-            print("drag start !!!!!!!!");
+          print("drag start !!!!!!!!");
           App.getInstance().playBackController.dragStart(posToSeek);
         },
         onHorizontalDragUpdate: (DragUpdateDetails dragUpdateDetails) {
@@ -65,16 +65,15 @@ class ProgressBarState extends State<ProgressBar> {
           percent = math.max(0, percent);
           double posToSeek = percent * totalPos;
           App.getInstance().playBackController.drag(posToSeek);
-
         },
         onHorizontalDragEnd: (DragEndDetails dragEndDetails) {
           double posToSeek = percent * totalPos;
-         // seekCallBack(posToSeek);
+          // seekCallBack(posToSeek);
           App.getInstance().playBackController.dragEnd(posToSeek);
-
         },
         child: CustomPaint(
-          painter: ProgressBarPainter.fromPercent(percent, Theme.of(context).primaryColor,Colors.red),
+          painter:
+              ProgressBarPainter.fromPercent(percent, Theme.of(context).primaryColor, Colors.red),
           child: FractionallySizedBox(
             widthFactor: 1,
             child: SizedBox(

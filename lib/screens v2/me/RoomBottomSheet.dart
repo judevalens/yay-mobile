@@ -186,7 +186,7 @@ class __RoomListState extends State<_RoomList> with AutomaticKeepAliveClientMixi
                           backgroundColor: MaterialStateColor.resolveWith(
                               (states) => Theme.of(context).primaryColor)),
                       onPressed: () {
-                        App.getInstance().roomController.joinRoom(joinCode);
+                        App.getInstance().roomController.joinGroupChat(joinCode);
                       },
                       child: Text("Join room"),
                     )),
@@ -206,7 +206,7 @@ class __RoomListState extends State<_RoomList> with AutomaticKeepAliveClientMixi
                         backgroundColor: MaterialStateColor.resolveWith(
                             (states) => Theme.of(context).primaryColor)),
                     onPressed: () {
-                      App.getInstance().roomController.createRoom(roomName);
+                     // App.getInstance().roomController.createSession(roomName);
                     },
                     child: Text("Create room"),
                   ),

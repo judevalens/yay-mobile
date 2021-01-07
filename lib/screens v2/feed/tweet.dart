@@ -28,7 +28,6 @@ class _FeedTweetState extends State<FeedTweet> {
     } else if (widget.tweetType == "tweetFlow") {
       tweet = TweetItem.tweetFlow(widget.itemData);
     } else {
-      print("quoted tweet " + widget.itemData.toString());
       tweet = TweetItem.quoteTweet(widget.itemData);
     }
   }

@@ -309,7 +309,6 @@ class PlayerState extends State<Player> with AutomaticKeepAliveClientMixin {
             songTitle = snapShot.data.item1 != null ? snapShot.data.item1 : "No data";
             artists = snapShot.data.item2 != null ? snapShot.data.item2 : "No data";
 
-            print("title has changed " + snapShot.data.item1);
           }
 
           return Container(

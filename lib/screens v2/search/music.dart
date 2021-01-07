@@ -20,7 +20,8 @@ class _MusicPageState extends State<MusicPage> with TickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)
+  {
     return Container(
       child: Column(
         children: [

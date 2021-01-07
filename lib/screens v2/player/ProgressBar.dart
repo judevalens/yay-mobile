@@ -55,12 +55,10 @@ class ProgressBarState extends State<ProgressBar> {
           percent = math.min(percent, 1);
           percent = math.max(0, percent);
           double posToSeek = percent * totalPos;
-            print("drag start !!!!!!!!");
           App.getInstance().playBackController.dragStart(posToSeek);
         },
         onHorizontalDragUpdate: (DragUpdateDetails dragUpdateDetails) {
-          print("dragiing!!");
-          print("current dx " + dragUpdateDetails.localPosition.dx.toString());
+
 
           percent = dragUpdateDetails.localPosition.dx / (context.size.width);
           percent = math.min(percent, 1);

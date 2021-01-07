@@ -54,7 +54,6 @@ class _FeedContentState extends State<FeedContent> {
 
     tweetText = itemContent["text"];
 
-    print("contentssfd  " + itemContent["id_str"]);
   }
 
   @override
@@ -226,7 +225,6 @@ class _FeedContentState extends State<FeedContent> {
 
     var newUrl = url.substring(0, lastIndex) +
         url.substring(url.substring(0, lastIndex).length + "_normal".length);
-    print("new url " + newUrl);
   }
 
   String getBigger(String url) {
@@ -234,7 +232,6 @@ class _FeedContentState extends State<FeedContent> {
     var newUrl = url.substring(0, lastIndex) +
         "_bigger" +
         url.substring(url.substring(0, lastIndex).length + "_normal".length);
-    print("new url " + newUrl);
     return newUrl;
   }
 }
