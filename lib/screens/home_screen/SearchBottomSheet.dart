@@ -217,7 +217,7 @@ class _SearchResponseItemState extends State<SearchResponseItem> {
       onSelected: (value) {
 
         if(value == 2){
-          App.getInstance().roomController.chatController.sendObject(widget.track, ChatItemType(ChatItemType.SUGGESTION));
+          App.getInstance().roomController.chatController.sendMedia("",widget.track, ChatItemType(ChatItemType.SUGGESTION));
         }
 
       },

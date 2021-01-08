@@ -43,6 +43,7 @@ class ChatController {
       if (call.method == MC_INSERT_MEDIA) {
         logger.i(call.arguments);
 
+
         var giphyData = jsonDecode(call.arguments);
 
         var giphySize = "downsized";
@@ -51,7 +52,13 @@ class ChatController {
           //giphySize = "original";
         }
 
-        sendObject(giphyData["media"]["images"][giphySize], ChatItemType(giphyData["contentType"]));
+        print("received gif");
+
+        String chatID = giphyData["chat_id"];
+        print("received gif  " +chatID );
+
+        sendMedia(chatID, giphyData["media"]["images"][giphySize],
+            ChatItemType(giphyData["contentType"]));
       }
 
       return;
@@ -79,13 +86,11 @@ class ChatController {
     messageStreamController.controller.add(messages);
   }
 
-  void sendContent(String chatID, String content, ChatItemType chatItemTYpe) {
+  void sendText(String chatID, String content, ChatItemType chatItemTYpe) {
     print("TEST WEIRD BUG");
     print("sending msg...... to chat  " + chatID);
 
-
-    var chatRef =
-        _database.reference().child("chat_messages").child(chatID);
+    var chatRef = _database.reference().child("chat_messages").child(chatID);
     var newChatRef = chatRef.push();
 
     var chatData = {
@@ -101,13 +106,11 @@ class ChatController {
     newChatRef.set(chatData);
   }
 
-  void sendObject(Map<String, dynamic> content, ChatItemType chatItemTYpe) {
-    print("sending text...... to room  " + this.roomController.currentRoomID);
+  void sendMedia(String chatID, Map<String, dynamic> content, ChatItemType chatItemTYpe) {
+    print("sending media " + chatID);
 
-    print("sending text...... to room  " + this.roomController.currentRoomID);
 
-    var chatRef =
-        _database.reference().child("chatMessages").child(this.roomController.currentRoomID);
+    var chatRef = _database.reference().child("chat_messages").child(chatID);
     var newChatRef = chatRef.push();
 
     var chatData = {

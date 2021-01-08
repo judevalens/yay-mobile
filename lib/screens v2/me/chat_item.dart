@@ -1,9 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/ChatController.dart';
-import 'dart:math' as math;
 
 class ChatItem extends StatefulWidget {
   final Map<String, dynamic> chat;
@@ -16,8 +16,9 @@ class ChatItem extends StatefulWidget {
 }
 
 class _ChatItemState extends State<ChatItem> {
-  Color bg = Color(0xFF2E2829);
+  Color bg;
   double gifPadding = 4;
+  double maxHeight = 0;
 
   @override
   void initState() {
@@ -27,7 +28,11 @@ class _ChatItemState extends State<ChatItem> {
 
   @override
   Widget build(BuildContext context) {
+    bg = Colors.black12;
+    maxHeight = MediaQuery.of(context).size.height * 0.8;
+
     var time = DateTime.fromMillisecondsSinceEpoch(widget.chat["time"]);
+
     return LayoutBuilder(builder: (context, constraintBox) {
       return Container(
         width: double.infinity,
@@ -39,6 +44,7 @@ class _ChatItemState extends State<ChatItem> {
             UnconstrainedBox(
               child: LimitedBox(
                 maxWidth: constraintBox.maxWidth * 0.8,
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
                 child: Container(
                   child: Text(
                     widget.chat["senderName"] +
@@ -48,7 +54,7 @@ class _ChatItemState extends State<ChatItem> {
                         time.minute.toString().padLeft(2, "0"),
                     overflow: TextOverflow.fade,
                     softWrap: false,
-                    style: Theme.of(context).primaryTextTheme.caption,
+                    style: Theme.of(context).primaryTextTheme.bodyText2,
                   ),
                 ),
               ),
@@ -65,10 +71,18 @@ class _ChatItemState extends State<ChatItem> {
   Widget textContent(String text) {
     return LimitedBox(
       maxWidth: 250,
+      maxHeight: maxHeight,
       child: Container(
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.all(Radius.circular(5))),
-        padding: EdgeInsets.all(10),
-        child: Text(text, style: Theme.of(context).primaryTextTheme.bodyText1),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
+        ),
+        padding: EdgeInsets.all(20),
+        child: Text(text, style: TextStyle(fontSize: 15, color: Colors.black87)),
       ),
     );
   }
@@ -79,6 +93,7 @@ class _ChatItemState extends State<ChatItem> {
 
     return LimitedBox(
       maxWidth: maxWidth,
+      maxHeight: maxHeight,
       child: Container(
         decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.all(Radius.circular(2))),
         padding: EdgeInsets.all(gifPadding),
@@ -110,10 +125,6 @@ class _ChatItemState extends State<ChatItem> {
       maxWidth: 100,
       maxHeight: 100,
       child: Container(
-          decoration: BoxDecoration(
-              color: bg,
-              // borderRadius: BorderRadius.all(Radius.circular(10)),
-              shape: BoxShape.circle),
           padding: EdgeInsets.all(10),
           child: Image.network(
             media["url"],
@@ -126,14 +137,14 @@ class _ChatItemState extends State<ChatItem> {
   Widget suggestionContent(Map<dynamic, dynamic> media, double maxWidth) {
     return LimitedBox(
       maxWidth: maxWidth * 0.8,
+      maxHeight: maxHeight,
       child: Material(
         color: Theme.of(context).backgroundColor,
-        child: InkWell (
-          onTap: (){
-
-          },
-          child:  Container(
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.all(Radius.circular(5))),
+        child: InkWell(
+          onTap: () {},
+          child: Container(
+            decoration:
+                BoxDecoration(color: bg, borderRadius: BorderRadius.all(Radius.circular(5))),
             padding: EdgeInsets.all(10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,

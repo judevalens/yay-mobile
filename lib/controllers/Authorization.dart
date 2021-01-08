@@ -82,6 +82,8 @@ class Authorization extends ChangeNotifier {
       setIsAuthorized(isConnected);
     }else{
       setIsAuthorized(false);
+      connectionState.add(false);
+
     }
   }
 

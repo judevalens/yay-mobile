@@ -35,7 +35,7 @@ public class MyGiphy  {
     }
 
 
-    public  void show(){
+    public  void show(String chatID){
         GiphyFrescoHandler handler = Giphy.INSTANCE.getFrescoHandler();
         Giphy.INSTANCE.configure(context,giphyKey,false,handler);
 

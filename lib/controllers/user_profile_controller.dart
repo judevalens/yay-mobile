@@ -28,10 +28,11 @@ class UserProfileController {
     App.getInstance().authorization.getConnectionState().listen((isConnected) async {
       if (isConnected) {
         userProfileData = await getUserProfile(_firebaseAuth.currentUser.uid);
-
         print("user profile 2");
         print(userProfileData);
           isLoaded.complete(true);
+      }else{
+        isLoaded.complete(false);
       }
     });
   }

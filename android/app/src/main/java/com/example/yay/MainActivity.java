@@ -1,5 +1,6 @@
 package com.example.yay;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.util.Log;
 
@@ -50,6 +51,8 @@ public class MainActivity extends FlutterFragmentActivity implements GiphyDialog
     Spotify spotify;
     MethodChannel.Result loginResult;
     MyGiphy myGiphy;
+    String currentChatID;
+    @SuppressLint("LogNotTimber")
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
@@ -87,12 +90,15 @@ public class MainActivity extends FlutterFragmentActivity implements GiphyDialog
                 }
         );
 
-        giphyChannel.setMethodCallHandler(new MethodChannel.MethodCallHandler() {
-            @Override
-            public void onMethodCall(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-                if ("showGiphyPad".equals(call.method)) {
-                    myGiphy.show();
-                }
+        giphyChannel.setMethodCallHandler((call, result) -> {
+            if ("showGiphyPad".equals(call.method)) {
+                String chatId = (String)(call.arguments);
+                currentChatID = chatId;
+                Log.d("chat id",currentChatID);
+                Timber.d("fetching gif");
+
+                Timber.d("Current chat id %s", currentChatID);
+                myGiphy.show(chatId);
             }
         });
 
@@ -189,7 +195,7 @@ public class MainActivity extends FlutterFragmentActivity implements GiphyDialog
 
     @Override
     public void onDismissed(@NotNull GPHContentType gphContentType) {
-
+        currentChatID =null;
     }
 
     @Override
@@ -202,7 +208,7 @@ public class MainActivity extends FlutterFragmentActivity implements GiphyDialog
 
         giphy.add("media", mediaJSON);
         giphy.add("contentType", gson.toJsonTree(gphContentType));
-
+        giphy.addProperty("chat_id",currentChatID);
        giphyChannel.invokeMethod("insertMedia",giphy.toString());
 
     }

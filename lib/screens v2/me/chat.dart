@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/ChatController.dart';
 import 'package:yay/model/chat_model.dart';
 
@@ -33,8 +35,8 @@ class _ChatState extends State<Chat> {
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Container(
-        padding: MediaQuery.of(context).padding,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Expanded(
               child: chatList(),
@@ -58,10 +60,19 @@ class _ChatState extends State<Chat> {
               if (msgIDs.length == 0) {
                 return emptyList();
               } else {
+
+                  SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+                    var oldPos = scrollController.position.maxScrollExtent;
+                    scrollToBottom(scrollController);
+
+                  });
+                  App.getInstance().roomController.chatController.messageStreamController.brandNew = false;
+
+
                 return ListView.builder(
-                    //   controller: _scrollController,
-                    padding: EdgeInsets.only(left: 5, right: 5),
+                      controller: scrollController,
                     physics: ClampingScrollPhysics(),
+                    padding: EdgeInsets.only(left: 5, right: 5),
                     itemCount: msgIDs.length,
                     itemBuilder: (context, index) {
                       return ChatItem(
@@ -75,18 +86,28 @@ class _ChatState extends State<Chat> {
               return emptyList();
             }
 
-            /* if (App.getInstance().roomController.chatController.messageStreamController.brandNew){
-                WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 900),
-                    curve: Curves.decelerate,
-                  );
-                });
-                App.getInstance().roomController.chatController.messageStreamController.brandNew = false;
-              }*/
+
           }),
     );
+  }
+
+
+  void scrollToBottom(ScrollController _scrollController){
+      var oldPos = scrollController.position.maxScrollExtent;
+      var scroll  =  scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 900),
+        curve: Curves.easeOutSine,
+      );
+
+      scroll.then((value) {
+        if (oldPos < scrollController.position.maxScrollExtent){
+          scrollToBottom(_scrollController);
+        }
+      }
+      );
+
+
   }
 
   Widget bar(BuildContext context) {
@@ -116,7 +137,7 @@ class _ChatState extends State<Chat> {
               onSubmitted: (text) {
                 print("sending chat " + text);
                 _textEditingController.clear();
-                widget.chatController.sendContent(
+                widget.chatController.sendText(
                     widget.chatModel.chatID, text, ChatItemType(ChatItemType.TEXT_CHAT));
                 _focusNode.requestFocus();
               },
@@ -134,7 +155,7 @@ class _ChatState extends State<Chat> {
               color: Theme.of(context).accentColor,
               onPressed: () {
                 _focusNode.unfocus();
-                widget.chatController.channel.invokeListMethod("showGiphyPad");
+                widget.chatController.channel.invokeListMethod("showGiphyPad",widget.chatModel.chatID);
               },
               icon: Icon(Icons.emoji_emotions_sharp),
             ),

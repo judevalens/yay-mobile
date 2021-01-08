@@ -187,7 +187,7 @@ class _SearchResponseItemState extends State<SearchResponseItem> {
           App.getInstance()
               .roomController
               .chatController
-              .sendObject(widget.track, ChatItemType(ChatItemType.SUGGESTION));
+              .sendMedia("",widget.track, ChatItemType(ChatItemType.SUGGESTION));
         }
       },
       itemBuilder: (context) {
