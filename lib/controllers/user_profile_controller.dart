@@ -9,7 +9,7 @@ import 'App.dart';
 
 class UserProfileController {
   static const String userProfileUrl = Authorization.ApiBaseUrl + "/auth/getUserProfile";
-  Map<String, dynamic> userProfileData;
+  Future<Map<String, dynamic>> userProfileData;
 
   Map<String, Map<String, dynamic>> userProfiles  = Map();
   FirebaseAuth _firebaseAuth;
@@ -26,10 +26,14 @@ class UserProfileController {
 
   loadProfile() {
     App.getInstance().authorization.getConnectionState().listen((isConnected) async {
+      if (isLoaded.isCompleted){
+        isLoaded = Completer();
+      }
       if (isConnected) {
-        userProfileData = await getUserProfile(_firebaseAuth.currentUser.uid);
+        userProfileData = getUserProfile(_firebaseAuth.currentUser.uid);
         print("user profile 2");
         print(userProfileData);
+
           isLoaded.complete(true);
       }else{
         isLoaded.complete(false);

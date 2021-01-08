@@ -13,7 +13,7 @@ class Me extends StatefulWidget {
 class _MeState extends State<Me> with TickerProviderStateMixin {
   TabController _controller;
   PageController _pageController;
-  Map<String, dynamic> userProfileData;
+  Future<Map<String, dynamic>> userProfileDataFuture;
   String userProfile;
   String userName;
   String userId;
@@ -25,19 +25,31 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
     super.initState();
     _controller = TabController(vsync: this, length: 2);
     _pageController = PageController();
-    userProfileData = App.getInstance().userProfileController.userProfileData;
-    userProfile = userProfileData["basic"]["profile_picture"];
-    userName = userProfileData["basic"]["spotify_user_name"];
+    userProfileDataFuture = App.getInstance().userProfileController.userProfileData;
+    userProfileDataFuture.then((userProfileData) {
+      userProfile = userProfileData["basic"]["profile_picture"];
+      userProfile = userProfile.length == 0 ? null : userProfile;
+      userName = userProfileData["basic"]["spotify_user_name"];
+    });
+
     userId = App.getInstance().authorization.firebaseAuth.currentUser.uid;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [header(), body()],
-      ),
-    );
+        body: FutureBuilder(
+      future: userProfileDataFuture,
+      builder: (context, AsyncSnapshot<Map<String, dynamic>> snapShot) {
+        if (snapShot.hasData) {
+          return CustomScrollView(
+            slivers: [header(), body()],
+          );
+        } else {
+          return emptyListLoader();
+        }
+      },
+    ));
   }
 
   Widget header() {
@@ -119,6 +131,20 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget emptyListLoader() {
+    return Container(
+      height: double.infinity,
+      alignment: Alignment.center,
+      child: SizedBox(
+        height: 50,
+        width: 50,
+        child: CircularProgressIndicator(
+          backgroundColor: Theme.of(context).primaryColor,
         ),
       ),
     );

@@ -28,6 +28,8 @@ class _UserProfileState extends State<UserProfile> {
     profileData = App.getInstance().userProfileController.getUserProfile(widget.userID);
     profileData.then((data) {
       profilePictureUrl = data["basic"]["profile_picture"];
+      profilePictureUrl = profilePictureUrl.length == 0 ? null : profilePictureUrl;
+
       userName = data["basic"]["spotify_user_name"];
       description = (data["basic"]["user_desc"] as String).length > 0
           ? data["basic"]["user_desc"]
@@ -176,16 +178,18 @@ class _UserProfileState extends State<UserProfile> {
                   child: Container(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: topTracks.map((trackData) {
-                        var totalItem = topTracks.length;
-                        double rightMargin = (counter != totalItem - 1) ? 10 : 0;
-                        counter++;
+                      children: topTracks.map(
+                        (trackData) {
+                          var totalItem = topTracks.length;
+                          double rightMargin = (counter != totalItem - 1) ? 10 : 0;
+                          counter++;
 
-                        return Container(
-                          margin: EdgeInsets.only(right: rightMargin),
-                          child: topTrackItem(trackData),
-                        );
-                      }).toList(),
+                          return Container(
+                            margin: EdgeInsets.only(right: rightMargin),
+                            child: topTrackItem(trackData),
+                          );
+                        },
+                      ).toList(),
                     ),
                   ),
                 ),

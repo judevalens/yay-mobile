@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:yay/controllers/App.dart';
 import 'package:yay/screens%20v2/feed/feed.dart';
 import 'package:yay/screens%20v2/me/me.dart';
 import 'package:yay/screens%20v2/player/Player.dart';
 import 'package:yay/screens%20v2/search/find.dart';
-
+import 'package:yay/controllers/Authorization.dart' as auth;
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
+
   int currentIndex = 0;
   Player _playerPage = Player();
   Feed _feed = Feed();
   Me _me = Me();
  Find _find = Find();
+
+ @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,4 +57,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+
+
 }

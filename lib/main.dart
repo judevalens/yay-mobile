@@ -6,9 +6,9 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/misc/httpsPatch.dart';
 import 'package:yay/screens%20v2/home/home.dart';
-import 'package:yay/screens/home_screen/home_page.dart';
 import 'package:yay/screens/login_screen/login_screen.dart';
 
+import 'controllers/Authorization.dart' as auth;
 
 void main() {
   HttpOverrides.global = new MyHttpOverrides();
@@ -28,7 +28,6 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   Widget widgetToRender = Text("waiting");
   Future<bool> _isConnected;
-  Future<bool> _isInitialized;
   Map<String, Widget> homeWidgets;
 
   String initialRoute = "/splash";
@@ -52,21 +51,11 @@ class MyAppState extends State<MyApp> {
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
     currentRoute = splashRoute;
     print("isNull");
-    print(App.spotifyApi);
-    _isInitialized = App.getInstance().init();
-
-    _isInitialized.then((value) {
-      homeWidgets = {
-        "homeScreen": Home(),
-        "loginScreen": LoginScreen()
-      };
-
-      print("is connected : $_isInitialized");
-    });
     print(_isConnected);
   }
 
   Widget build(BuildContext context) {
+
     print("initial ? " + initialRoute);
     return MaterialApp(
       theme: ThemeData(
@@ -91,26 +80,15 @@ class MyAppState extends State<MyApp> {
         backgroundColor:  Color(0xFFf5f5f5),
       ),
       title: "YAY",
-      home: FutureBuilder<bool>(
-        future: _isInitialized,
-        builder: (BuildContext context, AsyncSnapshot<bool> initialized) {
-          Widget w;
-
-          if (initialized.hasData) {
-            w = homeWidgets['homeScreen'];
-          } else {
-            w = getSplashScreen(context);
-          }
-          return w;
-        },
-      ),
+      home: Loader(),
       routes: {
-        "/home": (context) => homeWidgets['homeScreen'],
+        "/home": (context) => Home(),
         "/loginScreen": (context) => LoginScreen(),
         "/splash": (context) => getSplashScreen(context)
       },
     );
   }
+
 
   Widget getHome(String route, BuildContext context) {
     switch (route) {
@@ -168,3 +146,87 @@ class MyAppState extends State<MyApp> {
     );
   }
 }
+
+class Loader extends StatefulWidget {
+  final bool isInitialized;
+
+  const Loader({Key key, this.isInitialized}) : super(key: key);
+
+  @override
+  _LoaderState createState() => _LoaderState();
+}
+
+class _LoaderState extends State<Loader> {
+  Future<bool> _isInitialized;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _isInitialized = App.getInstance().init();
+
+    _isInitialized.then((value) {
+      listenToConnectionState(context);
+      App.getInstance().authorization.init();
+      print("is connected : $_isInitialized");
+    });
+
+    print("loader is " + widget.isInitialized.toString());
+  }
+  @override
+  Widget build(BuildContext context) {
+    return  Center(
+      child: Container(
+        height: double.infinity,
+        width: double.infinity,
+        decoration: BoxDecoration(color: Theme.of(context).primaryColor),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              flex: 2,
+              child: Container (
+                decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.white)),
+                padding: EdgeInsets.all(15),
+                child: Text("YAY",style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.white,
+                    decoration: TextDecoration.none
+                ),),
+
+              ) ,
+            )
+            ,
+            Spacer(flex: 1,),
+            Flexible(
+              flex: 2,
+              child: FractionallySizedBox(
+                  widthFactor: 0.8,
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.black26,
+                    minHeight: 10,
+                  )),
+            ) ,
+
+          ],
+        ),
+      ),
+    );
+  }
+
+  listenToConnectionState(BuildContext _context) {
+    App.getInstance().authorization.connectionState2.getStream().listen((connectionState) {
+      print("Connection state changed");
+      print(connectionState);
+
+      if (connectionState == auth.ConnectionState.Connected) {
+        Navigator.of(_context).pushNamedAndRemoveUntil("/home", (route) => false);
+      } else if (connectionState == auth.ConnectionState.Disconnected) {
+        Navigator.of(_context).pushNamedAndRemoveUntil("/loginScreen", (route) => false);
+      }
+    });
+  }
+
+}
+

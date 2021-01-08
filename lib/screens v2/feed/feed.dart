@@ -56,17 +56,19 @@ class _FeedState extends State<Feed> {
         builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
           data = snapshot.data;
           if (snapshot.hasData) {
+            if (data.length == 0) {
+              return emptyListMessage();
+            }
+
             return SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  Widget w;
+              Widget w;
 
+              var itemIndex = index ~/ 2;
 
-                 var itemIndex = index ~/ 2;
-
-
-                  if (index == data.length) {
-                    w = Container(
-                      alignment: Alignment.center,
+              if (index == data.length) {
+                w = Container(
+                  alignment: Alignment.center,
                       margin: EdgeInsets.only(bottom: 5,top: 5),
                       child: SizedBox(
                           height: 50,
@@ -103,24 +105,26 @@ class _FeedState extends State<Feed> {
         child: SizedBox(
             height: 50,
             width: 50,
-            child: CircularProgressIndicator(backgroundColor: Theme
-                .of(context)
-                .primaryColor,)
-        ),
+            child: CircularProgressIndicator(
+              backgroundColor: Theme.of(context).primaryColor,
+            )),
       ),
     );
   }
 
-  Widget feedBody(BuildContext context) {
-    _controller.addListener(() {
+  Widget emptyListMessage() {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Container(
+          height: double.infinity, alignment: Alignment.center, child: Text("No Content to show")),
+    );
+  }
 
-    });
+  Widget feedBody(BuildContext context) {
+    _controller.addListener(() {});
     return CustomScrollView(
       controller: _controller,
       slivers: [sliverAppBar(context), feedSliverList()],
     );
   }
-
-
-
 }

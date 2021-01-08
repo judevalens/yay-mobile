@@ -8,8 +8,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:http/http.dart' as http;
+import 'package:yay/misc/SingleSubsStream.dart';
 
 import '../ChannelConst.dart';
+
+enum ConnectionState{
+  Connected,
+  Disconnected,
+  Connecting
+}
 
 class Authorization extends ChangeNotifier {
   static const String ApiBaseUrl = "https://192.168.1.7:8000";
@@ -44,6 +51,7 @@ class Authorization extends ChangeNotifier {
   FirebaseAuth firebaseAuth;
   int maxTokenDuration = 3600;
   StreamController<bool> connectionState;
+  SingleSCMultipleSubscriptions<ConnectionState> connectionState2;
   MethodChannel authenticationChannel = const MethodChannel(ChannelProtocol.SPOTIFY_CHANNEL);
 
   Map<String,dynamic> spotifyLoginData;
@@ -54,7 +62,7 @@ class Authorization extends ChangeNotifier {
     this.spotifyApi = spotifyApi;
     firebaseAuth = auth;
     connectionState =  new StreamController.broadcast();
-
+    connectionState2 = new SingleSCMultipleSubscriptions();
 
     print("remoteLoginUrl " + loginUrl);
 
@@ -79,11 +87,12 @@ class Authorization extends ChangeNotifier {
     if(firebaseAuth.currentUser != null){
     var isConnected =  await spotifySoftLogin();
       connectionState.add(true);
+    connectionState2.controller.add(ConnectionState.Connected);
       setIsAuthorized(isConnected);
     }else{
-      setIsAuthorized(false);
+      connectionState2.controller.add(ConnectionState.Disconnected);
       connectionState.add(false);
-
+      setIsAuthorized(false);
     }
   }
 

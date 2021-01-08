@@ -4,7 +4,7 @@ import 'package:tuple/tuple.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
 
 import 'App.dart';
-
+import 'dart:math' as math;
 class FeedController {
   static const String USER_TYPE = "user";
   static const String ARTIST_TYPE = "artist";
@@ -106,8 +106,14 @@ class FeedController {
           .orderBy(selectionField, descending: true)
           .endBefore([(data[0][selectionField] as int)]).limitToLast(upperSize);
     } else if (direction > 0) {
-      print("data length " + data.length.toString() + "last timestamp " + data[data.length - 1]["info"][selectionField].toString());
-      var lowerBound =  data[data.length - 1]["info"][selectionField];
+      //print("data length " + data.length.toString() + "last timestamp " + data[data.length - 1]["info"][selectionField].toString());
+
+      if (data.length == 0){
+        return feedItemQuery.get();
+      }
+
+      var lastIndex  = math.max(data.length-1, 0);
+      var lowerBound =  data[lastIndex]["info"][selectionField];
       feedItemQuery = feedItemCol
           .orderBy(selectionField, descending: true)
           .startAfter([lowerBound]).limit(lowerSize);
