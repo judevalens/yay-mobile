@@ -158,6 +158,9 @@ class TweetItem {
   List<TweetElement> parseTweet(String tweetRawText, List<TweetEntity> entities) {
     List<TweetElement> tweetElements = List.empty(growable: true);
 
+    List<int> tweetRawChar = tweetRawText.runes.toList();
+
+
     if (entities.length > 0) {
       for (int i = 0; i < entities.length; i++) {
         var entity = entities[i];
@@ -167,7 +170,7 @@ class TweetItem {
           var startTingElement = TweetElement();
 
           startTingElement.text =
-              String.fromCharCodes(tweetRawText.runes.toList(), 0, entity.indices.item1);
+              String.fromCharCodes(tweetRawChar, 0, entity.indices.item1);
           startTingElement.type = "normal";
           tweetElements.add(startTingElement);
         }
@@ -185,16 +188,16 @@ class TweetItem {
         var currentElement = TweetElement();
 
         currentElement.text = String.fromCharCodes(
-            tweetRawText.runes.toList(), entity.indices.item1, entity.indices.item2);
+            tweetRawChar, entity.indices.item1, entity.indices.item2);
 
         currentElement.type = entity.elementType;
         tweetElements.add(currentElement);
 
-        if (i == entities.length - 1 && entity.indices.item2 < entities.length) {
+        if (i == entities.length - 1 && entity.indices.item2 < tweetRawChar.length) {
+          print("last element start: " + entity.indices.item2.toString() +", end :" +tweetRawText.length.toString() + ", length: " + tweetRawText.runes.toList().length.toString() );
           var lastElement = TweetElement();
-
           lastElement.text = String.fromCharCodes(
-              tweetRawText.runes.toList(), entity.indices.item2, tweetRawText.length);
+              tweetRawChar, entity.indices.item2, tweetRawChar.length);
           lastElement.type = "normal";
           tweetElements.add(lastElement);
         }

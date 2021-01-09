@@ -19,7 +19,7 @@ import 'package:yay/controllers/RoomController.dart';
 import 'package:yay/controllers/ChatController.dart';
 import 'package:yay/controllers/TweetController.dart';
 import 'package:yay/controllers/tweet_flow_controller.dart';
-import 'package:yay/controllers/user_profile_controller.dart';
+import 'package:yay/controllers/user_controller.dart';
 
 import '../ChannelConst.dart';
 import 'package:http/http.dart' as http;
@@ -47,7 +47,7 @@ class App extends ChangeNotifier {
   FeedController feedController;
   TweetController tweetController;
   TweetFlowController tweetFlowController;
-  UserProfileController userProfileController;
+  UserController userProfileController;
   App();
 
   static App getInstance() {
@@ -76,7 +76,7 @@ class App extends ChangeNotifier {
     playBackController = new PlayBackController();
     roomController = new RoomController(firebaseDatabase,firebaseAuth);
     browserController = new BrowserController(authorization);
-     userProfileController = new UserProfileController(firebaseAuth);
+     userProfileController = new UserController(firebaseAuth,firebaseFirestore);
     feedController = FeedController(firebaseFirestore,firebaseAuth);
     tweetController = TweetController();
      tweetFlowController = TweetFlowController("");

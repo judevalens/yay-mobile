@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/model/user_model.dart';
 import 'package:yay/screens%20v2/profile/profile_header.dart';
 
 class UserProfile extends StatefulWidget {
@@ -12,8 +13,8 @@ class UserProfile extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfile> {
-  Future<Map<String, dynamic>> profileData;
-
+  Future<UserModel> userF;
+  UserModel user;
   String profilePictureUrl;
   String userName;
   String description;
@@ -25,18 +26,19 @@ class _UserProfileState extends State<UserProfile> {
     // TODO: implement initState
     super.initState();
 
-    profileData = App.getInstance().userProfileController.getUserProfile(widget.userID);
-    profileData.then((data) {
-      profilePictureUrl = data["basic"]["profile_picture"];
+    userF = App.getInstance().userProfileController.getUser(widget.userID);
+    userF.then((_user) {
+      user  = _user;
+      profilePictureUrl = user.userProfile["basic"]["profile_picture"];
       profilePictureUrl = profilePictureUrl.length == 0 ? null : profilePictureUrl;
 
-      userName = data["basic"]["spotify_user_name"];
-      description = (data["basic"]["user_desc"] as String).length > 0
-          ? data["basic"]["user_desc"]
+      userName = user.userProfile["basic"]["spotify_user_name"];
+      description = (user.userProfile["basic"]["user_desc"] as String).length > 0
+          ? user.userProfile["basic"]["user_desc"]
           : "No desc";
-      topTracks = ((data["topTracks"] as Map<String, dynamic>)["items"] as List)
+      topTracks = ((user.userProfile["topTracks"] as Map<String, dynamic>)["items"] as List)
           .cast<Map<String, dynamic>>();
-      topArtists = ((data["topArtists"] as Map<String, dynamic>)["items"] as List)
+      topArtists = ((user.userProfile["topArtists"] as Map<String, dynamic>)["items"] as List)
           .cast<Map<String, dynamic>>();
     });
   }
@@ -50,8 +52,8 @@ class _UserProfileState extends State<UserProfile> {
         elevation: 0,
       ),
       body: FutureBuilder(
-        future: profileData,
-        builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+        future: userF,
+        builder: (BuildContext context, AsyncSnapshot<UserModel> snapshot) {
           if (snapshot.hasData) {
             var _profileData = snapshot.data;
             return Container(
@@ -65,6 +67,7 @@ class _UserProfileState extends State<UserProfile> {
                         profilePictureUrl: profilePictureUrl,
                         userName: userName,
                         description: description,
+                        user: snapshot.data,
                       ),
                     ),
                     topTrack(),
@@ -94,6 +97,7 @@ class _UserProfileState extends State<UserProfile> {
           profilePictureUrl: profilePictureUrl,
           userName: userName,
           description: description,
+          user: user
         ),
       ),
     );

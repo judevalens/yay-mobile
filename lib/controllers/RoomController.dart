@@ -212,7 +212,7 @@ class RoomController extends ChangeNotifier {
   }
 
   loadChat(String chatID) {
-    _database.reference().child("chats").child(chatID).onChildAdded.listen((chatEvent) {
+    _database.reference().child("chats").child(chatID).orderByKey().onChildAdded.listen((chatEvent) {
       chatEvent.snapshot.value;
     });
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/ChatController.dart';
 import 'package:yay/model/chat_model.dart';
+
 import 'chat.dart';
 
 class ChatList extends StatefulWidget {
@@ -17,6 +18,8 @@ class _ChatListState extends State<ChatList> {
   Widget build(BuildContext context) {
     return chatList();
   }
+
+  Map<String, Chat> chats = Map();
 
   Widget chatList() {
     return Scaffold(
@@ -64,7 +67,10 @@ class _ChatListState extends State<ChatList> {
             return InkWell(
               onTap: (){
                 Navigator.of(context).push(MaterialPageRoute(builder: (context){
-                  return Chat(chatModel: chatModel,chatController: widget.chatController,);
+                  return getChat(
+                    chatModel,
+                    widget.chatController,
+                  );
                 }));
               },
               child: Container(
@@ -114,6 +120,18 @@ class _ChatListState extends State<ChatList> {
     return Container(
       child: Text("EMPTY!!"),
     );
+  }
+
+  Widget getChat(ChatModel chatModel, ChatController chatController) {
+    if (chats.containsKey(chatModel.chatID)) {
+      return chats[chatModel.chatID];
+    }
+    chats[chatModel.chatID] = Chat(
+      chatModel: chatModel,
+      chatController: chatController,
+      key: ValueKey(chatModel.chatID),
+    );
+    return chats[chatModel.chatID];
   }
 
   Future<void> addRoomModalSheet(BuildContext context) {

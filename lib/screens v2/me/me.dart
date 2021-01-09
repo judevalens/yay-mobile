@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/model/user_model.dart';
 import 'package:yay/screens%20v2/me/chats.dart';
 import 'package:yay/screens%20v2/profile/user_profile.dart';
 import 'package:yay/screens/setting_screen/setting_screen.dart';
@@ -13,7 +14,7 @@ class Me extends StatefulWidget {
 class _MeState extends State<Me> with TickerProviderStateMixin {
   TabController _controller;
   PageController _pageController;
-  Future<Map<String, dynamic>> userProfileDataFuture;
+  Future<UserModel> userF;
   String userProfile;
   String userName;
   String userId;
@@ -25,11 +26,11 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
     super.initState();
     _controller = TabController(vsync: this, length: 2);
     _pageController = PageController();
-    userProfileDataFuture = App.getInstance().userProfileController.userProfileData;
-    userProfileDataFuture.then((userProfileData) {
-      userProfile = userProfileData["basic"]["profile_picture"];
+    userF = App.getInstance().userProfileController.userProfileData;
+    userF.then((user) {
+      userProfile = user.userProfile["basic"]["profile_picture"];
       userProfile = userProfile.length == 0 ? null : userProfile;
-      userName = userProfileData["basic"]["spotify_user_name"];
+      userName = user.userProfile["basic"]["spotify_user_name"];
     });
 
     userId = App.getInstance().authorization.firebaseAuth.currentUser.uid;
@@ -39,8 +40,8 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
         body: FutureBuilder(
-      future: userProfileDataFuture,
-      builder: (context, AsyncSnapshot<Map<String, dynamic>> snapShot) {
+      future: userF,
+      builder: (context, AsyncSnapshot<UserModel> snapShot) {
         if (snapShot.hasData) {
           return CustomScrollView(
             slivers: [header(), body()],

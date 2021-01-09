@@ -70,14 +70,15 @@ class _ChatState extends State<Chat> {
 
 
                 return ListView.builder(
+                      reverse: true,
                       controller: scrollController,
                     physics: ClampingScrollPhysics(),
                     padding: EdgeInsets.only(left: 5, right: 5),
                     itemCount: msgIDs.length,
                     itemBuilder: (context, index) {
                       return ChatItem(
-                        chat: msg[msgIDs[index]],
-                        key: ValueKey(msg[msgIDs[index]]["chatID"]),
+                        chat: msg[msgIDs[(msgIDs.length-1)-index]],
+                        key: ValueKey(msg[msgIDs[(msgIDs.length-1)-index]]["chatID"]),
                         scrollController: scrollController,
                       );
                     });
@@ -95,18 +96,17 @@ class _ChatState extends State<Chat> {
   void scrollToBottom(ScrollController _scrollController){
       var oldPos = scrollController.position.maxScrollExtent;
       var scroll  =  scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 900),
+        scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 500),
         curve: Curves.easeOutSine,
       );
 
       scroll.then((value) {
-        if (oldPos < scrollController.position.maxScrollExtent){
+        if (oldPos < scrollController.position.minScrollExtent){
           scrollToBottom(_scrollController);
         }
       }
       );
-
 
   }
 

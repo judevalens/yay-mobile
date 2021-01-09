@@ -330,7 +330,7 @@ class _FeedTweetState extends State<FeedTweet> {
     return Container(
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
-          border: Border.all(width: 1, color: Colors.black54),
+          border: Border.all(width: 0.1, color: Colors.black54),
           borderRadius: BorderRadius.circular(10)),
       child: Column(
         children: [
