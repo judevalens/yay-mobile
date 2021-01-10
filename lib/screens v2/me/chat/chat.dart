@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:yay/controllers/App.dart';
-import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/chat_controller.dart';
 import 'package:yay/model/chat_model.dart';
+import 'package:yay/screens%20v2/me/chat/chat_member.dart';
 
 import 'chat_item.dart';
 
@@ -32,6 +33,25 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(widget.chatModel.chatData["chat_name"]),
+        actions: [
+          IconButton(
+              icon: Icon(
+                Icons.add,
+              ),
+              onPressed: () {
+                print("member button pressed");
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return ChatMember(
+                        chatModel: widget.chatModel,
+                      );
+                    },
+                  ),
+                );
+              })
+        ],
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Container(
@@ -66,7 +86,7 @@ class _ChatState extends State<Chat> {
                     scrollToBottom(scrollController);
 
                   });
-                  App.getInstance().roomController.chatController.messageStreamController.brandNew = false;
+
 
 
                 return ListView.builder(
@@ -137,8 +157,8 @@ class _ChatState extends State<Chat> {
               onSubmitted: (text) {
                 print("sending chat " + text);
                 _textEditingController.clear();
-                widget.chatController.sendText(
-                    widget.chatModel.chatID, text, ChatItemType(ChatItemType.TEXT_CHAT));
+                widget.chatModel.sendText(
+                    widget.chatModel.chatID, text, MsgType(MsgType.TEXT_CHAT));
                 _focusNode.requestFocus();
               },
             ),
@@ -155,7 +175,7 @@ class _ChatState extends State<Chat> {
               color: Theme.of(context).accentColor,
               onPressed: () {
                 _focusNode.unfocus();
-                widget.chatController.channel.invokeListMethod("showGiphyPad",widget.chatModel.chatID);
+              widget.chatModel.showGifPad();
               },
               icon: Icon(Icons.emoji_emotions_sharp),
             ),
@@ -171,10 +191,23 @@ class _ChatState extends State<Chat> {
     );
   }
 
-  Widget loadList() {
+  Widget loadingList() {
     return Container(
       alignment: Alignment.center,
       child: CircularProgressIndicator(),
     );
   }
 }
+/*
+class  extends StatefulWidget {
+  @override
+  _State createState() => _State();
+}
+
+class _State extends State<> {
+  @override
+  Widget build(BuildContext context) {
+    return Container();
+  }
+}
+*/

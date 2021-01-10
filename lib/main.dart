@@ -6,7 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/misc/httpsPatch.dart';
 import 'package:yay/screens%20v2/home/home.dart';
-import 'package:yay/screens/login_screen/login_screen.dart';
+import 'package:yay/screens%20v2/login_screen/login_screen.dart';
 
 import 'controllers/Authorization.dart' as auth;
 

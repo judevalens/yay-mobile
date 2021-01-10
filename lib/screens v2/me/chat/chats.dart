@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
-import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/chat_controller.dart';
 import 'package:yay/model/chat_model.dart';
 
 import 'chat.dart';
@@ -25,28 +25,28 @@ class _ChatListState extends State<ChatList> {
     return Scaffold(
       body: Container(
           child: StreamBuilder(
-        stream: App.getInstance().roomController.roomListStreamController.getStream(),
-        builder: (context, AsyncSnapshot<Map<String, ChatModel>> snapshot) {
-          if (snapshot.hasData) {
-            var chatValue = snapshot.data;
-            var chatID = snapshot.data.keys.toList();
+            stream: App.getInstance().roomController.roomListStreamController.getStream(),
+            builder: (context, AsyncSnapshot<Map<String, ChatModel>> snapshot) {
+              if (snapshot.hasData) {
+                var chatValue = snapshot.data;
+                var chatID = App.getInstance().roomController.sortedChats;
 
-            return ListView.separated(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              itemCount: chatID.length,
-              itemBuilder: (context, itemIndex) {
-                print("chat data");
-                print(chatValue[chatID[itemIndex]]);
-                return chatItem(chatValue[chatID[itemIndex]]);
-              },
-              separatorBuilder: (BuildContext context, int index) {
-                return Divider();
-              },
-            );
-          }
-          return emptyList();
-        },
-      )),
+                return ListView.separated(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: chatID.length,
+                  itemBuilder: (context, itemIndex) {
+                    print("chat data 2");
+                    print(chatValue[chatID[(chatID.length-1)-itemIndex]]);
+                    return chatItem(chatValue[chatID[itemIndex]]);
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return Divider();
+                  },
+                );
+              }
+              return emptyList();
+            },
+          )),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           addRoomModalSheet(context);
@@ -172,7 +172,7 @@ class _ChatListState extends State<ChatList> {
                     width: double.infinity,
                     child: RaisedButton(
                       onPressed: () {
-                        App.getInstance().roomController.joinGroupChat(joinCode);
+                        //    App.getInstance().roomController.joinGroupChat(joinCode);
                       },
                       child: Text("Join room"),
                     )),

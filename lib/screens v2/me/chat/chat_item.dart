@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:tuple/tuple.dart';
-import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/chat_controller.dart';
 
 class ChatItem extends StatefulWidget {
   final Map<String, dynamic> chat;
@@ -184,16 +184,16 @@ class _ChatItemState extends State<ChatItem> {
     Widget w;
 
     switch (widget.chat["contentType"]) {
-      case ChatItemType.TEXT_CHAT:
+      case MsgType.TEXT_CHAT:
         w = textContent(widget.chat["content"]);
         break;
-      case ChatItemType.GIF:
+      case MsgType.GIF:
         w = gifContent(widget.chat["content"], maxWidth);
         break;
-      case ChatItemType.EMOJI:
+      case MsgType.EMOJI:
         w = animatedEmojiContent(widget.chat["content"]);
         break;
-      case ChatItemType.SUGGESTION:
+      case MsgType.SUGGESTION:
         w = suggestionContent(widget.chat["content"], maxWidth);
         break;
     }

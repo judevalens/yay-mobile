@@ -180,17 +180,18 @@ class _PeoplePageState extends State<PeoplePage> with TickerProviderStateMixin {
         child: Row(
           children: [
             Container(
-              margin: EdgeInsets.only(right: 5),
               height: 60,
               width: 60,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
               child: ClipOval(
                 child: profileUrl != null
                     ? Image.network(
-                        profileUrl,
-                        fit: BoxFit.fill,
-                      )
-                    : Placeholder(),
+                  profileUrl,
+                  fit: BoxFit.fill,
+                )
+                    : Container(
+                  child: Icon(Icons.account_circle,size: 60,),
+                ),
               ),
             ),
             Expanded(
@@ -222,17 +223,18 @@ class _PeoplePageState extends State<PeoplePage> with TickerProviderStateMixin {
         child: Row(
           children: [
             Container(
-              margin: EdgeInsets.only(right: 5),
               height: 60,
               width: 60,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(30)),
               child: ClipOval(
                 child: profileUrl != null
                     ? Image.network(
                   profileUrl,
                   fit: BoxFit.fill,
                 )
-                    : Placeholder(),
+                    : Container(
+                  child: Icon(Icons.account_circle,size: 60,),
+                ),
               ),
             ),
             Expanded(

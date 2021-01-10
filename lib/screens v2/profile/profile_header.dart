@@ -23,19 +23,18 @@ class _ProfileHeaderState extends State<ProfileHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: Theme.of(context).colorScheme.secondary),
-            ),
+            height: 80,
+            width: 80,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(40)),
             child: ClipOval(
               child: widget.profilePictureUrl != null
                   ? Image.network(
-                      widget.profilePictureUrl,
-                      fit: BoxFit.fill,
-                    )
-                  : Placeholder(),
+                widget.profilePictureUrl,
+                fit: BoxFit.fill,
+              )
+                  : Container(
+                child: Icon(Icons.account_circle,size: 80,),
+              ),
             ),
           ),
           Container(
@@ -175,8 +174,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   Widget followedButton() {
     return Container(
       child: RaisedButton(
-        color: Theme.of(context).colorScheme.secondaryVariant,
-        disabledColor: Theme.of(context).colorScheme.secondaryVariant,
+        color: Theme.of(context).colorScheme.secondary,
+        disabledColor: Theme.of(context).colorScheme.secondary,
         textColor: Theme.of(context).colorScheme.primary,
         onPressed: null,
         child: Text("Following",style: TextStyle(color: Colors.white),),
@@ -187,8 +186,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   Widget followButton() {
     return Container(
       child: RaisedButton(
-        color: Theme.of(context).colorScheme.secondaryVariant,
-        disabledColor: Theme.of(context).colorScheme.secondaryVariant,
+        color: Theme.of(context).colorScheme.secondary,
+        disabledColor: Theme.of(context).colorScheme.secondary,
         textColor: Theme.of(context).colorScheme.primary,
         onPressed: () {
           App.getInstance().userProfileController.followUser(widget.user.currentUSerID, widget.user.userID);
@@ -201,12 +200,33 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   Widget followButtonLoader() {
     return Container(
       child: RaisedButton(
-        color: Theme.of(context).colorScheme.secondaryVariant,
-        disabledColor: Theme.of(context).colorScheme.secondaryVariant,
+        color: Theme.of(context).colorScheme.secondary,
+        disabledColor: Theme.of(context).colorScheme.secondary,
         textColor: Theme.of(context).colorScheme.primary,
         onPressed: null,
-        child: CircularProgressIndicator(),
+        child: LinearProgressIndicator(),
+      ),
+    );
+  }
+
+  static Widget  getUserPicture(String profilePictureUrl){
+    return Container(
+      margin: EdgeInsets.only(right: 5),
+      height: 60,
+      width: 60,
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+      child: ClipOval(
+        child: profilePictureUrl != null
+            ? Image.network(
+          profilePictureUrl,
+          fit: BoxFit.fill,
+        )
+            : Container(
+          child: Icon(Icons.account_circle,size: 60,),
+        ),
       ),
     );
   }
 }
+
+

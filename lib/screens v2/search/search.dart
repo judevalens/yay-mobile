@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
-import 'package:yay/controllers/ChatController.dart';
 
 class Search extends StatefulWidget {
   @override
@@ -184,10 +183,10 @@ class _SearchResponseItemState extends State<SearchResponseItem> {
       },
       onSelected: (value) {
         if (value == 2) {
-          App.getInstance()
+          /*App.getInstance()
               .roomController
               .chatController
-              .sendMedia("",widget.track, ChatItemType(ChatItemType.SUGGESTION));
+              .sendMedia("",widget.track, MsgType(MsgType.SUGGESTION));*/
         }
       },
       itemBuilder: (context) {

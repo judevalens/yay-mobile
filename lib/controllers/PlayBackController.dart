@@ -88,7 +88,7 @@ class PlayBackController {
             currentPlayBackState.rawState = playBackJson;
 
             if (currentMode == playerMode.STREAMING) {
-              App.getInstance().roomController.streamPlayBackState(playBackJson);
+              //App.getInstance().roomController.streamPlayBackState(playBackJson);
             }
 
             break;

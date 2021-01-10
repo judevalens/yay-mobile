@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:yay/controllers/App.dart';
-import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/chat_controller.dart';
 import 'package:yay/model/user_model.dart';
-import 'package:yay/screens%20v2/me/chats.dart';
+
+import 'package:yay/screens%20v2/me/friends.dart';
 import 'package:yay/screens%20v2/profile/user_profile.dart';
-import 'package:yay/screens/setting_screen/setting_screen.dart';
+
+import 'chat/chats.dart';
 
 class Me extends StatefulWidget {
   @override
@@ -14,6 +16,7 @@ class Me extends StatefulWidget {
 class _MeState extends State<Me> with TickerProviderStateMixin {
   TabController _controller;
   PageController _pageController;
+  int currentIndex = 0;
   Future<UserModel> userF;
   String userProfile;
   String userName;
@@ -26,7 +29,7 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
     super.initState();
     _controller = TabController(vsync: this, length: 2);
     _pageController = PageController();
-    userF = App.getInstance().userProfileController.userProfileData;
+    userF = App.getInstance().userProfileController.userProfileData.future;
     userF.then((user) {
       userProfile = user.userProfile["basic"]["profile_picture"];
       userProfile = userProfile.length == 0 ? null : userProfile;
@@ -59,10 +62,15 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
       floating: true,
       pinned: true,
       bottom: TabBar(
+        onTap: (index) {
+              print("tapped index :"+ index.toString());
+            _controller.index = index;
+            _pageController.animateToPage(index, duration: Duration(milliseconds: 500),curve: Curves.linear);
+        },
         controller: _controller,
         tabs: [
           Tab(
-            text: "Listening sessions",
+            text: "Chats",
           ),
           Tab(
             text: "Friends",
@@ -75,10 +83,10 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
   Widget body() {
     return SliverFillRemaining(
       hasScrollBody: true,
-      fillOverscroll: true,
       child: Container(
         child: PageView(
-          children: [ChatList(chatController: _chatController,)],
+          controller: _pageController,
+          children: [ChatList(chatController: _chatController,),Friends()],
         ),
       ),
     );
@@ -161,7 +169,7 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
             context,
             MaterialPageRoute(
               builder: (context) {
-                return Setting();
+                return Container();
               },
             ),
           );

@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 import 'package:yay/controllers/App.dart';
 import 'package:yay/model/play_back_state.dart';
-import 'package:yay/screens/player/progressBarPainter.dart';
 
 import 'dart:math' as math;
+
+import 'package:yay/screens%20v2/player/progressBarPainter.dart';
 
 typedef SeekCallBack = void Function(double pos);
 

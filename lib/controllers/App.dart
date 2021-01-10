@@ -15,8 +15,7 @@ import 'package:yay/controllers/Authorization.dart';
 import 'package:yay/controllers/FeedController.dart';
 import 'package:yay/controllers/LibraryController.dart';
 import 'package:yay/controllers/PlayBackController.dart';
-import 'package:yay/controllers/RoomController.dart';
-import 'package:yay/controllers/ChatController.dart';
+import 'package:yay/controllers/chat_controller.dart';
 import 'package:yay/controllers/TweetController.dart';
 import 'package:yay/controllers/tweet_flow_controller.dart';
 import 'package:yay/controllers/user_controller.dart';
@@ -42,7 +41,7 @@ class App extends ChangeNotifier {
   Network nt;
   Authorization authorization;
   PlayBackController playBackController;
-  RoomController roomController;
+  ChatController roomController;
   BrowserController browserController;
   FeedController feedController;
   TweetController tweetController;
@@ -74,7 +73,7 @@ class App extends ChangeNotifier {
     nt = Network();
     authorization = new Authorization(spotifyApi,firebaseAuth);
     playBackController = new PlayBackController();
-    roomController = new RoomController(firebaseDatabase,firebaseAuth);
+    roomController = new ChatController(firebaseDatabase,firebaseAuth);
     browserController = new BrowserController(authorization);
      userProfileController = new UserController(firebaseAuth,firebaseFirestore);
     feedController = FeedController(firebaseFirestore,firebaseAuth);

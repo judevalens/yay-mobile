@@ -13,7 +13,7 @@ import 'App.dart';
 class UserController {
   static const String userProfileUrl = Authorization.ApiBaseUrl + "/auth/getUserProfile";
   static const String isFollowingUrl = Authorization.ApiBaseUrl + "";
-  Future<UserModel> userProfileData;
+  Completer<UserModel> userProfileData = Completer();
 
   Map<String, UserModel> userProfiles = Map();
   final FirebaseAuth _firebaseAuth;
@@ -22,43 +22,50 @@ class UserController {
 
   SingleSCMultipleSubscriptions<Map<String, UserModel>> friendsStream =
       SingleSCMultipleSubscriptions();
-  Map<String, UserModel> friends;
+  Map<String, UserModel> friends = Map();
 
   UserController(this._firebaseAuth, this._firestore) {
-    loadProfile();
+    init();
   }
 
   Future<bool> init() async {
+    App.getInstance().authorization.getConnectionState().listen((isConnected) async {
+      if (isConnected) {
+        print("is connected");
+        loadProfile();
+        loadFriends();
+      }
+    });
+
     return await isLoaded.future;
   }
 
-  loadProfile() {
-    App.getInstance().authorization.getConnectionState().listen((isConnected) async {
+  loadProfile() async{
       if (isLoaded.isCompleted) {
         isLoaded = Completer();
       }
-      if (isConnected) {
-        userProfileData = getUser(_firebaseAuth.currentUser.uid);
-        print("user profile 2");
-        print(userProfileData);
+      print("user profile 1");
 
-        isLoaded.complete(true);
-      } else {
-        isLoaded.complete(false);
-      }
-    });
+      userProfileData.complete(await getUser(_firebaseAuth.currentUser.uid));
+      print("user profile 2");
+      print(userProfileData);
+
+      isLoaded.complete(true);
+
   }
 
-  loadFriends(String currentUserID) {
+  loadFriends() {
     _firestore
         .collection("users")
-        .doc(currentUserID)
+        .doc(_firebaseAuth.currentUser.uid)
         .collection("followed_users")
         .snapshots()
         .listen((friendsSnapShot) {
       friendsSnapShot.docChanges.forEach((friendID) async {
+        print("getting friends");
         friends[friendID.doc.id] = await getUser(friendID.doc.id);
         friendsStream.controller.add(friends);
+        print("getting friends 2");
       });
     });
   }
@@ -81,7 +88,7 @@ class UserController {
     var userProfile = jsonDecode(userProfileRes.body);
 
     var user = UserModel(userProfile, this, userID, _firebaseAuth.currentUser.uid);
-
+    userProfiles[userID] = user;
     print("user profile");
     print(userProfile);
     return Future.value(user);

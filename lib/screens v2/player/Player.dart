@@ -9,14 +9,12 @@ import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/marquee/marquee.dart';
 
 import 'TweetFlow.dart';
-import 'file:///C:/Users/judev/Documents/flutter%20projects/yay-mobile/lib/screens/home_screen/RoomPlayerPage.dart';
 
 import 'ProgressBar.dart';
 
 class Player extends StatefulWidget {
-  final PageSwitcher pageSwitcher;
 
-  Player({this.pageSwitcher});
+  Player();
 
   @override
   State<StatefulWidget> createState() {
