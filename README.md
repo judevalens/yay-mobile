@@ -19,3 +19,7 @@ I mainly created this improve my mobile and back end  deveoplement skills . Duri
 
 **Login**
 ![enter image description here](https://i.ibb.co/dBxXrpR/login-gif.gif)
+
+**Feed**
+![enter image description here](https://i.ibb.co/3NtVbjf/GIF-210113-160021-1.gif)
+
