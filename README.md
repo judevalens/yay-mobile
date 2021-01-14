@@ -1,16 +1,25 @@
-# yay
+# YAY
+Yay is Proof of concept social platform that revolves around music. I am a big fan of music, Spotify is probably the app that I use the most. I realized that there's very little to no social interaction between the Spotify users. Yay uses the Spotify SDK and the Twitter API to create a social music app, through the app users can control their playback, they have access to a content feed that is made of tweets from the artists and other users that they follow and users can also create groups chat where they can discuss music and synchronize their playbacks.
 
-A new Flutter project.
+## Motivation
 
-## Getting Started
+I mainly created this improve my mobile and back end  deveoplement skills . During the developlement of this project I was able to learn Dart and go and many other valuable skills.
 
-This project is a starting point for a Flutter application.
+## Tech Stack and tools
 
-A few resources to get you started if this is your first Flutter project:
+ - Flutter
+ - Go
+ - Java
+ - FireBase Suite (Firestore and RealTimeDatabase)
+ - Spotify API and Android SDK
+ - Twitter API
+ - Algolia
+ 
+## Demo
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+**Login**
+![enter image description here](https://i.ibb.co/dBxXrpR/login-gif.gif)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**Feed**
+![enter image description here](https://i.ibb.co/3NtVbjf/GIF-210113-160021-1.gif)
+
