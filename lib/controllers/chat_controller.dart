@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,10 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:yay/controllers/App.dart';
+import 'package:yay/controllers/PlayBackController.dart';
 import 'package:yay/misc/SingleSubsStream.dart';
 import 'package:yay/model/chat_model.dart';
 
-enum RoomAction { JoinStream, StartStream, StopStream, leaveStream, RoomIsInactive }
+enum StreamAction { JoinStream, StartStream, StopStream, leaveStream, RoomIsInactive }
+enum StreamStatus { Idle, StreamProvider, StreamReceiver }
 
 class MsgType {
   final String value;
@@ -23,6 +24,7 @@ class MsgType {
   static const String STICKER = "sticker";
   static const String EMOJI = "emoji";
   static const String SUGGESTION = "suggestion";
+  static const String NEW_CHAT = "new_chat";
 
   MsgType(this.value);
 }
@@ -35,9 +37,7 @@ class ChatController extends ChangeNotifier {
   FirebaseFirestore _firestore;
   FirebaseAuth _auth;
 
-  Map<String, dynamic> myRooms = new Map();
-  StreamController<Map<String, dynamic>> list = new StreamController();
-  SingleSCMultipleSubscriptions<Map<String, ChatModel>> roomListStreamController =
+  SingleSCMultipleSubscriptions<Map<String, ChatModel>> chatsStreamController =
       new SingleSCMultipleSubscriptions();
   DatabaseReference currentRoom;
 
@@ -46,13 +46,18 @@ class ChatController extends ChangeNotifier {
   String currentRoomID;
   OnDisconnect currentRoomOnDisconnect;
   StreamSubscription<Event> currentRoomPlayBackState;
+  Stream<Event> playBackEvent;
 
   // room members subscribe to this stream
-  StreamSubscription<Event> currentRoomState;
+  // ignore: cancel_subscriptions
+  StreamSubscription<Event> currentChatStreamingState;
   String userID;
   bool isInRoom = false;
   bool isStreaming = false;
+  StreamStatus streamStatus = StreamStatus.Idle;
+  DatabaseReference streamStatusRef;
 
+  String currentStreamID;
   bool isInitialized = false;
 
   ChatController chatController;
@@ -61,6 +66,7 @@ class ChatController extends ChangeNotifier {
       new SingleSCMultipleSubscriptions();
 
   Map<String, ChatModel> chats = Map();
+  Map<String, int> chatNotifications = Map();
   List<String> sortedChats = List.empty(growable: true);
 
   final MethodChannel channel = new MethodChannel(GIPHY_CHANNEL);
@@ -96,7 +102,6 @@ class ChatController extends ChangeNotifier {
         .child(_auth.currentUser.uid)
         .child("chats")
         .orderByKey());
-    var roomList = (await roomsRef.once()).value;
     // addRoom(roomList);
 
     roomsRef.onChildAdded.listen((event) {
@@ -109,21 +114,28 @@ class ChatController extends ChangeNotifier {
       print(chatData);
       //addNewRoom(event.snapshot.key);
 
-      var chatStreamEvent = _database.reference().child("chats").child(chatId).onValue;
-      var chatMemberEvent =
-          _database.reference().child("chats").child(chatId).child("members").onChildAdded;
-      chats[event.snapshot.key] = ChatModel(
-          chatId, chatData, chatStreamEvent, chatMemberEvent, _database, _auth.currentUser.uid);
-      sortedChats.remove(chatId);
-      sortedChats.insert(0, chatId);
-      roomListStreamController.controller.add(chats);
+      var chatDataEvent = _database.reference().child("chats").child(chatId).onValue;
+      var chatMemberEvent = _database
+          .reference()
+          .child("chats")
+          .child(chatId)
+          .child("members")
+          .orderByChild("added")
+          .onChildAdded;
+      chats[event.snapshot.key] =
+          ChatModel(chatId, chatDataEvent, chatMemberEvent, _database, _auth.currentUser.uid, this);
+      if (!sortedChats.contains(chatId)) {
+        sortedChats.add(chatId);
+      }
+      chatsStreamController.controller.add(chats);
       // addRoom(roomList);
     });
 
     roomsRef.onChildChanged.listen((event) {
       print("child changed");
-      print(roomList);
     });
+
+    loadNotification();
 
     roomsRef.onChildRemoved.listen((event) {
       var roomList = event.snapshot.value;
@@ -159,31 +171,48 @@ class ChatController extends ChangeNotifier {
     });
   }
 
-  Future<void> createSession(String roomName) async {
-    var joinCode = randomString(5);
-
-    if (roomName.length == 0) {
-      roomName = joinCode;
-    }
-
+  Future<void> createGroupChat(String roomName) async {
     var roomRef = _database.reference().child("chats").push();
 
-    var joinCodeRef = _database.reference().child("join_codes").child(joinCode);
-
-    joinCodeRef.set(roomRef.key);
+    if (roomName.length == 0) {
+      roomName = roomRef.key;
+    }
 
     roomRef.set({
       "chat_name": roomName,
       "chat_type": "group",
-      "join_code": joinCode,
       "owner": _auth.currentUser.uid,
       "is_active": false,
-      "play_back_state": {}
+      "play_back_state": {},
+      "is_streaming": false,
     });
 
-    roomRef.child("members").push().set(_auth.currentUser.uid);
+    _database
+        .reference()
+        .child("chats")
+        .child(roomRef.key)
+        .child("members")
+        .child(_auth.currentUser.uid)
+        .set({
+      "member_id": _auth.currentUser.uid,
+      "added": DateTime.now().toUtc().millisecondsSinceEpoch
+    });
+    // SENDING NEW GROUP NOTIFICATIONS , so it can be push at the top
+    _database
+        .reference()
+        .child("users")
+        .child(_auth.currentUser.uid)
+        .child("chat_notifications")
+        .push()
+        .set({
+      "sender_id": App.getInstance().authorization.firebaseAuth.currentUser.uid,
+      "msg_type": MsgType.NEW_CHAT,
+      "msg_id": roomRef.key,
+      "seen": true,
+      "chat_id": roomRef.key
+    });
 
-    // SAVE THIS ROOM FOR THE USER
+    // save a ref of this chat for the owner
     _database
         .reference()
         .child("users")
@@ -196,25 +225,65 @@ class ChatController extends ChangeNotifier {
   }
 
   loadNotification() {
+    print("loading notifications");
     _database
         .reference()
+        .child("users")
+        .child(_auth.currentUser.uid)
+        .child("chat_notifications")
+        .orderByKey()
+        .onChildAdded
+        .listen((chatNotificationEvent) {
+      print("notif");
+      Map<String, dynamic> chatNotification = Map.from(chatNotificationEvent.snapshot.value);
+      var chatID = chatNotification["chat_id"];
+      sortedChats.remove(chatID);
+      sortedChats.insert(0, chatID);
+      chatsStreamController.controller.add(chats);
+      if (!chatNotification["seen"]) {
+        if (chatNotifications.containsKey(chatID)) {
+          chatNotifications[chatID]++;
+        } else {
+          chatNotifications[chatID] = 1;
+        }
+      }
+    });
+
+    _database
+        .reference()
+        .child("users")
         .child(_auth.currentUser.uid)
         .child("chat_notifications")
         .orderByKey()
         .onChildChanged
         .listen((chatNotificationEvent) {
+      print("notif");
       Map<String, dynamic> chatNotification = Map.from(chatNotificationEvent.snapshot.value);
 
-      var chat = chats[chatNotification["chat_id"]];
+      var chatID = chatNotification["chat_id"];
 
-      if (!chatNotification["seen"]) {
-        chat.unReadMessages++;
-        sortedChats.remove(chat.chatID);
-        sortedChats.insert(0, chat.chatID);
+      if (chatNotifications.containsKey(chatID)) {
+        chatNotifications[chatID]++;
       } else {
-        chat.unReadMessages--;
+        chatNotifications[chatID] = 1;
       }
+
+      chatsStreamController.controller.add(chats);
     });
+  }
+
+  bool hasUnreadMessages(String chatID) {
+    if (!chatNotifications.containsKey(chatID)) {
+      return false;
+    }
+    return chatNotifications[chatID] > 0;
+  }
+
+  void clearNotification(String chatID) {
+    if (chatNotifications.containsKey(chatID)) {
+      chatNotifications[chatID] = 0;
+      chatsStreamController.controller.add(chats);
+    }
   }
 
   loadChat(String chatID) {
@@ -229,113 +298,158 @@ class ChatController extends ChangeNotifier {
     });
   }
 
-  // determines the correct way to stop . stop stream or leave room;
-
-
-
-  /// Stops streaming to a room
+  sync(String chatID) {
+    var action = getAction(chatID);
+    switch (action) {
+      case StreamAction.JoinStream:
+        joinStream(chatID);
+        break;
+      case StreamAction.StartStream:
+        stream(chatID);
+        break;
+      case StreamAction.StopStream:
+        stopStreaming();
+        break;
+      case StreamAction.leaveStream:
+        leaveStream(chatID);
+        break;
+      case StreamAction.RoomIsInactive:
+        // TODO: Handle this case.
+        break;
+    }
+  }
 
   /// Determine which action can be executed based on a room's state and a user's relation to the room
   ///
-  /// [roomID].
-  RoomAction getAction(String roomID) {
-    var room = myRooms[roomID];
+  /// [chatID].
+  StreamAction getAction(String chatID) {
+    var chat = chats[chatID];
 
-    print("room " + roomID);
-    print(room);
+    print("chat owner");
+    print(chat.chatOwnerID);
 
-    var isMyRoom = room["owner"] == App.getInstance().firebaseAuth.currentUser.uid;
-    var isActive = room.containsKey("is_active") ? room["is_active"] : false;
-    var action = isMyRoom ? RoomAction.StartStream : RoomAction.JoinStream;
-
-    if (isMyRoom && isActive) {
-      action = RoomAction.StopStream;
-    } else if (isMyRoom && !isActive) {
-      action = RoomAction.StartStream;
-    } else if (!isMyRoom && isActive) {
-      // if im in already in the room I can leave otherwise I can join the room!
-      if (isInRoom && currentRoomID == roomID) {
-        action = RoomAction.leaveStream;
-      } else {
-        action = RoomAction.JoinStream;
+    if (chat.chatOwnerID == _auth.currentUser.uid) {
+      if (chat.chatData["is_streaming"]) {
+        return StreamAction.StopStream;
+      } else if (!chat.chatData["is_streaming"]) {
+        return StreamAction.StartStream;
       }
-    } else if (!isMyRoom && !isActive) {
-      action = RoomAction.RoomIsInactive;
+    } else {
+      if (!chat.chatData["is_streaming"]) {
+        return StreamAction.RoomIsInactive;
+      }
+      if (streamStatus == StreamStatus.StreamReceiver) {
+        if (currentStreamID == chatID && chat.chatData["is_streaming"]) {
+          return StreamAction.leaveStream;
+        } else if (chat.chatData["is_streaming"]) {
+          return StreamAction.JoinStream;
+        }
+      } else if (chat.chatData["is_streaming"]) {
+        return StreamAction.JoinStream;
+      }
+    }
+    return StreamAction.RoomIsInactive;
+  }
+
+  stream(String chatID) {
+    if (streamStatus == StreamStatus.StreamProvider) {
+      stopStreaming();
+    } else if (streamStatus == StreamStatus.StreamReceiver) {
+      leaveStream(chatID);
     }
 
-    return action;
+    streamStatusRef = _database.reference().child("chats").child(chatID).child("is_streaming");
+    streamStatusRef.set(true);
+    streamStatusRef.onDisconnect().set(false);
+    App.getInstance().playBackController.setCurrentMode(playerMode.STREAMING);
+    currentStreamID = chatID;
+    streamStatus = StreamStatus.StreamProvider;
   }
 
-  void addNewRoom(String roomID) async {
-    var roomRef = _database.reference().child("chats").child(roomID);
+  joinStream(String chatID) {
+    print("joining stream");
+    if (streamStatus == StreamStatus.StreamProvider) {
+      stopStreaming();
+    } else if (streamStatus == StreamStatus.StreamReceiver) {
+      leaveStream(chatID);
+    }
 
-    roomRef.onValue.listen((event) {
-      print("child changed !!!");
-
-      var roomValue = event.snapshot.value;
-      Map<String, dynamic> myRoom = Map.from(roomValue);
-
-      myRooms[roomID] = myRoom;
-
-      list.add(myRooms);
-      roomListStreamController.controller.add(myRooms);
+    currentChatStreamingState = _database
+        .reference()
+        .child("chats")
+        .child(chatID)
+        .child("is_streaming")
+        .onValue
+        .listen((event) {
+      var isStreaming = event.snapshot.value;
+      if (!isStreaming) {
+        leaveStream(chatID);
+      }
     });
+
+    streamStatusRef = _database
+        .reference()
+        .child("chats")
+        .child(chatID)
+        .child("members")
+        .child(_auth.currentUser.uid);
+
+    streamStatusRef.update({"stream_status": "receiving"});
+    streamStatusRef.onDisconnect().update({"stream_status": "idle"});
+    streamStatus = StreamStatus.StreamReceiver;
+    currentStreamID = chatID;
+    chats[chatID].chatStreamStatus.controller.add(true);
+    syncPlayBack(chatID, true);
   }
 
-  Future<void> addRooms(Map<dynamic, dynamic> roomList) async {
-    if (roomList != null) {
-      Map<String, dynamic> roomListMap = new Map.from(roomList);
-      roomListMap.forEach((key, value) async {
-        logger.d("key : " + key);
-        var roomValue = (await _database.reference().child("rooms").child(key).once()).value;
-        var roomKey = key;
-        Map<String, dynamic> myRoom = Map.from(roomValue);
-        myRooms[roomKey] = myRoom;
+  stopStreaming() {
+    if (streamStatusRef != null) {
+      currentStreamID = null;
+      App.getInstance().playBackController.setCurrentMode(playerMode.NORMAL);
+      streamStatusRef.set(false);
+    }
+  }
 
-        logger.d("storing room with key :" + roomKey);
-        logger.d(myRoom);
-        list.add(myRooms);
+  leaveStream(String chatID) {
+    if (streamStatusRef != null) {
+      App.getInstance().playBackController.setCurrentMode(playerMode.NORMAL);
+      streamStatusRef.update({"stream_status": "idle"});
+      streamStatus = StreamStatus.Idle;
+      currentStreamID = null;
+      currentChatStreamingState.cancel();
+      syncPlayBack(chatID, false);
+    }
+    chats[chatID].chatStreamStatus.controller.add(false);
+  }
+
+  streamPlayBack(dynamic playBackState) {
+    if (currentStreamID != null) {
+      _database
+          .reference()
+          .child("chats")
+          .child(currentStreamID)
+          .child("playback_state")
+          .set(playBackState);
+    }
+  }
+
+  syncPlayBack(String chatID, bool sync) {
+    if (sync) {
+      playBackEvent =
+          _database.reference().child("chats").child(chatID).child("playback_state").onValue;
+      currentRoomPlayBackState = playBackEvent.listen((event) {
+        Map<String, dynamic> playState = Map.from(event.snapshot.value);
+        var playStateToString = jsonEncode(playState);
+        
+        print("sync playback state  ");
+        print(playState);
+        App.getInstance().playBackController.sync(jsonDecode(playStateToString));
       });
-    }
-  }
-
-
-
-
-
-  String randomString(int length) {
-    var rand = new Random();
-    var codeUnits = new List.generate(length, (index) {
-      var charType = rand.nextInt(3);
-
-      switch (charType) {
-        case 0:
-          return this.randomNumber();
-          break;
-        case 1:
-          return this.randomLowerCase();
-          break;
-        case 2:
-          return this.randomUpperCase();
-          break;
+    } else {
+      if (playBackEvent != null) {
+        playBackEvent = null;
+        currentRoomPlayBackState.cancel();
       }
-    });
-
-    return new String.fromCharCodes(codeUnits);
-  }
-
-  int randomNumber() {
-    var rand = new Random();
-    return rand.nextInt(10) + 48;
-  }
-
-  int randomLowerCase() {
-    var rand = new Random();
-    return rand.nextInt(26) + 97;
-  }
-
-  int randomUpperCase() {
-    var rand = new Random();
-    return rand.nextInt(26) + 65;
+    }
   }
 }

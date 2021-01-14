@@ -22,7 +22,7 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
   String userName;
   String userId;
 
-  ChatController _chatController = App.getInstance().roomController.chatController;
+  ChatController _chatController = App.getInstance().roomController;
 
   void initState() {
     // TODO: implement initState
@@ -61,6 +61,13 @@ class _MeState extends State<Me> with TickerProviderStateMixin {
       title: myProfile(userProfile, userName, userId),
       floating: true,
       pinned: true,
+      actions: [IconButton(
+        icon: Icon(Icons.logout),
+        onPressed: (){
+          App.getInstance().authorization.logOut();
+          Navigator.of(context).pushNamedAndRemoveUntil("/loginScreen", (route) => false);
+        },
+      )],
       bottom: TabBar(
         onTap: (index) {
               print("tapped index :"+ index.toString());

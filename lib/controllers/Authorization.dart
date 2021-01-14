@@ -19,8 +19,8 @@ enum ConnectionState{
 }
 
 class Authorization extends ChangeNotifier {
-  static const String ApiBaseUrl = "https://192.168.1.8:8000";
-  static const String ApiAuthority = "192.168.1.8:8000";
+  static const String ApiBaseUrl = "https://192.168.1.11:8000";
+  static const String ApiAuthority = "192.168.1.11:8000";
 
   static const String USER_EMAIL_PREFERENCE_ATTR = "userEmail";
   static const String USER_PROFILE_URL_PREFERENCE_ATTR = "userProfile";

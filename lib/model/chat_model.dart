@@ -14,7 +14,8 @@ class ChatModel {
   Map<String, UserModel> nonChatMember = Map();
   final Stream<Event> chatStream;
   final FirebaseDatabase db;
-  final String userID;
+  final String currentUserID;
+  String chatOwnerID;
 
   int unReadMessages = 0;
 
@@ -28,19 +29,41 @@ class ChatModel {
   SingleSCMultipleSubscriptions<Map<String, UserModel>> chatMemberStreamController =
       SingleSCMultipleSubscriptions();
 
+  SingleSCMultipleSubscriptions<bool> chatStreamStatus = SingleSCMultipleSubscriptions();
+
   Stream<Event> chatEventStream;
   final Stream<Event> chatMemberEventStream;
+  final ChatController chatController;
 
   ChatModel(
     this.chatID,
-    this.chatData,
     this.chatStream,
     this.chatMemberEventStream,
     this.db,
-    this.userID,
+    this.currentUserID,
+    this.chatController,
   ) {
     loadChat(chatID);
     loadChatMember();
+    loadChatStreamingStatus();
+  }
+
+  loadChatStreamingStatus() {
+    db
+        .reference()
+        .child("chats")
+        .child(chatID)
+        .child("is_streaming")
+        .onValue
+        .listen((chatStreamingStatus) {
+      print("is streaming");
+      print(chatStreamingStatus.snapshot.value);
+      var isStreaming =
+          chatStreamingStatus.snapshot.value != null ? chatStreamingStatus.snapshot.value : false;
+      print("is streaming 2");
+      print(isStreaming);
+      chatStreamStatus.controller.add(isStreaming);
+    });
   }
 
   loadChat(String chatID) {
@@ -49,12 +72,14 @@ class ChatModel {
       print(chatEvent.snapshot.value);
       chatData = Map.from(chatEvent.snapshot.value);
       chatDataStreamController.controller.add(chatData);
+      chatOwnerID = chatData["owner"];
     });
   }
 
   loadChatMember() {
     chatMemberEventStream.listen((event) async {
-      var userID = event.snapshot.value;
+      var memberObj = event.snapshot.value;
+      var userID = memberObj["member_id"];
       var user = await App.getInstance().userProfileController.getUser(userID);
       chatMember[userID] = user;
       chatMemberStreamController.controller.add(chatMember);
@@ -95,7 +120,10 @@ class ChatModel {
     for (int i = 0; i < members.length; i++) {
       var memberID = members[i];
 
-      db.reference().child("chats").child(chatID).child("members").push().set(memberID);
+      db.reference().child("chats").child(chatID).child("members").child(memberID).set({
+        "member_id": memberID,
+        "added": DateTime.now().toUtc().millisecondsSinceEpoch
+      });
       db
           .reference()
           .child("users")
@@ -108,12 +136,44 @@ class ChatModel {
 
   dispatchNotification(MsgType msgType, String msgID) {
     chatMember.forEach((key, user) {
-      if (key != userID) {
-        db.reference().child("users").child(user.userID).child("chat_notifications").push().set({
-          "sender_id": App.getInstance().authorization.firebaseAuth.currentUser.uid,
-          "msg_type": msgType.value,
-          "msg_id": msgID,
-          "seen": false
+      db.reference().child("users").child(user.userID).child("chat_notifications").push().set({
+        "sender_id": App.getInstance().authorization.firebaseAuth.currentUser.uid,
+        "msg_type": msgType.value,
+        "msg_id": msgID,
+        "seen": false,
+        "chat_id": chatID
+      });
+    });
+  }
+
+  bool hasUnreadMessages(){
+    return chatController.hasUnreadMessages(chatID);
+  }
+
+  resolveNotification() {
+    chatController.clearNotification(chatID);
+    db
+        .reference()
+        .child("users")
+        .child(currentUserID)
+        .child("chat_notifications")
+        .orderByChild("chat_id")
+        .equalTo(chatID)
+        .once()
+        .then((notificationSnapshot) {
+      if (notificationSnapshot.value != null) {
+        Map<String, dynamic> notifications = Map.from(notificationSnapshot.value);
+        List<String> notificationIds = notifications.keys.toList();
+        notificationIds.forEach((id) {
+          db
+              .reference()
+              .child("users")
+              .child(currentUserID)
+              .child("chat_notifications")
+              .child(id)
+              .update({
+            "seen": true,
+          });
         });
       }
     });
@@ -130,7 +190,7 @@ class ChatModel {
       "time": DateTime.now().millisecondsSinceEpoch,
       "content": content,
       "contentType": msgType.value,
-      "senderID": userID,
+      "senderID": currentUserID,
       // TODO decide if we will use global variable or pass dependency
       "senderName": App.getInstance().authorization.userDisplayName,
       "chatID": newChatRef.key
@@ -150,7 +210,7 @@ class ChatModel {
       "time": DateTime.now().millisecondsSinceEpoch,
       "content": content,
       "contentType": msgType.value,
-      "senderID": userID,
+      "senderID": currentUserID,
       "senderName": App.getInstance().authorization.userDisplayName,
       "chatID": newChatRef.key
     };

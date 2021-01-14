@@ -25,18 +25,18 @@ class _ChatListState extends State<ChatList> {
     return Scaffold(
       body: Container(
           child: StreamBuilder(
-            stream: App.getInstance().roomController.roomListStreamController.getStream(),
-            builder: (context, AsyncSnapshot<Map<String, ChatModel>> snapshot) {
-              if (snapshot.hasData) {
-                var chatValue = snapshot.data;
-                var chatID = App.getInstance().roomController.sortedChats;
+            stream: App.getInstance().roomController.chatsStreamController.getStream(),
+        builder: (context, AsyncSnapshot<Map<String, ChatModel>> snapshot) {
+          if (snapshot.hasData) {
+            var chatValue = snapshot.data;
+            var chatID = App.getInstance().roomController.sortedChats;
 
-                return ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: chatID.length,
-                  itemBuilder: (context, itemIndex) {
-                    print("chat data 2");
-                    print(chatValue[chatID[(chatID.length-1)-itemIndex]]);
+            return ListView.separated(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              itemCount: chatID.length,
+              itemBuilder: (context, itemIndex) {
+                print("chat data 2");
+                print(chatValue[chatID[(chatID.length-1)-itemIndex]]);
                     return chatItem(chatValue[chatID[itemIndex]]);
                   },
                   separatorBuilder: (BuildContext context, int index) {
@@ -104,6 +104,15 @@ class _ChatListState extends State<ChatList> {
                         Text("created Jude Valens"),
                       ],
                     ),
+                    if (chatModel.hasUnreadMessages())
+                      Expanded(
+                          child: Container(
+                        child: Icon(
+                          Icons.mark_chat_unread_rounded,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        alignment: Alignment.centerRight,
+                      ))
                   ],
                 ),
               ),
@@ -192,7 +201,7 @@ class _ChatListState extends State<ChatList> {
                   width: double.infinity,
                   child: RaisedButton(
                     onPressed: () {
-                      App.getInstance().roomController.createSession(roomName);
+                      App.getInstance().roomController.createGroupChat(roomName);
                     },
                     child: Text("Create room"),
                   ),

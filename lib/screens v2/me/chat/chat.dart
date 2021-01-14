@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:yay/controllers/App.dart';
 import 'package:yay/controllers/chat_controller.dart';
 import 'package:yay/model/chat_model.dart';
 import 'package:yay/screens%20v2/me/chat/chat_member.dart';
@@ -27,17 +26,21 @@ class _ChatState extends State<Chat> {
     // TODO: implement initState
     super.initState();
     widget.chatModel.loadChatContent();
+    widget.chatModel.unReadMessages = 0;
+    widget.chatModel.resolveNotification();
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.chatModel.chatData["chat_name"]),
         actions: [
+          syncAction(),
           IconButton(
               icon: Icon(
-                Icons.add,
+                Icons.people,
               ),
               onPressed: () {
                 print("member button pressed");
@@ -68,6 +71,13 @@ class _ChatState extends State<Chat> {
     );
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    widget.chatModel.resolveNotification();
+
+  }
+
   Widget chatList() {
     return Container(
       child: StreamBuilder(
@@ -80,25 +90,21 @@ class _ChatState extends State<Chat> {
               if (msgIDs.length == 0) {
                 return emptyList();
               } else {
-
-                  SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-                    var oldPos = scrollController.position.maxScrollExtent;
-                    scrollToBottom(scrollController);
-
-                  });
-
-
-
+                SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+                  var oldPos = scrollController.position.maxScrollExtent;
+                  scrollToBottom(scrollController);
+                });
+                widget.chatModel.resolveNotification();
                 return ListView.builder(
-                      reverse: true,
-                      controller: scrollController,
+                    reverse: true,
+                    controller: scrollController,
                     physics: ClampingScrollPhysics(),
                     padding: EdgeInsets.only(left: 5, right: 5),
                     itemCount: msgIDs.length,
                     itemBuilder: (context, index) {
                       return ChatItem(
-                        chat: msg[msgIDs[(msgIDs.length-1)-index]],
-                        key: ValueKey(msg[msgIDs[(msgIDs.length-1)-index]]["chatID"]),
+                        chat: msg[msgIDs[(msgIDs.length - 1) - index]],
+                        key: ValueKey(msg[msgIDs[(msgIDs.length - 1) - index]]["chatID"]),
                         scrollController: scrollController,
                       );
                     });
@@ -197,17 +203,48 @@ class _ChatState extends State<Chat> {
       child: CircularProgressIndicator(),
     );
   }
-}
-/*
-class  extends StatefulWidget {
-  @override
-  _State createState() => _State();
-}
 
-class _State extends State<> {
-  @override
-  Widget build(BuildContext context) {
-    return Container();
+  Widget syncAction() {
+    return StreamBuilder(
+        stream: widget.chatModel.chatStreamStatus.getStream(),
+        builder: (context, AsyncSnapshot<bool> isStreaming) {
+          if (!isStreaming.hasData) {
+            return IconButton(
+              icon: Icon(Icons.sync_disabled),
+              onPressed: null,
+            );
+          }
+          StreamAction action = widget.chatController.getAction(widget.chatModel.chatID);
+          IconData icon;
+          switch (action) {
+            case StreamAction.JoinStream:
+              icon = Icons.sync;
+
+              break;
+            case StreamAction.StartStream:
+              icon = Icons.sync;
+
+              break;
+            case StreamAction.StopStream:
+              icon = Icons.sync_disabled;
+              break;
+            case StreamAction.leaveStream:
+              icon = Icons.sync_disabled;
+              break;
+            default:
+              icon = Icons.sync_disabled;
+              return IconButton(
+                icon: Icon(icon),
+                onPressed: null,
+              );
+              break;
+          }
+          return IconButton(
+            icon: Icon(icon),
+            onPressed: () {
+              widget.chatController.sync(widget.chatModel.chatID);
+            },
+          );
+        });
   }
 }
-*/

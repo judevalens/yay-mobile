@@ -88,7 +88,7 @@ class PlayBackController {
             currentPlayBackState.rawState = playBackJson;
 
             if (currentMode == playerMode.STREAMING) {
-              //App.getInstance().roomController.streamPlayBackState(playBackJson);
+              App.getInstance().roomController.streamPlayBack(playBackJson);
             }
 
             break;
@@ -182,15 +182,11 @@ class PlayBackController {
     });
   }
 
-
   void start(String musicID){
     playBackChannel.invokeMethod(MC_START,musicID);
 
   }
-
-
-
-
+  
   void resumeMusic() {
     playBackChannel.invokeMethod(MC_RESUME);
   }
@@ -250,7 +246,7 @@ class PlayBackController {
 
   setCurrentMode(playerMode mode) async {
     currentMode = mode;
-    pauseMusic();
+   // pauseMusic();
 
     /// give time to stop current track
     await Future.delayed(new Duration(milliseconds: 500));
@@ -262,7 +258,21 @@ class PlayBackController {
     return jsonDecode(playerStateJSonString);
   }
 
-  void sync(Map<String, String> playbackState) {}
+  void sync(Map<String, dynamic> playbackState) {
+    var playBack =  PlayBackState.fromJson(playbackState);
 
-  void compareState() {}
+    if (playBack.track.trackUri != currentPlayBackState.track.trackUri){
+      start(playBack.track.trackUri);
+      seek(playBack.playBackPosition.toDouble());
+    }
+
+    print("done syncing..");
+    print("playback pos syncing" + playBack.playBackPosition.toString());
+
+  }
+
+  void compareState() {
+
+
+  }
 }

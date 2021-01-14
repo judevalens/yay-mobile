@@ -35,14 +35,10 @@ class _FeedState extends State<Feed> {
       title: Container(
         child: Text("Feed"),
         ),
-
       leading: null,
       pinned: true,
       automaticallyImplyLeading: true,
       floating: true,
-      flexibleSpace: Placeholder(),
-      expandedHeight: 200,
-
     );
   }
 

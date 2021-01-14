@@ -182,15 +182,15 @@ class _UserProfileState extends State<UserProfile> {
                   child: Container(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: topTracks.map(
-                        (trackData) {
+                      children: topArtists.map(
+                        (artistData) {
                           var totalItem = topTracks.length;
                           double rightMargin = (counter != totalItem - 1) ? 10 : 0;
                           counter++;
 
                           return Container(
                             margin: EdgeInsets.only(right: rightMargin),
-                            child: topTrackItem(trackData),
+                            child: topArtistItem(artistData),
                           );
                         },
                       ).toList(),
@@ -246,6 +246,45 @@ class _UserProfileState extends State<UserProfile> {
                     overflow: TextOverflow.ellipsis,
                     softWrap: true,
                     style: TextStyle(fontSize: 15),
+                  )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  Widget topArtistItem(Map<String, dynamic> artistData) {
+    var trackCoverUrl = (artistData["images"] as List).length > 0
+        ? artistData["images"][1]["url"]
+        : null;
+
+    Widget trackCover;
+    if (trackCoverUrl != null) {
+      trackCover = Container(
+        height: 150,
+        width: 150,
+        child: Image.network(trackCoverUrl),
+      );
+    } else {
+      trackCover = emptyCover();
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 150,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              trackCover,
+              Container(
+                  height: 25,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    artistData["name"],
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                    style: TextStyle(fontSize: 20),
                   )),
             ],
           ),
