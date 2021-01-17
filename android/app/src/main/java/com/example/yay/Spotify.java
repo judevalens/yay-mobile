@@ -46,8 +46,8 @@ public class Spotify {
     static final MediaType JSON = MediaType.get("application/x-www-form-urlencoded");
     public static final int AUTH_TOKEN_REQUEST_CODE = 0x10;
     public static final int AUTH_CODE_REQUEST_CODE = 0x11;
-    private static final String CLIENT_ID = "c32f7f7b46e14062ba2aea1b462415c9";
-    private static final String CLIENT_SECRET = "4bf8bb4cb9964ec8bb9d900bc9bc5fb3";
+    private static final String CLIENT_ID = "";
+    private static final String CLIENT_SECRET = "";
 
     private static final String REDIRECT_URI = "http://com.example.yay/";
     private final String SOCKET_ADDRESS = "http://192.168.1.3:5000";

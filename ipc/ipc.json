@@ -1,7 +1,0 @@
-{
-  "socketIoStatus" : {
-    "create_room_succeeded": true,
-    "join_room_succeeded": true,
-    "leave_room_succeeded": true
-  }
-}
