@@ -11,12 +11,12 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  FocusNode searchFocusNode = FocusNode();
 
   int currentIndex = 0;
   Player _playerPage = Player();
   Feed _feed = Feed();
   Me _me = Me();
- Find _find = Find();
 
  @override
   void initState() {
@@ -29,7 +29,7 @@ class _HomeState extends State<Home> {
       body: IndexedStack(
         sizing: StackFit.expand,
         index: currentIndex,
-        children: [_feed, _playerPage,_find, _me],
+        children: [_feed, _playerPage,Find(focusNode: searchFocusNode,), _me],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -44,7 +44,13 @@ class _HomeState extends State<Home> {
           onTap: (int index) {
             setState(() {
               print("taped!!");
+
               currentIndex = index;
+              if (index == 2){
+                searchFocusNode.requestFocus();
+              }else{
+                searchFocusNode.unfocus();
+              }
             });
           },
           items: [
